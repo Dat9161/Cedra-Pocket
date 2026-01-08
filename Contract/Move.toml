@@ -1,0 +1,15 @@
+[package]
+name = "CedraMiniApp"
+version = "1.0.0"
+authors = ["Cedra GameFi Team"]
+
+[addresses]
+cedra_gamefi = "_"
+admin = "_"
+
+[dev-addresses]
+
+
+
+[dependencies]
+CedraFramework = { git = "https://github.com/cedra-labs/cedra-framework.git", subdir = "cedra-framework", rev = "main" }
