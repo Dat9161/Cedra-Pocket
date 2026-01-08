@@ -188,7 +188,7 @@ export function HeroSection({
         `}
       >
         {/* Mascot and Cua container */}
-        <div className="relative w-[90vw] h-[90vw] max-w-[360px] max-h-[360px]">
+        <div className="relative w-[70vw] h-[70vw] max-w-[280px] max-h-[280px]">
           {/* Cua image - left side with walking animation */}
           <div className="absolute z-20 animate-crab-walk" style={{ left: '-15%', bottom: '-15%', width: '20%' }}>
             <img
@@ -210,7 +210,7 @@ export function HeroSection({
               <img
                 src={mascotImageUrl}
                 alt="Game Mascot"
-                className="w-[160%] h-[160%] object-contain absolute -top-[45%]"
+                className="w-[140%] h-[140%] object-contain absolute -top-[35%]"
                 onError={(e) => {
                   // Hide broken image and show fallback
                   e.currentTarget.style.display = 'none';
