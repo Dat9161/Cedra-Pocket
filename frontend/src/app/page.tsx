@@ -162,8 +162,6 @@ export default function HomePage() {
               {/* Username - center */}
               <div className="absolute left-1/2 -translate-x-1/2 z-20" style={{ top: '30px' }}>
                 <span className="text-base font-bold text-gray-800">{user.username}</span>
-                {/* Debug: show telegramId */}
-                <div className="text-xs text-gray-500">{user.telegramId || 'no-tg-id'}</div>
               </div>
 
               {/* Notification bell button - top right */}
