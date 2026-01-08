@@ -53,11 +53,20 @@ export class UsersController {
 
   @Post('add-points')
   @UseGuards(JwtAuthGuard)
-  addPoints(
+  async addPoints(
     @CurrentUser() user: any,
     @Body() body: { points: number },
   ) {
-    return this.usersService.addPoints(BigInt(user.id), body.points);
+    const updatedUser = await this.usersService.addPoints(BigInt(user.id), body.points);
+    // Convert BigInt to string for JSON serialization
+    return {
+      id: updatedUser.id.toString(),
+      telegram_id: updatedUser.telegram_id,
+      username: updatedUser.username,
+      total_points: Number(updatedUser.total_points),
+      current_rank: updatedUser.current_rank,
+      wallet_address: updatedUser.wallet_address,
+    };
   }
 
   @Patch(':id')
