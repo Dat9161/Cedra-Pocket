@@ -21,8 +21,9 @@ export default function HomePage() {
   const { isInitialized, isAvailable } = useTelegram();
   const [isAppReady, setIsAppReady] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [leaderboardData, setLeaderboardData] = useState<Array<{rank: number; name: string; score: number}>>([]);
+  const [leaderboardData, setLeaderboardData] = useState<Array<{rank: number; name: string; score: number; odTelegramId?: string}>>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [userRank, setUserRank] = useState<number | null>(null);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -58,23 +59,39 @@ export default function HomePage() {
     }
   }, [showLeaderboard]);
 
+  // Load user rank on app start
+  useEffect(() => {
+    if (user?.telegramId && userRank === null) {
+      loadLeaderboard();
+    }
+  }, [user?.telegramId]);
+
   const loadLeaderboard = async () => {
     setLeaderboardLoading(true);
     try {
-      // TODO: Add leaderboard endpoint to backend
-      // For now, fetch users and sort by points
       const response = await fetch(`${API_URL}/users`);
       if (response.ok) {
         const users = await response.json();
         const sorted = users
           .sort((a: { total_points: number }, b: { total_points: number }) => Number(b.total_points) - Number(a.total_points))
           .slice(0, 20)
-          .map((u: { username: string; total_points: number }, i: number) => ({
+          .map((u: { username: string; total_points: number; telegram_id: string }, i: number) => ({
             rank: i + 1,
             name: u.username || `Player${i + 1}`,
-            score: Number(u.total_points)
+            score: Number(u.total_points),
+            odTelegramId: u.telegram_id
           }));
         setLeaderboardData(sorted);
+        
+        // Find current user's rank
+        if (user?.telegramId) {
+          const allSorted = users
+            .sort((a: { total_points: number }, b: { total_points: number }) => Number(b.total_points) - Number(a.total_points));
+          const myRank = allSorted.findIndex((u: { telegram_id: string }) => u.telegram_id === user.telegramId);
+          if (myRank !== -1) {
+            setUserRank(myRank + 1);
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to load leaderboard:', error);
@@ -261,7 +278,9 @@ export default function HomePage() {
                 }}
               >
                 <span style={{ fontSize: '28px' }}>🏆</span>
-                <span className="text-white font-bold" style={{ fontSize: '18px' }}>#42 Rank</span>
+                <span className="text-white font-bold" style={{ fontSize: '18px' }}>
+                  #{userRank || '?'} Rank
+                </span>
               </button>
 
               {/* Quest Suggestion Button */}
