@@ -47,6 +47,44 @@ function getTelegramInitData(): string | null {
 }
 
 /**
+ * Get Telegram user from initDataUnsafe (backup method)
+ */
+function getTelegramUserFromInitData(): TelegramUser | null {
+  if (typeof window === 'undefined') return null;
+  
+  const webApp = (window as unknown as { 
+    Telegram?: { 
+      WebApp?: { 
+        initDataUnsafe?: { 
+          user?: {
+            id: number;
+            first_name: string;
+            last_name?: string;
+            username?: string;
+            photo_url?: string;
+            language_code?: string;
+          }
+        } 
+      } 
+    } 
+  }).Telegram?.WebApp;
+  
+  const user = webApp?.initDataUnsafe?.user;
+  if (!user) return null;
+  
+  console.log('📱 Raw initDataUnsafe.user:', user);
+  
+  return {
+    id: user.id,
+    firstName: user.first_name,
+    lastName: user.last_name,
+    username: user.username,
+    photoUrl: user.photo_url,
+    languageCode: user.language_code,
+  };
+}
+
+/**
  * TelegramProvider component
  * Requirements: 8.1, 8.3, 8.4
  * - 8.1: Retrieve user data from Telegram SDK on initialization
@@ -128,10 +166,18 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
       try {
         await telegramService.initialize();
         
-        // Get user data from Telegram SDK
-        const user = telegramService.getUserData();
-        console.log('📱 Telegram user data:', user);
+        // Get user data from Telegram SDK (try both methods)
+        let user = telegramService.getUserData();
+        console.log('📱 Telegram user from service:', user);
+        
+        // Fallback: try getting from initDataUnsafe directly
+        if (!user) {
+          user = getTelegramUserFromInitData();
+          console.log('📱 Telegram user from initDataUnsafe:', user);
+        }
+        
         console.log('📱 Telegram WebApp available:', telegramService.isAvailable());
+        console.log('📱 Final Telegram user:', user);
         setTelegramUser(user);
         
         // Clear old cached user if we have new Telegram user
