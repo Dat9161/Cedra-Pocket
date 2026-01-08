@@ -42,9 +42,9 @@ export class AuthService {
       });
     }
 
-    // Tạo JWT token
+    // Tạo JWT token - convert BigInt to string for serialization
     const payload = {
-      sub: user.id,
+      sub: user.id.toString(),
       telegramId: user.telegram_id,
       username: user.username,
     };
@@ -54,11 +54,11 @@ export class AuthService {
     return {
       access_token: accessToken,
       user: {
-        id: user.id,
+        id: user.id.toString(),
         telegram_id: user.telegram_id,
         username: user.username,
         wallet_address: user.wallet_address,
-        total_points: user.total_points,
+        total_points: Number(user.total_points),
         current_rank: user.current_rank,
         referral_code: user.referral_code,
       },
