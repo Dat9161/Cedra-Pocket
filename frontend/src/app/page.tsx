@@ -357,7 +357,11 @@ export default function HomePage() {
               className="flex flex-col gap-2 overflow-y-auto flex-1"
               style={{ padding: '0 24px 16px 24px' }}
             >
-              {leaderboardData.map((player) => (
+              {leaderboardLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-white">Loading...</div>
+                </div>
+              ) : leaderboardData.map((player) => (
                 <div 
                   key={player.rank}
                   className="flex items-center gap-3"
