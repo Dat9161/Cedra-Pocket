@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useAppStore } from '../../store/useAppStore';
+import { useAppStore, useSpinsLeft } from '../../store/useAppStore';
 
 // Các phần thưởng trên vòng quay
 const WHEEL_SEGMENTS = [
@@ -20,8 +20,8 @@ export function SpinScreen() {
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
-  const [spinsLeft, setSpinsLeft] = useState(3);
-  const { updateBalance } = useAppStore();
+  const spinsLeft = useSpinsLeft();
+  const { updateBalance, decrementSpins } = useAppStore();
 
   const segmentAngle = 360 / WHEEL_SEGMENTS.length; // 45 độ mỗi segment
 
@@ -64,7 +64,7 @@ export function SpinScreen() {
       setResult(prize.value);
       setShowResult(true);
       updateBalance(prize.value, 'token');
-      setSpinsLeft(prev => prev - 1);
+      decrementSpins();
       setIsSpinning(false);
 
       // Ẩn kết quả sau 2.5 giây

@@ -62,6 +62,9 @@ export interface AppState {
 
   // Navigation State
   activeTab: NavigationTab;
+
+  // Spin State
+  spinsLeft: number;
 }
 
 /**
@@ -106,6 +109,10 @@ export interface AppActions {
 
   // Navigation Actions
   setActiveTab: (tab: NavigationTab) => void;
+
+  // Spin Actions
+  setSpinsLeft: (spins: number) => void;
+  decrementSpins: () => void;
 
   // Global Actions
   reset: () => void;
@@ -161,6 +168,9 @@ const initialState: AppState = {
 
   // Navigation State
   activeTab: 'home',
+
+  // Spin State
+  spinsLeft: 3,
 };
 
 
@@ -177,6 +187,7 @@ const PERSISTED_KEYS: (keyof AppState)[] = [
   'referralStats',
   'wallet',
   'activeTab',
+  'spinsLeft',
 ];
 
 /**
@@ -465,6 +476,15 @@ export const useAppStore = create<AppStore>()(
       // Navigation Actions
       setActiveTab: (activeTab) => set({ activeTab }),
 
+      // Spin Actions
+      setSpinsLeft: (spinsLeft) => set({ spinsLeft }),
+      decrementSpins: () => {
+        const { spinsLeft } = get();
+        if (spinsLeft > 0) {
+          set({ spinsLeft: spinsLeft - 1 });
+        }
+      },
+
       // Global Actions
       reset: () => set(initialState),
     }),
@@ -548,6 +568,7 @@ export const useActiveCardCategory = () => useAppStore((state) => state.activeCa
 export const useReferralStats = () => useAppStore((state) => state.referralStats);
 export const useWallet = () => useAppStore((state) => state.wallet);
 export const useActiveTab = () => useAppStore((state) => state.activeTab);
+export const useSpinsLeft = () => useAppStore((state) => state.spinsLeft);
 
 /**
  * Action hooks for cleaner component code
