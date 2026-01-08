@@ -51,6 +51,15 @@ export class UsersController {
     return this.usersService.connectWallet(user.id.toString(), connectWalletDto);
   }
 
+  @Post('add-points')
+  @UseGuards(JwtAuthGuard)
+  addPoints(
+    @CurrentUser() user: any,
+    @Body() body: { points: number },
+  ) {
+    return this.usersService.addPoints(BigInt(user.id), body.points);
+  }
+
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {

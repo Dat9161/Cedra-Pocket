@@ -209,6 +209,27 @@ export class BackendAPIService {
   }
 
   /**
+   * Add points to user (sync with backend)
+   */
+  async addPoints(points: number): Promise<BackendUser> {
+    try {
+      const response = await this.client.post<BackendUser>('/users/add-points', {
+        points,
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new BackendAPIError(
+          error.response?.data?.message || 'Failed to add points',
+          error.response?.status || 500,
+          'ADD_POINTS_FAILED'
+        );
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Get quests list
    */
   async getQuests(): Promise<BackendQuest[]> {

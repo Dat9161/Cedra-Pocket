@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useAppStore, useSpinsLeft } from '../../store/useAppStore';
+import { backendAPI } from '../../services/backend-api.service';
 
 // Các phần thưởng trên vòng quay
 const WHEEL_SEGMENTS = [
@@ -21,7 +22,7 @@ export function SpinScreen() {
   const [result, setResult] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const spinsLeft = useSpinsLeft();
-  const { updateBalance, decrementSpins } = useAppStore();
+  const { updateBalance, decrementSpins, user, setUser } = useAppStore();
 
   const segmentAngle = 360 / WHEEL_SEGMENTS.length; // 45 độ mỗi segment
 
@@ -60,12 +61,26 @@ export function SpinScreen() {
     setRotation(prev => prev + totalRotation);
 
     // Sau khi quay xong - trả về đúng prize đã chọn
-    setTimeout(() => {
+    setTimeout(async () => {
       setResult(prize.value);
       setShowResult(true);
       updateBalance(prize.value, 'token');
       decrementSpins();
       setIsSpinning(false);
+
+      // Sync points with backend
+      if (backendAPI.isAuthenticated()) {
+        try {
+          const updatedUser = await backendAPI.addPoints(prize.value);
+          console.log('✅ Points synced with backend:', updatedUser.total_points);
+          // Update local user with backend data
+          if (user) {
+            setUser({ ...user, tokenBalance: Number(updatedUser.total_points) });
+          }
+        } catch (error) {
+          console.error('❌ Failed to sync points with backend:', error);
+        }
+      }
 
       // Ẩn kết quả sau 2.5 giây
       setTimeout(() => {
