@@ -97,7 +97,7 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [telegramUser, setTelegramUser] = useState<TelegramUser | null>(null);
-  const { setUser, setActiveTab } = useAppStore();
+  const { setUser, setActiveTab, user: currentUser } = useAppStore();
 
   /**
    * Authenticate with backend
@@ -118,6 +118,15 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
         photoUrl: tgUser?.photoUrl,
       });
       console.log('👤 Converted user data:', userData);
+      
+      // Keep local balance if it's higher than backend (sync issue protection)
+      const localBalance = currentUser?.tokenBalance || 0;
+      const backendBalance = userData.tokenBalance;
+      console.log(`💰 Local balance: ${localBalance}, Backend balance: ${backendBalance}`);
+      if (localBalance > backendBalance) {
+        console.log(`⚠️ Keeping higher local balance: ${localBalance}`);
+        userData.tokenBalance = localBalance;
+      }
 
       setUser(userData);
       setIsAuthenticated(true);
