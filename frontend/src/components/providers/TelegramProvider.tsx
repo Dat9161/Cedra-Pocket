@@ -164,6 +164,10 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
   useEffect(() => {
     const initialize = async () => {
       try {
+        // FORCE clear old cache on every load (temporary fix)
+        console.log('🧹 Force clearing localStorage cache');
+        localStorage.removeItem('tg-mini-app-storage');
+        
         // Debug: Log all Telegram WebApp data
         const webApp = (window as unknown as { Telegram?: { WebApp?: unknown } }).Telegram?.WebApp;
         console.log('🔍 Full Telegram WebApp object:', webApp);
