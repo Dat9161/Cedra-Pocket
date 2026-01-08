@@ -10,7 +10,8 @@ import { SpinScreen } from '../components/spin';
 import { WalletScreen } from '../components/wallet';
 import { GameScreen } from '../components/game';
 import { useTelegram } from '../components/providers';
-import { backendAPI } from '../services/backend-api.service';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://cedra-quest-backend.onrender.com';
 
 export default function HomePage() {
   const user = useUser();
@@ -62,7 +63,7 @@ export default function HomePage() {
     try {
       // TODO: Add leaderboard endpoint to backend
       // For now, fetch users and sort by points
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://cedra-quest-backend.onrender.com'}/users`);
+      const response = await fetch(`${API_URL}/users`);
       if (response.ok) {
         const users = await response.json();
         const sorted = users
