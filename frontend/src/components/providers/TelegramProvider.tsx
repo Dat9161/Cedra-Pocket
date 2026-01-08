@@ -70,6 +70,8 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
 
     try {
       const response = await backendAPI.authenticate(initData);
+      console.log('🔐 Backend auth response:', response);
+      console.log('🔐 Backend user:', response.user);
       
       // Convert backend user to frontend format
       const userData = backendAPI.backendUserToUserData(response.user, {
@@ -77,6 +79,7 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
         firstName: tgUser?.firstName,
         photoUrl: tgUser?.photoUrl,
       });
+      console.log('👤 Converted user data:', userData);
 
       setUser(userData);
       setIsAuthenticated(true);
@@ -128,7 +131,14 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
         // Get user data from Telegram SDK
         const user = telegramService.getUserData();
         console.log('📱 Telegram user data:', user);
+        console.log('📱 Telegram WebApp available:', telegramService.isAvailable());
         setTelegramUser(user);
+        
+        // Clear old cached user if we have new Telegram user
+        if (user) {
+          console.log('🔄 Clearing old cached user data');
+          localStorage.removeItem('tg-mini-app-storage');
+        }
 
         // Get initData for backend authentication
         const initData = getTelegramInitData();
