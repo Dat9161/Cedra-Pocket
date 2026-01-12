@@ -232,76 +232,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Leaderboard Button and Quest Suggestion - Side by side */}
-            <div className="flex justify-center gap-4" style={{ marginTop: '10px' }}>
-              <button 
-                onClick={() => setShowRankModal(true)}
-                className="flex items-center justify-center gap-2 py-4 transition-all hover:scale-105"
-                style={{
-                  background: 'linear-gradient(135deg, #7DD3FC, #38BDF8)',
-                  border: '1px solid rgba(255,255,255,0.4)',
-                  boxShadow: '0 4px 15px rgba(56,189,248,0.3)',
-                  width: '110px',
-                  borderRadius: '16px'
-                }}
-              >
-                <img src={getUserRankTier(user.tokenBalance).icon} alt="Rank" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
-                <span className="text-gray-700 font-bold" style={{ fontSize: '14px' }}>
-                  {getUserRankTier(user.tokenBalance).name}
-                </span>
-              </button>
-
-              {/* Spin Button */}
-              <button 
-                onClick={() => setShowSpinModal(true)}
-                className="flex items-center justify-center gap-2 py-4 transition-all hover:scale-105 relative"
-                style={{
-                  background: 'linear-gradient(135deg, #FECACA, #FCA5A5)',
-                  border: '1px solid rgba(255,255,255,0.4)',
-                  boxShadow: '0 4px 15px rgba(252,165,165,0.3)',
-                  width: '100px',
-                  borderRadius: '16px'
-                }}
-              >
-                <img src="/icons/spin.PNG" alt="Spin" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
-                <span className="text-gray-700 font-bold" style={{ fontSize: '16px' }}>Spin</span>
-                {spinsLeft > 0 && (
-                  <div 
-                    className="absolute -top-2 -right-2 flex items-center justify-center"
-                    style={{
-                      width: '22px',
-                      height: '22px',
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #F87171, #EF4444)',
-                      border: '2px solid white',
-                      fontSize: '11px',
-                      fontWeight: 'bold',
-                      color: 'white'
-                    }}
-                  >
-                    {spinsLeft}
-                  </div>
-                )}
-              </button>
-
-              {/* Quest Suggestion Button */}
-              <button 
-                onClick={() => handleTabChange('quest')}
-                className="flex items-center justify-center gap-2 py-4 transition-all hover:scale-105"
-                style={{
-                  background: 'linear-gradient(135deg, #D9F99D, #BEF264)',
-                  border: '1px solid rgba(255,255,255,0.4)',
-                  boxShadow: '0 4px 15px rgba(190,242,100,0.3)',
-                  width: '100px',
-                  borderRadius: '16px'
-                }}
-              >
-                <span style={{ fontSize: '24px' }}>🎁</span>
-                <span className="text-gray-700 font-bold" style={{ fontSize: '16px' }}>Quest</span>
-              </button>
-            </div>
-
-            {/* Big Coin Display - Below rank */}
+            {/* Big Coin Display */}
             <div className="flex justify-center items-center" style={{ marginTop: '10px', marginBottom: '10px' }}>
               <div className="flex items-center gap-3">
                 <span style={{ fontSize: '42px' }}>🪙</span>
@@ -318,7 +249,83 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Hero Section */}
+            {/* Left Side Buttons - Vertical below coin */}
+            <div className="flex flex-col gap-2" style={{ marginLeft: '10px', zIndex: 10 }}>
+              <button 
+                onClick={() => setShowRankModal(true)}
+                className="flex items-center transition-all hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, #7DD3FC, #38BDF8)',
+                  border: '1px solid rgba(255,255,255,0.4)',
+                  boxShadow: '0 4px 15px rgba(56,189,248,0.3)',
+                  width: '100px',
+                  height: '36px',
+                  borderRadius: '18px',
+                  paddingLeft: '8px',
+                  gap: '8px'
+                }}
+              >
+                <img src={getUserRankTier(user.tokenBalance).icon} alt="Rank" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
+                <span className="text-gray-700 font-bold" style={{ fontSize: '12px' }}>
+                  {getUserRankTier(user.tokenBalance).name}
+                </span>
+              </button>
+
+              {/* Spin Button */}
+              <button 
+                onClick={() => setShowSpinModal(true)}
+                className="flex items-center transition-all hover:scale-105 relative"
+                style={{
+                  background: 'linear-gradient(135deg, #FECACA, #FCA5A5)',
+                  border: '1px solid rgba(255,255,255,0.4)',
+                  boxShadow: '0 4px 15px rgba(252,165,165,0.3)',
+                  width: '100px',
+                  height: '36px',
+                  borderRadius: '18px',
+                  paddingLeft: '8px',
+                  gap: '8px'
+                }}
+              >
+                <img src="/icons/spin.PNG" alt="Spin" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
+                <span className="text-gray-700 font-bold" style={{ fontSize: '12px' }}>Spin</span>
+                {spinsLeft > 0 && (
+                  <div 
+                    className="absolute -top-1 -right-1 flex items-center justify-center"
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #F87171, #EF4444)',
+                      border: '2px solid white',
+                      fontSize: '9px',
+                      fontWeight: 'bold',
+                      color: 'white'
+                    }}
+                  >
+                    {spinsLeft}
+                  </div>
+                )}
+              </button>
+
+              {/* Quest Button */}
+              <button 
+                onClick={() => handleTabChange('quest')}
+                className="flex items-center transition-all hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, #D9F99D, #BEF264)',
+                  border: '1px solid rgba(255,255,255,0.4)',
+                  boxShadow: '0 4px 15px rgba(190,242,100,0.3)',
+                  width: '100px',
+                  height: '36px',
+                  borderRadius: '18px',
+                  paddingLeft: '8px',
+                  gap: '8px'
+                }}
+              >
+                <span style={{ fontSize: '18px', lineHeight: 1, width: '22px', textAlign: 'center' }}>🎁</span>
+                <span className="text-gray-700 font-bold" style={{ fontSize: '12px' }}>Quest</span>
+              </button>
+            </div>            {/* Hero Section */}
             <div className="flex-1 flex items-center justify-center">
               <HeroSection mascotImageUrl="/mascot.png" showAnimation={true} />
             </div>
