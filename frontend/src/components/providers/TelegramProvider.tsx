@@ -97,7 +97,7 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [telegramUser, setTelegramUser] = useState<TelegramUser | null>(null);
-  const { setUser, setActiveTab, user: currentUser } = useAppStore();
+  const { setUser, setActiveTab } = useAppStore();
 
   /**
    * Authenticate with backend
@@ -118,42 +118,9 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
         photoUrl: tgUser?.photoUrl,
       });
       console.log('👤 Converted user data:', userData);
+      console.log(`💰 Backend balance: ${userData.tokenBalance}`);
       
-      // Get local balance from localStorage directly (store might not be hydrated yet)
-      let localBalance = currentUser?.tokenBalance || 0;
-      try {
-        const cachedData = localStorage.getItem('tg-mini-app-storage');
-        if (cachedData) {
-          const parsed = JSON.parse(cachedData);
-          const cachedBalance = parsed?.state?.user?.tokenBalance;
-          if (typeof cachedBalance === 'number' && cachedBalance > localBalance) {
-            localBalance = cachedBalance;
-            console.log(`📦 Found cached balance in localStorage: ${localBalance}`);
-          }
-        }
-      } catch (e) {
-        console.log('⚠️ Could not read cached balance from localStorage');
-      }
-      
-      const backendBalance = userData.tokenBalance;
-      console.log(`💰 Local balance: ${localBalance}, Backend balance: ${backendBalance}`);
-      
-      // Use the higher balance (backend is source of truth, but protect against sync issues)
-      if (localBalance > backendBalance) {
-        console.log(`⚠️ Local balance higher - syncing to backend: ${localBalance}`);
-        userData.tokenBalance = localBalance;
-        // Sync the difference to backend
-        const diff = localBalance - backendBalance;
-        if (diff > 0 && backendAPI.isAuthenticated()) {
-          try {
-            await backendAPI.addPoints(diff);
-            console.log(`✅ Synced ${diff} points to backend`);
-          } catch (e) {
-            console.error('❌ Failed to sync points to backend:', e);
-          }
-        }
-      }
-
+      // Always use backend balance as source of truth
       setUser(userData);
       setIsAuthenticated(true);
       console.log('✅ Backend authentication successful');

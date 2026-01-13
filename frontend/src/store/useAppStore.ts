@@ -84,7 +84,7 @@ export interface AppState {
 export interface AppActions {
   // User Actions
   setUser: (user: UserData | null) => void;
-  updateBalance: (amount: number, currency: CurrencyType) => void;
+  updateBalance: (amount: number, currency: CurrencyType) => Promise<void>;
   addXP: (amount: number) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -244,11 +244,12 @@ export const useAppStore = create<AppStore>()(
       // User Actions
       setUser: (user) => set({ user }),
 
-      updateBalance: (amount, currency) => {
+      updateBalance: async (amount, currency) => {
         const { user } = get();
         if (!user) return;
 
         if (currency === 'token') {
+          // Update local state immediately
           set({
             user: {
               ...user,
@@ -256,6 +257,17 @@ export const useAppStore = create<AppStore>()(
               updatedAt: new Date(),
             },
           });
+          
+          // Sync to backend (fire and forget, don't block UI)
+          if (amount !== 0) {
+            import('../services/backend-api.service').then(({ backendAPI }) => {
+              if (backendAPI.isAuthenticated()) {
+                backendAPI.addPoints(amount).catch((err) => {
+                  console.error('❌ Failed to sync points to backend:', err);
+                });
+              }
+            });
+          }
         } else {
           set({
             user: {
