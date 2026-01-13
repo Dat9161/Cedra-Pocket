@@ -6,6 +6,7 @@ import { VerifyQuestDto } from './dto/verify-quest.dto';
 import { QuestType, QuestStatus } from '../common/types/quest.types';
 import { SocialService } from '../social/social.service';
 import { RewardsService } from '../rewards/rewards.service';
+import { reward_type, quest_frequency } from '@prisma/client';
 
 @Injectable()
 export class QuestsService {
@@ -20,12 +21,12 @@ export class QuestsService {
       data: {
         title: createQuestDto.title,
         description: createQuestDto.description,
-        type: createQuestDto.type,
+        type: createQuestDto.type as any,
         category: createQuestDto.category,
         config: createQuestDto.config || {},
         reward_amount: createQuestDto.reward_amount,
-        reward_type: createQuestDto.reward_type || 'POINT',
-        frequency: createQuestDto.frequency || 'ONCE',
+        reward_type: (createQuestDto.reward_type || 'POINT') as reward_type,
+        frequency: (createQuestDto.frequency || 'ONCE') as quest_frequency,
         is_active: true,
       },
     });
@@ -34,21 +35,35 @@ export class QuestsService {
   async findAll(userId?: string) {
     const quests = await this.prisma.quests.findMany({
       where: { is_active: true },
-      include: {
-        user_quests: userId ? {
-          where: { user_id: BigInt(userId) },
-        } : false,
-      },
       orderBy: { created_at: 'desc' },
     });
 
+    if (!userId) {
+      return quests.map(quest => ({
+        ...quest,
+        user_status: 'NOT_STARTED',
+        user_completed_at: null,
+        user_claimed_at: null,
+      }));
+    }
+
+    // Get user quests separately
+    const userQuests = await this.prisma.user_quests.findMany({
+      where: { user_id: BigInt(userId) },
+    });
+
+    const userQuestMap = new Map(userQuests.map(uq => [uq.quest_id, uq]));
+
     // Transform to include user status
-    return quests.map(quest => ({
-      ...quest,
-      user_status: quest.user_quests?.[0]?.status || 'NOT_STARTED',
-      user_completed_at: quest.user_quests?.[0]?.completed_at,
-      user_claimed_at: quest.user_quests?.[0]?.claimed_at,
-    }));
+    return quests.map(quest => {
+      const userQuest = userQuestMap.get(quest.id);
+      return {
+        ...quest,
+        user_status: userQuest?.status || 'NOT_STARTED',
+        user_completed_at: userQuest?.completed_at,
+        user_claimed_at: userQuest?.claimed_at,
+      };
+    });
   }
 
   async findOne(id: string) {
@@ -155,9 +170,17 @@ export class QuestsService {
   }
 
   async update(id: string, updateQuestDto: UpdateQuestDto) {
+    const data: any = { ...updateQuestDto };
+    if (data.reward_type) {
+      data.reward_type = data.reward_type as any;
+    }
+    if (data.frequency) {
+      data.frequency = data.frequency as any;
+    }
+    
     return this.prisma.quests.update({
       where: { id: parseInt(id) },
-      data: updateQuestDto,
+      data,
     });
   }
 

@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ConnectWalletDto } from './dto/connect-wallet.dto';
+import { user_rank } from '@prisma/client';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -55,13 +56,6 @@ export class UsersService {
   async findOne(id: string) {
     const user = await this.prisma.users.findUnique({
       where: { id: BigInt(id) },
-      include: {
-        user_quests: {
-          include: {
-            quests: true,
-          },
-        },
-      },
     });
 
     if (!user) {
@@ -103,9 +97,14 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
+    const data: any = { ...updateUserDto };
+    if (data.current_rank) {
+      data.current_rank = data.current_rank as user_rank;
+    }
+    
     return this.prisma.users.update({
       where: { id: BigInt(id) },
-      data: updateUserDto,
+      data,
     });
   }
 

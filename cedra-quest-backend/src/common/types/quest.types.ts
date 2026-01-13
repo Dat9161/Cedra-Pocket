@@ -16,10 +16,12 @@ export enum QuestFrequency {
   WEEKLY = 'WEEKLY',
 }
 
+// Match database enum: POINT, XP, SPIN, TOKEN
 export enum RewardType {
   POINT = 'POINT',
+  XP = 'XP',
+  SPIN = 'SPIN',
   TOKEN = 'TOKEN',
-  NFT = 'NFT',
 }
 
 export interface SocialQuestConfig {
