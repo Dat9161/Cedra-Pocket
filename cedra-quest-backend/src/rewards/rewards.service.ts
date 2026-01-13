@@ -33,14 +33,17 @@ export class RewardsService {
     rewardAmount: number;
   }) {
     try {
-      if (data.rewardType === RewardType.POINT) {
+      if (data.rewardType === RewardType.POINT || data.rewardType === RewardType.XP) {
         // Add points directly to user
         await this.usersService.addPoints(BigInt(data.userId), data.rewardAmount);
         
         this.logger.log(`Added ${data.rewardAmount} points to user ${data.userId}`);
-      } else if (data.rewardType === RewardType.TOKEN || data.rewardType === RewardType.NFT) {
-        // For token/NFT rewards, log for now (implement blockchain payout later)
-        this.logger.log(`Token/NFT reward queued for user ${data.userId}: ${data.rewardAmount}`);
+      } else if (data.rewardType === RewardType.TOKEN) {
+        // For token rewards, log for now (implement blockchain payout later)
+        this.logger.log(`Token reward queued for user ${data.userId}: ${data.rewardAmount}`);
+      } else if (data.rewardType === RewardType.SPIN) {
+        // Add spins to user
+        this.logger.log(`Spin reward for user ${data.userId}: ${data.rewardAmount}`);
       }
 
       // Update quest claim status
