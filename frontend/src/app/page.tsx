@@ -80,6 +80,7 @@ export default function HomePage() {
       }, 500);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [user, isAppReady, showLoadingScreen]);
 
   // Show loading screen while app is initializing or user not ready
