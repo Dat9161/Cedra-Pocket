@@ -177,22 +177,22 @@ export function SpinModal({ isOpen, onClose }: SpinModalProps) {
                   );
                 })}
               </svg>
-
-              {/* Center Circle */}
-              <div 
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full flex items-center justify-center cursor-pointer"
-                style={{
-                  width: 'clamp(44px, 12vw, 60px)',
-                  height: 'clamp(44px, 12vw, 60px)',
-                  background: 'linear-gradient(135deg, #00BFFF, #1E90FF)',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-                  border: 'clamp(2px, 0.5vw, 3px) solid rgba(255,255,255,0.8)',
-                }}
-                onClick={spinWheel}
-              >
-                <span className="text-white font-bold" style={{ fontSize: 'var(--fs-sm)' }}>SPIN</span>
-              </div>
             </div>
+          </div>
+
+          {/* Center SPIN Button - Outside wheel so it doesn't rotate */}
+          <div 
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full flex items-center justify-center cursor-pointer z-10"
+            style={{
+              width: 'clamp(44px, 12vw, 60px)',
+              height: 'clamp(44px, 12vw, 60px)',
+              background: 'linear-gradient(135deg, #00BFFF, #1E90FF)',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+              border: 'clamp(2px, 0.5vw, 3px) solid rgba(255,255,255,0.8)',
+            }}
+            onClick={spinWheel}
+          >
+            <span className="text-white font-bold" style={{ fontSize: 'var(--fs-sm)' }}>SPIN</span>
           </div>
         </div>
 
