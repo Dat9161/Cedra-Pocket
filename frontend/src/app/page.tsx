@@ -110,12 +110,7 @@ export default function HomePage() {
   }
 
   if (!user) {
-    return (
-      <LoadingScreen 
-        minDuration={1500}
-        onLoadingComplete={() => {}}
-      />
-    );
+    return <LoadingScreen />;
   }
 
   const renderActiveScreen = () => {
