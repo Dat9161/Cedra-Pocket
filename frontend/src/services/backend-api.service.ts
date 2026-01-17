@@ -325,6 +325,7 @@ export class BackendAPIService {
       currentXP: Number(backendUser.total_points) % 1000,
       requiredXP: 1000,
       tokenBalance: Number(backendUser.total_points),
+      walletBalance: 0, // Backend doesn't have wallet balance yet
       gemBalance: 0, // Backend doesn't have gems yet
       earningRate: 10,
       walletAddress: backendUser.wallet_address || undefined,

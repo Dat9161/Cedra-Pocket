@@ -34,256 +34,6 @@ function getUserRankTier(points: number) {
   return RANK_TIERS[0];
 }
 
-// Rank Carousel Component
-function RankCarousel({ ranks, currentUserPoints, getUserRankTier }: {
-  ranks: typeof RANK_TIERS;
-  currentUserPoints: number;
-  getUserRankTier: (points: number) => typeof RANK_TIERS[0];
-}) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [startX, setStartX] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const currentTier = getUserRankTier(currentUserPoints);
-  const currentTierIndex = ranks.findIndex(r => r.name === currentTier.name);
-
-  // Set initial index to current user rank
-  useEffect(() => {
-    if (currentTierIndex >= 0) {
-      setCurrentIndex(currentTierIndex);
-    }
-  }, [currentTierIndex]);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setStartX(e.touches[0].clientX);
-    setIsDragging(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    
-    const endX = e.changedTouches[0].clientX;
-    const diffX = startX - endX;
-    
-    if (Math.abs(diffX) > 50) { // Minimum swipe distance
-      if (diffX > 0 && currentIndex < ranks.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-      } else if (diffX < 0 && currentIndex > 0) {
-        setCurrentIndex(currentIndex - 1);
-      }
-    }
-  };
-
-  const rank = ranks[currentIndex];
-  const isCurrentTier = rank.name === currentTier.name;
-  const isUnlocked = currentUserPoints >= rank.minPoints;
-  const nextRank = ranks[currentIndex + 1];
-
-  return (
-    <div className="relative">
-      {/* Horizontal Scrollable Rank Preview */}
-      <div className="flex gap-3 mb-6 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        {ranks.map((tier, index) => {
-          const isCurrent = index === currentIndex;
-          const isUserTier = tier.name === currentTier.name;
-          const tierUnlocked = currentUserPoints >= tier.minPoints;
-          
-          return (
-            <button
-              key={tier.name}
-              onClick={() => setCurrentIndex(index)}
-              className="flex-shrink-0 relative transition-all duration-300"
-              style={{
-                width: '60px',
-                height: '60px',
-                borderRadius: '50%',
-                background: isCurrent 
-                  ? `linear-gradient(135deg, ${tier.color}, ${tier.color}80)`
-                  : 'rgba(255,255,255,0.1)',
-                border: isCurrent 
-                  ? `3px solid ${tier.color}` 
-                  : isUserTier 
-                    ? `2px solid ${tier.color}60`
-                    : '2px solid rgba(255,255,255,0.2)',
-                opacity: tierUnlocked ? 1 : 0.4,
-                transform: isCurrent ? 'scale(1.1)' : 'scale(1)',
-              }}
-            >
-              <img 
-                src={tier.icon} 
-                alt={tier.name}
-                style={{ 
-                  width: '36px', 
-                  height: '36px', 
-                  objectFit: 'contain',
-                  margin: 'auto',
-                  marginTop: '10px'
-                }} 
-              />
-              {isUserTier && !isCurrent && (
-                <div 
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
-                  style={{ background: tier.color, fontSize: '8px' }}
-                >
-                  👑
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Main Rank Card */}
-      <div 
-        className="relative mx-auto transition-all duration-500"
-        style={{ 
-          maxWidth: '320px',
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-          borderRadius: '24px',
-          border: `2px solid ${rank.color}40`,
-          padding: '24px',
-          backdropFilter: 'blur(20px)',
-          transform: isDragging ? 'scale(0.98)' : 'scale(1)',
-        }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {/* Crown for current user rank */}
-        {isCurrentTier && (
-          <div 
-            className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: rank.color }}
-          >
-            <span style={{ fontSize: '16px' }}>👑</span>
-          </div>
-        )}
-
-        {/* Lock for locked ranks */}
-        {!isUnlocked && (
-          <div className="absolute top-4 right-4 opacity-60">
-            <span style={{ fontSize: '24px' }}>🔒</span>
-          </div>
-        )}
-
-        {/* Rank Icon with Glow */}
-        <div className="text-center mb-4">
-          <div 
-            className="inline-block relative"
-            style={{
-              filter: isCurrentTier ? `drop-shadow(0 0 30px ${rank.color}80)` : 'none'
-            }}
-          >
-            <img 
-              src={rank.icon} 
-              alt={rank.name} 
-              style={{ 
-                width: '100px', 
-                height: '100px', 
-                objectFit: 'contain',
-                borderRadius: '50%',
-                background: `radial-gradient(circle, ${rank.color}20, transparent)`,
-                padding: '10px'
-              }} 
-            />
-          </div>
-        </div>
-
-        {/* Rank Name */}
-        <h3 
-          className="text-center font-bold mb-3"
-          style={{ 
-            fontSize: '28px', 
-            color: '#fff',
-            textShadow: `0 0 20px ${rank.color}60`
-          }}
-        >
-          {rank.name}
-        </h3>
-
-        {/* Points Range */}
-        <div className="text-center mb-4">
-          <span 
-            className="font-semibold"
-            style={{ 
-              fontSize: '16px',
-              color: rank.color,
-              background: `${rank.color}20`,
-              padding: '6px 16px',
-              borderRadius: '20px',
-              border: `1px solid ${rank.color}40`
-            }}
-          >
-            {rank.minPoints >= 1000 ? `${rank.minPoints/1000}K` : rank.minPoints}
-            {nextRank && (
-              <> - {nextRank.minPoints >= 1000 ? `${nextRank.minPoints/1000}K` : nextRank.minPoints}</>
-            )}
-            {!nextRank && '+'} points
-          </span>
-        </div>
-
-        {/* Bonus */}
-        {rank.bonus > 0 && (
-          <div className="text-center">
-            <div 
-              className="inline-block px-4 py-2 rounded-full"
-              style={{ 
-                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(34, 197, 94, 0.1))',
-                border: '1px solid rgba(34, 197, 94, 0.4)'
-              }}
-            >
-              <span className="text-green-300 font-bold" style={{ fontSize: '14px' }}>
-                +{Math.round(rank.bonus * 100)}% bonus
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Navigation Dots */}
-      <div className="flex justify-center mt-6 gap-2">
-        {ranks.map((tier, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className="transition-all duration-300"
-            style={{
-              width: currentIndex === index ? '32px' : '8px',
-              height: '8px',
-              borderRadius: '4px',
-              background: currentIndex === index 
-                ? tier.color 
-                : 'rgba(255,255,255,0.3)',
-              boxShadow: currentIndex === index 
-                ? `0 0 10px ${tier.color}60` 
-                : 'none'
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Swipe Hint */}
-      <div className="text-center mt-4">
-        <span className="text-white/50" style={{ fontSize: '13px' }}>
-          Swipe to explore ranks
-        </span>
-      </div>
-
-      <style jsx>{`
-        .overflow-x-auto::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-    </div>
-  );
-}
-
 export default function HomePage() {
   const user = useUser();
   const pet = usePet();
@@ -306,7 +56,8 @@ export default function HomePage() {
     try {
       if (backendAPI?.isAuthenticated()) {
         // Refresh user data from backend
-        const userData = await backendAPI.getUser();
+        const backendUser = await backendAPI.getUserProfile();
+        const userData = backendAPI.backendUserToUserData(backendUser);
         setUser(userData);
       }
     } catch (error) {
@@ -466,81 +217,82 @@ export default function HomePage() {
                 </button>
               </div>
 
-              {/* Spin - next to coin display */}
-              <div className="absolute z-20" style={{ top: 'clamp(14px, 4vw, 20px)', right: 'clamp(52px, 13vw, 66px)' }}>
-                <button 
-                  onClick={() => setShowSpinModal(true)}
-                  className="relative flex items-center justify-center transition-all hover:scale-110"
-                  style={{
-                    width: 'clamp(28px, 7vw, 36px)',
-                    height: 'clamp(28px, 7vw, 36px)',
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <img 
-                    src="/icons/spin.PNG" 
-                    alt="Spin" 
-                    style={{ 
-                      width: 'clamp(24px, 6vw, 32px)', 
-                      height: 'clamp(24px, 6vw, 32px)', 
-                      objectFit: 'contain',
-                      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
-                    }} 
-                  />
-                  {spinsLeft > 0 && (
-                    <div 
-                      className="absolute flex items-center justify-center"
-                      style={{
-                        top: '-4px',
-                        right: '-4px',
-                        width: 'clamp(16px, 4vw, 20px)',
-                        height: 'clamp(16px, 4vw, 20px)',
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #EF4444, #DC2626)',
-                        border: '2px solid white',
-                        fontSize: 'clamp(8px, 2vw, 10px)',
-                        fontWeight: 'bold',
-                        color: 'white',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+              {/* Spin + Points display - top right */}
+              <div className="absolute z-20" style={{ top: 'clamp(14px, 4vw, 20px)', right: 'clamp(8px, 2.5vw, 12px)' }}>
+                <div className="flex items-center gap-2">
+                  {/* Spin Button */}
+                  <button 
+                    onClick={() => setShowSpinModal(true)}
+                    className="relative flex items-center justify-center transition-all hover:scale-110"
+                    style={{
+                      width: 'clamp(28px, 7vw, 36px)',
+                      height: 'clamp(28px, 7vw, 36px)',
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <img 
+                      src="/icons/spin.PNG" 
+                      alt="Spin" 
+                      style={{ 
+                        width: 'clamp(24px, 6vw, 32px)', 
+                        height: 'clamp(24px, 6vw, 32px)', 
+                        objectFit: 'contain',
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+                      }} 
+                    />
+                    {spinsLeft > 0 && (
+                      <div 
+                        className="absolute flex items-center justify-center"
+                        style={{
+                          top: '-4px',
+                          right: '-4px',
+                          width: 'clamp(16px, 4vw, 20px)',
+                          height: 'clamp(16px, 4vw, 20px)',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                          border: '2px solid white',
+                          fontSize: 'clamp(8px, 2vw, 10px)',
+                          fontWeight: 'bold',
+                          color: 'white',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                        }}
+                      >
+                        {spinsLeft}
+                      </div>
+                    )}
+                  </button>
+
+                  {/* Points Display */}
+                  <div 
+                    className="flex items-center transition-all"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,220,100,0.4) 50%, rgba(255,180,50,0.6) 100%)',
+                      border: '1px solid rgba(255,255,255,0.5)',
+                      boxShadow: '0 2px 10px rgba(255,180,50,0.3), inset 0 1px 0 rgba(255,255,255,0.5)',
+                      borderRadius: '20px 8px 8px 8px',
+                      padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px)',
+                      gap: 'clamp(4px, 1vw, 6px)'
+                    }}
+                  >
+                    <span style={{ fontSize: 'var(--fs-sm)' }}>🪙</span>
+                    <span 
+                      style={{ 
+                        fontSize: 'var(--fs-sm)', 
+                        fontWeight: '700',
+                        color: '#1a1a2e'
                       }}
                     >
-                      {spinsLeft}
-                    </div>
-                  )}
-                </button>
+                      {user.tokenBalance.toLocaleString('fr-FR').replace(/\s/g, ' ')}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Username - center */}
               <div className="absolute left-1/2 -translate-x-1/2 z-20" style={{ top: 'clamp(12px, 3.5vw, 18px)' }}>
                 <span style={{ fontSize: 'var(--fs-base)' }} className="font-bold text-gray-800">{user.username}</span>
-              </div>
-
-              {/* Points display - top right (replacing notification bell) */}
-              <div className="absolute z-20" style={{ top: 'clamp(14px, 4vw, 20px)', right: 'clamp(8px, 2.5vw, 12px)' }}>
-                <div 
-                  className="flex items-center transition-all"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,220,100,0.4) 50%, rgba(255,180,50,0.6) 100%)',
-                    border: '1px solid rgba(255,255,255,0.5)',
-                    boxShadow: '0 2px 10px rgba(255,180,50,0.3), inset 0 1px 0 rgba(255,255,255,0.5)',
-                    borderRadius: '20px 8px 8px 8px',
-                    padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px)',
-                    gap: 'clamp(4px, 1vw, 6px)'
-                  }}
-                >
-                  <span style={{ fontSize: 'var(--fs-sm)' }}>🪙</span>
-                  <span 
-                    style={{ 
-                      fontSize: 'var(--fs-sm)', 
-                      fontWeight: '700',
-                      color: '#1a1a2e'
-                    }}
-                  >
-                    {user.tokenBalance.toLocaleString('fr-FR').replace(/\s/g, ' ')}
-                  </span>
-                </div>
               </div>
 
               {/* Glass background */}
