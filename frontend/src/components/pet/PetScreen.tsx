@@ -289,7 +289,7 @@ export function PetScreen() {
             {hatchStage === 1 && (
               <div style={{ animation: 'eggShake 0.15s ease-in-out infinite' }}>
                 <img 
-                  src="/icons/egg3.png"
+                  src="/icons/egg3.PNG"
                   alt="Egg" 
                   style={{ 
                     width: '150px', 
@@ -409,10 +409,10 @@ export function PetScreen() {
             {/* Egg stages based on progress */}
             <img 
               src={
-                progress >= 100 ? '/icons/egg4.png' :
-                progress >= 75 ? '/icons/egg3.png' :
-                progress >= 25 ? '/icons/egg2.png' :
-                '/icons/egg1.png'
+                progress >= 100 ? '/icons/egg4.PNG' :
+                progress >= 75 ? '/icons/egg3.PNG' :
+                progress >= 25 ? '/icons/egg2.PNG' :
+                '/icons/egg1.PNG'
               }
               alt="Egg"
               style={{ 
@@ -531,10 +531,10 @@ export function PetScreen() {
                     {/* Egg image changes based on progress */}
                     <img 
                       src={
-                        progress >= 100 ? '/icons/egg4.png' :
-                        progress >= 75 ? '/icons/egg3.png' :
-                        progress >= 25 ? '/icons/egg2.png' :
-                        '/icons/egg1.png'
+                        progress >= 100 ? '/icons/egg4.PNG' :
+                        progress >= 75 ? '/icons/egg3.PNG' :
+                        progress >= 25 ? '/icons/egg2.PNG' :
+                        '/icons/egg1.PNG'
                       }
                       alt="Egg"
                       style={{ 

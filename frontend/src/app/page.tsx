@@ -150,9 +150,9 @@ export default function HomePage() {
     switch (activeTab) {
       case 'home':
         return (
-          <div className="flex-1 flex flex-col px-3" style={{ paddingTop: 'clamp(6px, 2vw, 10px)', position: 'relative', zIndex: 1 }}>
+          <div className="flex-1 flex flex-col" style={{ paddingTop: 'clamp(6px, 2vw, 10px)', position: 'relative', zIndex: 1 }}>
             {/* Top Bar - Glass Container with top notch */}
-            <div className="relative mb-2" style={{ marginLeft: 'clamp(2px, 1vw, 4px)', marginRight: 'clamp(2px, 1vw, 4px)', zIndex: 10 }}>
+            <div className="relative mb-2" style={{ marginLeft: 'clamp(24px, 6vw, 32px)', marginRight: 'clamp(24px, 6vw, 32px)', zIndex: 10 }}>
               {/* SVG for clip-path definition - top center notch like inverted trapezoid */}
               <svg width="0" height="0" style={{ position: 'absolute' }}>
                 <defs>
@@ -343,8 +343,8 @@ export default function HomePage() {
               className="flex justify-center mb-6"
               style={{ 
                 marginTop: 'clamp(16px, 4vw, 24px)',
-                paddingLeft: '16px',
-                paddingRight: '16px',
+                paddingLeft: '24px',
+                paddingRight: '24px',
               }}
             >
               {/* Total Balance Card */}
@@ -473,8 +473,8 @@ export default function HomePage() {
               style={{ 
                 marginTop: 'clamp(32px, 8vw, 48px)',
                 zIndex: 10,
-                paddingLeft: '16px',
-                paddingRight: '16px',
+                paddingLeft: '24px',
+                paddingRight: '24px',
               }}
             >
               {/* Energy Widget - For Gaming */}
