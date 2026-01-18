@@ -751,64 +751,64 @@ export function PetScreen() {
         </div>
       </div>
 
-      {/* Claim Button - Fixed position above care bar */}
-      <div 
-        className="absolute left-1/2 transform -translate-x-1/2"
-        style={{ 
-          bottom: '55px', // Moved down from 70px to 55px
-          zIndex: 10
-        }}
-      >
-        <button 
-          onClick={collectCoins} 
-          disabled={pet.pendingCoins <= 0} 
-          className="transition-all hover:scale-105 active:scale-95"
-          style={{ 
-            padding: '10px 28px', 
-            borderRadius: '12px', 
-            background: pet.pendingCoins > 0 ? 'linear-gradient(135deg, #ffd700, #f5a623)' : 'rgba(100,100,100,0.3)', 
-            border: 'none', 
-            color: pet.pendingCoins > 0 ? '#1a1a1f' : 'rgba(0,0,0,0.4)', 
-            fontSize: '14px', 
-            fontWeight: '700', 
-            cursor: pet.pendingCoins > 0 ? 'pointer' : 'not-allowed',
-            boxShadow: pet.pendingCoins > 0 ? '0 4px 20px rgba(255,215,0,0.4)' : 'none'
-          }}
-        >
-          {pet.pendingCoins > 0 ? 'Claim' : `Next in ${Math.floor(coinTimer / 60)}:${(coinTimer % 60).toString().padStart(2, '0')}`}
-        </button>
-      </div>
-
       {/* Spacer to push content up and make room for fixed elements */}
-      <div style={{ flex: 1, minHeight: '80px' }} />
+      <div style={{ flex: 1, minHeight: '40px' }} />
 
-      {/* Bottom Actions Bar - Fixed at bottom */}
+      {/* Bottom Actions Bar with integrated Claim Button - Redesigned */}
       <div 
         className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
         style={{ 
-          padding: '6px 12px 12px 12px',
           background: 'rgba(255, 255, 255, 0.95)', 
-          borderRadius: '18px', 
-          border: '1px solid rgba(255,255,255,0.3)', 
+          borderRadius: '20px', 
+          border: '1px solid rgba(255, 255, 255, 0.4)', 
           backdropFilter: 'blur(20px)',
-          width: '240px',
-          marginBottom: '2px', // Reduced from 4px to 2px
-          zIndex: 5
+          width: '280px',
+          marginBottom: '8px',
+          zIndex: 5,
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          padding: '12px'
         }}
       >
+        {/* Claim Button - Top section */}
+        <div className="flex justify-center mb-3">
+          <button 
+            onClick={collectCoins} 
+            disabled={pet.pendingCoins <= 0} 
+            className="transition-all hover:scale-105 active:scale-95"
+            style={{ 
+              padding: '8px 24px', 
+              borderRadius: '12px', 
+              background: pet.pendingCoins > 0 ? 'linear-gradient(135deg, #ffd700, #f5a623)' : 'rgba(100,100,100,0.3)', 
+              border: 'none', 
+              color: pet.pendingCoins > 0 ? '#1a1a1f' : 'rgba(0,0,0,0.4)', 
+              fontSize: '13px', 
+              fontWeight: '700', 
+              cursor: pet.pendingCoins > 0 ? 'pointer' : 'not-allowed',
+              boxShadow: pet.pendingCoins > 0 ? '0 4px 20px rgba(255,215,0,0.4)' : 'none',
+              width: '150px'
+            }}
+          >
+            {pet.pendingCoins > 0 ? 'Claim' : `Next in ${Math.floor(coinTimer / 60)}:${(coinTimer % 60).toString().padStart(2, '0')}`}
+          </button>
+        </div>
+
+        {/* Separator line */}
+        <div style={{ width: '100%', height: '1px', background: 'rgba(0,0,0,0.1)', marginBottom: '10px' }} />
+
+        {/* Care Actions - Bottom section */}
         <div className="flex justify-around items-center">
-          <button onClick={handleFeed} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '3px 6px', cursor: 'pointer' }}>
-            <img src="/icons/mission.png" alt="Missions" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+          <button onClick={handleFeed} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '6px 10px', cursor: 'pointer' }}>
+            <img src="/icons/mission.png" alt="Missions" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
             <span style={{ color: '#1a1a2e', fontSize: '11px', fontWeight: '600' }}>Missions</span>
           </button>
-          <div style={{ width: '1px', height: '28px', background: 'rgba(0,0,0,0.1)' }} />
-          <button onClick={handleBoost} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '3px 6px', cursor: 'pointer' }}>
-            <img src="/icons/care.png" alt="Care" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+          <div style={{ width: '1px', height: '32px', background: 'rgba(0,0,0,0.1)' }} />
+          <button onClick={handleBoost} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '6px 10px', cursor: 'pointer' }}>
+            <img src="/icons/care.png" alt="Care" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
             <span style={{ color: '#1a1a2e', fontSize: '11px', fontWeight: '600' }}>Care</span>
           </button>
-          <div style={{ width: '1px', height: '28px', background: 'rgba(0,0,0,0.1)' }} />
-          <button onClick={() => setShowFriendsModal(true)} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ padding: '3px 6px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
-            <img src="/icons/friend.png" alt="Friends" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+          <div style={{ width: '1px', height: '32px', background: 'rgba(0,0,0,0.1)' }} />
+          <button onClick={() => setShowFriendsModal(true)} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ padding: '6px 10px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+            <img src="/icons/friend.png" alt="Friends" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
             <span style={{ color: '#1a1a2e', fontSize: '11px', fontWeight: '600' }}>Friends</span>
           </button>
         </div>

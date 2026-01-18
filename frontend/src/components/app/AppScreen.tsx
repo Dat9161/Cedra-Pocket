@@ -175,8 +175,8 @@ export function AppScreen() {
           className="hide-scrollbar"
           style={{
             overflowY: 'auto',
-            maxHeight: 'calc(100vh - 600px)',
-            paddingBottom: '20px'
+            maxHeight: 'calc(100vh - 480px)',
+            paddingBottom: '100px'
           }}
         >
           <div className="grid grid-cols-1 gap-4">
