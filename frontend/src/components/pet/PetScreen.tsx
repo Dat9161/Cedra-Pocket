@@ -682,7 +682,7 @@ export function PetScreen() {
 
   // Pet đã nở - hiển thị giao diện chính
   return (
-    <div className="flex flex-col relative" style={{ backgroundColor: 'transparent', height: 'calc(100vh - 160px)', overflow: 'hidden' }}>
+    <div className="flex flex-col relative" style={{ backgroundColor: 'transparent', height: 'calc(100vh - 160px)', overflow: 'visible' }}>
       {/* Pet Info - Top Left */}
       <div className="flex items-center" style={{ marginTop: '16px', marginBottom: '8px', marginLeft: '20px' }}>
         <div 
@@ -758,7 +758,7 @@ export function PetScreen() {
       <div 
         className="absolute left-1/2 transform -translate-x-1/2"
         style={{ 
-          bottom: '80px',
+          bottom: '50px',
           zIndex: 10
         }}
       >
@@ -791,7 +791,7 @@ export function PetScreen() {
           border: '1px solid rgba(255, 255, 255, 0.4)', 
           backdropFilter: 'blur(20px)',
           width: '240px',
-          marginBottom: '0px',
+          marginBottom: '-30px',
           zIndex: 5,
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
           padding: '8px 12px 12px 12px'
