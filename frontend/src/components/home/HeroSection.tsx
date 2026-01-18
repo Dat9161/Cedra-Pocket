@@ -21,34 +21,6 @@ export function HeroSection({
 }: HeroSectionProps) {
   return (
     <div className="relative flex flex-col items-center justify-center w-full">
-      {/* Light rays - diagonal converging towards mascot */}
-      {showAnimation && (
-        <div 
-          className="fixed pointer-events-none overflow-hidden"
-          style={{
-            top: '0',
-            left: '0',
-            right: '0',
-            width: '120%',
-            maxWidth: '400px',
-            height: '100vh',
-            zIndex: 2,
-            margin: '0 auto',
-            transform: 'translateY(-350px)',
-          }}
-          aria-hidden="true"
-        >
-          {/* Diagonal light rays - angled towards center, closer together */}
-          <div className="light-ray-diagonal" style={{ left: '25%', transform: 'rotate(15deg)', width: '25px' }} />
-          <div className="light-ray-diagonal" style={{ left: '32%', transform: 'rotate(10deg)', width: '22px' }} />
-          <div className="light-ray-diagonal" style={{ left: '40%', transform: 'rotate(5deg)', width: '30px' }} />
-          <div className="light-ray-diagonal" style={{ left: '50%', transform: 'rotate(0deg) translateX(-50%)', width: '35px' }} />
-          <div className="light-ray-diagonal" style={{ left: '60%', transform: 'rotate(-5deg)', width: '28px' }} />
-          <div className="light-ray-diagonal" style={{ left: '68%', transform: 'rotate(-10deg)', width: '22px' }} />
-          <div className="light-ray-diagonal" style={{ left: '75%', transform: 'rotate(-15deg)', width: '25px' }} />
-        </div>
-      )}
-
       {/* Bubbles floating up */}
       {showAnimation && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-30" aria-hidden="true">
@@ -72,7 +44,7 @@ export function HeroSection({
       )}
 
       {/* Rong bien image - with wavy animation (outside mascot container) */}
-      <div className="absolute z-5" style={{ right: '-10%', bottom: '-5%', width: '25%' }}>
+      <div className="absolute z-5" style={{ right: '-5%', bottom: '-5%', width: '25%' }}>
         <img
           src="/rongbien.png"
           alt="Rong Bien"
@@ -89,7 +61,7 @@ export function HeroSection({
       </div>
 
       {/* San ho image - left side (outside mascot container) */}
-      <div className="absolute z-5" style={{ left: '-8%', bottom: '5%', width: '22%' }}>
+      <div className="absolute z-5" style={{ left: '-5%', bottom: '5%', width: '22%' }}>
         <img
           src="/sanho.png"
           alt="San Ho"
@@ -192,9 +164,9 @@ export function HeroSection({
         `}
       >
         {/* Mascot and Cua container */}
-        <div className="relative w-[70vw] h-[70vw] max-w-[280px] max-h-[280px]">
+        <div className="relative w-[50vw] h-[50vw] max-w-[200px] max-h-[200px]">
           {/* Cua image - left side with walking animation */}
-          <div className="absolute z-20 animate-crab-walk" style={{ left: '-15%', bottom: '-15%', width: '20%' }}>
+          <div className="absolute z-20 animate-crab-walk" style={{ left: '-10%', bottom: '-15%', width: '20%' }}>
             <img
               src="/cua.PNG"
               alt="Cua"

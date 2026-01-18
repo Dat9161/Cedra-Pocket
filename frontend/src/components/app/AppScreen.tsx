@@ -1,24 +1,50 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 export function AppScreen() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
 
-  const handleWheel = (e: React.WheelEvent) => {
+  // Handle mouse wheel scroll for horizontal carousel (like GameScreen)
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (scrollContainerRef.current) {
       e.preventDefault();
       scrollContainerRef.current.scrollLeft += e.deltaY;
     }
   };
+
+  // Drag to scroll for carousel (like GameScreen)
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!scrollContainerRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
+    setScrollLeft(scrollContainerRef.current.scrollLeft);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || !scrollContainerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    scrollContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
   return (
     <div 
-      className="flex flex-col"
+      className="flex flex-col text-white"
       style={{ 
         backgroundColor: 'transparent',
-        minHeight: 'calc(100vh - 80px)',
-        padding: '20px',
-        color: '#fff'
+        padding: '20px 24px 20px'
       }}
     >
       {/* Last Used App - Empty for now */}
@@ -67,15 +93,17 @@ export function AppScreen() {
         <div 
           ref={scrollContainerRef}
           onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          className="flex pb-2 hide-scrollbar"
           style={{
-            display: 'flex',
-            gap: '16px',
-            overflowX: 'scroll',
-            overflowY: 'hidden',
-            paddingBottom: '16px',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
+            overflowX: 'auto',
             WebkitOverflowScrolling: 'touch',
+            cursor: isDragging ? 'grabbing' : 'grab',
+            userSelect: 'none',
+            gap: '16px',
             width: '100%',
             maxWidth: '100vw'
           }}
@@ -140,73 +168,64 @@ export function AppScreen() {
           <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#fff' }}>
             Recent
           </h2>
-          <button 
-            style={{ 
-              fontSize: '16px', 
-              color: '#4CAF50', 
-              background: 'none', 
-              border: 'none', 
-              cursor: 'pointer',
-              fontWeight: '600'
-            }}
-          >
-            All
-          </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          {[1, 2, 3].map((index) => (
-            <div 
-              key={index}
-              className="flex items-center gap-3 p-4 cursor-pointer transition-all hover:scale-[1.01]"
-              style={{
-                background: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: '16px',
-                border: '1px solid rgba(255,255,255,0.3)',
-                backdropFilter: 'blur(20px)',
-                minHeight: '80px'
-              }}
-            >
+        {/* Scrollable Recent Apps Container */}
+        <div 
+          className="hide-scrollbar"
+          style={{
+            overflowY: 'auto',
+            maxHeight: 'calc(100vh - 600px)',
+            paddingBottom: '20px'
+          }}
+        >
+          <div className="grid grid-cols-1 gap-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((index) => (
               <div 
-                className="flex items-center justify-center"
+                key={index}
+                className="flex items-center gap-3 p-4 cursor-pointer transition-all hover:scale-[1.01]"
                 style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '12px',
-                  background: 'rgba(26,26,46,0.1)',
-                  fontSize: '24px'
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  backdropFilter: 'blur(20px)',
+                  minHeight: '80px'
                 }}
               >
-                🔧
-              </div>
-              <div className="flex-1">
-                <div style={{ fontSize: '16px', fontWeight: '600', color: 'rgba(26,26,46,0.4)', marginBottom: '2px' }}>
-                  Recent App {index}
+                <div 
+                  className="flex items-center justify-center"
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '12px',
+                    background: 'rgba(26,26,46,0.1)',
+                    fontSize: '24px'
+                  }}
+                >
+                  🔧
                 </div>
-                <div style={{ fontSize: '14px', color: 'rgba(26,26,46,0.3)' }}>
-                  Coming soon...
+                <div className="flex-1">
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'rgba(26,26,46,0.4)', marginBottom: '2px' }}>
+                    Recent App {index}
+                  </div>
+                  <div style={{ fontSize: '14px', color: 'rgba(26,26,46,0.3)' }}>
+                    Coming soon...
+                  </div>
                 </div>
+                <div style={{ fontSize: '20px', color: 'rgba(26,26,46,0.4)' }}>›</div>
               </div>
-              <div style={{ fontSize: '20px', color: 'rgba(26,26,46,0.4)' }}>›</div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
       <style jsx>{`
-        div::-webkit-scrollbar {
-          height: 8px;
+        .hide-scrollbar {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
         }
-        div::-webkit-scrollbar-track {
-          background: rgba(255,255,255,0.1);
-          border-radius: 4px;
-        }
-        div::-webkit-scrollbar-thumb {
-          background: rgba(255,255,255,0.3);
-          border-radius: 4px;
-        }
-        div::-webkit-scrollbar-thumb:hover {
-          background: rgba(255,255,255,0.5);
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </div>

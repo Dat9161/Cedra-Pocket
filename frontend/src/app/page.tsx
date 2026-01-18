@@ -632,7 +632,7 @@ export default function HomePage() {
       case 'pet':
         return <div className="px-6"><PetScreen /></div>;
       case 'wallet':
-        return <div className="px-6"><AppScreen /></div>;
+        return <AppScreen />;
       case 'game':
         return <div className="px-6"><GameScreen /></div>;
       default:
@@ -645,7 +645,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen-safe flex flex-col pb-24 safe-area-inset-top relative overflow-hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+    <div className="min-h-screen-safe flex flex-col pb-24 safe-area-inset-top relative hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <main className="flex-1 flex flex-col" style={{ zIndex: 2 }}>{renderActiveScreen()}</main>
       <BottomNavigation activeTab={activeTab} onTabChange={handleTabChange} />
 
