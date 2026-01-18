@@ -54,10 +54,10 @@ const RewardBadge = ({ type, amount }: { type: Quest['reward']['type']; amount: 
     }}
     className="flex items-center justify-center gap-1"
   >
-    <span style={{ fontSize: 'var(--fs-xs)' }}>
+    <span style={{ fontSize: 'var(--fs-sm)' }}>
       <RewardIcon type={type} />
     </span>
-    <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)' }} className="font-extrabold">
+    <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-sm)' }} className="font-extrabold">
       +{formatRewardAmount(amount)}
     </span>
   </div>
@@ -79,7 +79,7 @@ const CompletedBadge = () => (
     }}
     className="flex items-center justify-center"
   >
-    <span style={{ color: '#16a34a', fontSize: 'var(--fs-xs)' }} className="font-extrabold">
+    <span style={{ color: '#16a34a', fontSize: 'var(--fs-sm)' }} className="font-extrabold">
       ✓ Completed
     </span>
   </div>
@@ -91,7 +91,7 @@ const CompletedBadge = () => (
 const ClaimButton = ({ onClick }: { onClick?: () => void }) => (
   <button 
     onClick={onClick}
-    style={{ width: 'clamp(44px, 12vw, 56px)', height: 'clamp(18px, 5vw, 24px)', fontSize: 'var(--fs-xs)' }}
+    style={{ width: 'clamp(44px, 12vw, 56px)', height: 'clamp(18px, 5vw, 24px)', fontSize: 'var(--fs-sm)' }}
     className="rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold shadow-lg shadow-pink-500/30 border border-pink-400/30 hover:scale-105 transition-transform flex items-center justify-center"
   >
     Claim
@@ -240,7 +240,7 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
             <h3 
               style={{ 
                 color: '#1a1a2e', 
-                fontSize: 'var(--fs-base)', 
+                fontSize: 'var(--fs-lg)', 
                 marginBottom: 'clamp(1px, 0.2vw, 2px)',
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
@@ -257,7 +257,7 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
             <p 
               style={{ 
                 color: 'rgba(0, 0, 0, 0.6)', 
-                fontSize: 'var(--fs-sm)',
+                fontSize: 'var(--fs-base)',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis'

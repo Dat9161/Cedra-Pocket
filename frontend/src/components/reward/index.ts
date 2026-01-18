@@ -1,1 +1,0 @@
-export { RewardScreen } from './RewardScreen';

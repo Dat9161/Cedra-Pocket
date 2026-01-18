@@ -7,7 +7,7 @@ import { BottomNavigation } from '../components/layout/BottomNavigation';
 import { LoadingScreen } from '../components/shared';
 import { QuestScreen } from '../components/quest';
 import { SpinModal } from '../components/spin';
-import { RewardScreen } from '../components/reward';
+import { AppScreen } from '../components/app';
 import { GameScreen } from '../components/game';
 import { PetScreen } from '../components/pet/PetScreen';
 import { useTelegram } from '../components/providers';
@@ -632,7 +632,7 @@ export default function HomePage() {
       case 'pet':
         return <div className="px-6"><PetScreen /></div>;
       case 'wallet':
-        return <div className="px-6"><RewardScreen /></div>;
+        return <div className="px-6"><AppScreen /></div>;
       case 'game':
         return <div className="px-6"><GameScreen /></div>;
       default:

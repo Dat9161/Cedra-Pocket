@@ -151,7 +151,7 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
           }}
         >
           <div className="flex items-center justify-evenly w-full" style={{ transform: 'skewX(8deg)' }}>
-            {/* Reward */}
+            {/* Apps */}
             <button
               onClick={() => handleTabClick('wallet')}
               className={`
@@ -165,12 +165,12 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
                 padding: 'clamp(4px, 1vw, 6px) clamp(6px, 1.5vw, 10px)',
                 ...(activeTab === 'wallet' ? { textShadow: '0 0 10px rgba(0,212,255,0.8)' } : {}) 
               }}
-              aria-label="Reward"
+              aria-label="Apps"
             >
               <div className="flex items-center justify-center" style={{ width: 'clamp(24px, 6.5vw, 30px)', height: 'clamp(24px, 6.5vw, 30px)' }}>
-                <img src="/icons/reward.PNG" alt="Reward" style={{ width: 'clamp(24px, 6.5vw, 30px)', height: 'clamp(24px, 6.5vw, 30px)', objectFit: 'contain' }} />
+                <img src="/icons/application.png" alt="Apps" style={{ width: 'clamp(24px, 6.5vw, 30px)', height: 'clamp(24px, 6.5vw, 30px)', objectFit: 'contain' }} />
               </div>
-              <span style={{ fontSize: 'var(--fs-sm)' }} className="font-semibold">Reward</span>
+              <span style={{ fontSize: 'var(--fs-sm)' }} className="font-semibold">Apps</span>
               {activeTab === 'wallet' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-cyan-500 rounded-full" style={{ width: 'clamp(16px, 4.5vw, 20px)', height: 'clamp(2px, 0.6vw, 3px)' }} />}
             </button>
 
