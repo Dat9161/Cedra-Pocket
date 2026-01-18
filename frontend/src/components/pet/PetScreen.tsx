@@ -751,8 +751,14 @@ export function PetScreen() {
         </div>
       </div>
 
-      {/* Claim Button - Smaller */}
-      <div className="flex justify-center" style={{ marginTop: '15px', marginBottom: '15px' }}>
+      {/* Claim Button - Fixed position above care bar */}
+      <div 
+        className="absolute left-1/2 transform -translate-x-1/2"
+        style={{ 
+          bottom: '90px', // Moved up from 70px to 90px
+          zIndex: 10
+        }}
+      >
         <button 
           onClick={collectCoins} 
           disabled={pet.pendingCoins <= 0} 
@@ -773,10 +779,10 @@ export function PetScreen() {
         </button>
       </div>
 
-      {/* Spacer to push content up and make room for bottom bar */}
-      <div style={{ flex: 1, minHeight: '80px' }} />
+      {/* Spacer to push content up and make room for fixed elements */}
+      <div style={{ flex: 1, minHeight: '120px' }} />
 
-      {/* Bottom Actions Bar - Even More Compact */}
+      {/* Bottom Actions Bar - Fixed at bottom */}
       <div 
         className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
         style={{ 
@@ -786,7 +792,8 @@ export function PetScreen() {
           border: '1px solid rgba(255,255,255,0.3)', 
           backdropFilter: 'blur(20px)',
           width: '240px',
-          marginBottom: '8px'
+          marginBottom: '8px',
+          zIndex: 5
         }}
       >
         <div className="flex justify-around items-center">
