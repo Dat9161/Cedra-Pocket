@@ -752,50 +752,51 @@ export function PetScreen() {
       </div>
 
       {/* Spacer to push content up and make room for fixed elements */}
-      <div style={{ flex: 1, minHeight: '40px' }} />
+      <div style={{ flex: 1, minHeight: '30px' }} />
 
-      {/* Bottom Actions Bar with integrated Claim Button - Redesigned */}
+      {/* Claim Button - Separate from care bar */}
+      <div 
+        className="absolute left-1/2 transform -translate-x-1/2"
+        style={{ 
+          bottom: '80px',
+          zIndex: 10
+        }}
+      >
+        <button 
+          onClick={collectCoins} 
+          disabled={pet.pendingCoins <= 0} 
+          className="transition-all hover:scale-105 active:scale-95"
+          style={{ 
+            padding: '10px 28px', 
+            borderRadius: '14px', 
+            background: pet.pendingCoins > 0 ? 'linear-gradient(135deg, #ffd700, #f5a623)' : 'rgba(100,100,100,0.3)', 
+            border: 'none', 
+            color: pet.pendingCoins > 0 ? '#1a1a1f' : 'rgba(0,0,0,0.4)', 
+            fontSize: '14px', 
+            fontWeight: '700', 
+            cursor: pet.pendingCoins > 0 ? 'pointer' : 'not-allowed',
+            boxShadow: pet.pendingCoins > 0 ? '0 4px 20px rgba(255,215,0,0.4)' : 'none'
+          }}
+        >
+          {pet.pendingCoins > 0 ? 'Claim' : `Next in ${Math.floor(coinTimer / 60)}:${(coinTimer % 60).toString().padStart(2, '0')}`}
+        </button>
+      </div>
+
+      {/* Care Actions Bar - Separate */}
       <div 
         className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
         style={{ 
           background: 'rgba(255, 255, 255, 0.95)', 
-          borderRadius: '20px', 
+          borderRadius: '18px', 
           border: '1px solid rgba(255, 255, 255, 0.4)', 
           backdropFilter: 'blur(20px)',
-          width: '280px',
-          marginBottom: '8px',
+          width: '240px',
+          marginBottom: '0px',
           zIndex: 5,
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          padding: '12px'
+          padding: '8px 12px 12px 12px'
         }}
       >
-        {/* Claim Button - Top section */}
-        <div className="flex justify-center mb-3">
-          <button 
-            onClick={collectCoins} 
-            disabled={pet.pendingCoins <= 0} 
-            className="transition-all hover:scale-105 active:scale-95"
-            style={{ 
-              padding: '8px 24px', 
-              borderRadius: '12px', 
-              background: pet.pendingCoins > 0 ? 'linear-gradient(135deg, #ffd700, #f5a623)' : 'rgba(100,100,100,0.3)', 
-              border: 'none', 
-              color: pet.pendingCoins > 0 ? '#1a1a1f' : 'rgba(0,0,0,0.4)', 
-              fontSize: '13px', 
-              fontWeight: '700', 
-              cursor: pet.pendingCoins > 0 ? 'pointer' : 'not-allowed',
-              boxShadow: pet.pendingCoins > 0 ? '0 4px 20px rgba(255,215,0,0.4)' : 'none',
-              width: '150px'
-            }}
-          >
-            {pet.pendingCoins > 0 ? 'Claim' : `Next in ${Math.floor(coinTimer / 60)}:${(coinTimer % 60).toString().padStart(2, '0')}`}
-          </button>
-        </div>
-
-        {/* Separator line */}
-        <div style={{ width: '100%', height: '1px', background: 'rgba(0,0,0,0.1)', marginBottom: '10px' }} />
-
-        {/* Care Actions - Bottom section */}
         <div className="flex justify-around items-center">
           <button onClick={handleFeed} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '6px 10px', cursor: 'pointer' }}>
             <img src="/icons/mission.png" alt="Missions" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
