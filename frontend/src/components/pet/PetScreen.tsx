@@ -755,7 +755,7 @@ export function PetScreen() {
       <div 
         className="absolute left-1/2 transform -translate-x-1/2"
         style={{ 
-          bottom: '70px', // Moved down from 90px to 70px
+          bottom: '55px', // Moved down from 70px to 55px
           zIndex: 10
         }}
       >
@@ -780,7 +780,7 @@ export function PetScreen() {
       </div>
 
       {/* Spacer to push content up and make room for fixed elements */}
-      <div style={{ flex: 1, minHeight: '100px' }} />
+      <div style={{ flex: 1, minHeight: '80px' }} />
 
       {/* Bottom Actions Bar - Fixed at bottom */}
       <div 
@@ -792,7 +792,7 @@ export function PetScreen() {
           border: '1px solid rgba(255,255,255,0.3)', 
           backdropFilter: 'blur(20px)',
           width: '240px',
-          marginBottom: '4px', // Reduced from 8px to 4px
+          marginBottom: '2px', // Reduced from 4px to 2px
           zIndex: 5
         }}
       >
