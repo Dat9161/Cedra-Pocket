@@ -248,24 +248,7 @@ export class BackendAPIService {
     }
   }
 
-  /**
-   * Get quests without auth (for testing)
-   */
-  async getTestQuests(): Promise<{ quests: BackendQuest[]; count: number }> {
-    try {
-      const response = await this.client.get('/test/quests');
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new BackendAPIError(
-          error.response?.data?.message || 'Failed to get test quests',
-          error.response?.status || 500,
-          'TEST_QUESTS_FAILED'
-        );
-      }
-      throw error;
-    }
-  }
+
 
   /**
    * Verify/complete a quest

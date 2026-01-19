@@ -32,13 +32,13 @@ export function QuestScreen() {
     const loadQuests = async () => {
       setQuestsLoading(true);
       try {
-        // Try authenticated endpoint first, fallback to test endpoint
+        // Get quests from authenticated endpoint
         let backendQuests;
         if (backendAPI.isAuthenticated()) {
           backendQuests = await backendAPI.getQuests();
         } else {
-          const testData = await backendAPI.getTestQuests();
-          backendQuests = testData.quests;
+          console.warn('Not authenticated, cannot load quests');
+          return;
         }
 
         // Convert to frontend format
