@@ -109,7 +109,7 @@ export default function HomePage() {
   // Load game dashboard when user is authenticated
   useEffect(() => {
     const initializeGameData = async () => {
-      if (!user || !backendAPI.isAuthenticated() || gameDataLoaded) return;
+      if (!user || gameDataLoaded) return;
       
       try {
         console.log('🎮 Initializing game data on app startup...');

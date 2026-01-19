@@ -32,12 +32,12 @@ export function useQuests(): UseQuestsReturn {
     try {
       let backendQuests: BackendQuest[];
 
-      // Get quests from authenticated endpoint
-      if (backendAPI.isAuthenticated()) {
+      // Get quests from backend
+      try {
         backendQuests = await backendAPI.getQuests();
-      } else {
-        console.warn('Not authenticated, cannot load quests');
-        return;
+      } catch (questError) {
+        console.warn('Backend quests not available, using empty list:', questError);
+        backendQuests = [];
       }
 
       // Convert to frontend format

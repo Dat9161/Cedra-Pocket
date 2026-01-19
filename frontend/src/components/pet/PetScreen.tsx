@@ -122,7 +122,7 @@ export function PetScreen() {
 
   useEffect(() => {
     const loadGameData = async () => {
-      if (!backendAPI.isAuthenticated() || hasFetchedRef.current) return;
+      if (hasFetchedRef.current) return;
       
       try {
         hasFetchedRef.current = true;

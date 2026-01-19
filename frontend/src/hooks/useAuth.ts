@@ -40,7 +40,7 @@ export function useAuth(): UseAuthReturn {
   const [authError, setAuthError] = useState<string | null>(null);
   const { setUser, user } = useAppStore();
 
-  const isAuthenticated = backendAPI.isAuthenticated() && !!user;
+  const isAuthenticated = !!user;
 
   /**
    * Authenticate with backend using Telegram initData
@@ -89,8 +89,8 @@ export function useAuth(): UseAuthReturn {
    */
   useEffect(() => {
     const autoAuth = async () => {
-      // Skip if already authenticated
-      if (backendAPI.isAuthenticated()) return;
+      // Skip if already have user data
+      if (user) return;
 
       const initData = getTelegramInitData();
       if (initData) {

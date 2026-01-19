@@ -137,10 +137,14 @@ export class BackendAPIService {
   }
 
   /**
-   * Check if authenticated
+   * Check if authenticated (for serverless, we'll use Telegram WebApp context)
    */
   isAuthenticated(): boolean {
-    return !!this.token;
+    // For serverless deployment, we rely on Telegram WebApp context
+    if (typeof window !== 'undefined') {
+      return !!(window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id;
+    }
+    return false;
   }
 
   /**
@@ -683,10 +687,31 @@ export class BackendAPIService {
   /**
    * Get complete game dashboard
    */
-  async getGameDashboard(): Promise<any> {
+  async getGameDashboard(telegramId?: string): Promise<any> {
     try {
-      const user = await this.getUserProfile();
-      const response = await this.client.get(`/game/dashboard/${user.telegram_id}`);
+      // Use provided telegram ID or get from Telegram WebApp
+      let userId = telegramId;
+      if (!userId) {
+        // Get telegram ID from Telegram WebApp context
+        if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+          userId = String((window as any).Telegram.WebApp.initDataUnsafe.user.id);
+        } else {
+          // Fallback: try to get from stored user data
+          const storedUser = localStorage.getItem('tg-mini-app-storage');
+          if (storedUser) {
+            const parsed = JSON.parse(storedUser);
+            if (parsed.state?.user?.telegramId) {
+              userId = parsed.state.user.telegramId;
+            }
+          }
+        }
+      }
+
+      if (!userId) {
+        throw new BackendAPIError('User ID not available', 400, 'USER_ID_MISSING');
+      }
+
+      const response = await this.client.get(`/game/dashboard/${userId}`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
