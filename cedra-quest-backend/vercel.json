@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node"
+  "functions": {
+    "api/index.js": {
+      "runtime": "@vercel/node",
+      "maxDuration": 30
     }
-  ],
+  },
   "routes": [
     {
       "src": "/(.*)",
@@ -15,11 +15,6 @@
   "env": {
     "NODE_ENV": "production",
     "SKIP_ENV_VALIDATION": "true"
-  },
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 30
-    }
   },
   "buildCommand": "npm run vercel-build",
   "installCommand": "npm ci --ignore-scripts"
