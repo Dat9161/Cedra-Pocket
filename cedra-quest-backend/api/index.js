@@ -252,11 +252,16 @@ export default async function handler(req, res) {
       console.log(`💰 Claiming rewards for user: ${userId}`);
 
       try {
-        // Get user and pet data
-        const user = await prisma.users.findUnique({
-          where: { telegram_id: BigInt(userId) },
-          include: { pet: true }
-        });
+        // Get user and pet data with timeout
+        const user = await Promise.race([
+          prisma.users.findUnique({
+            where: { telegram_id: BigInt(userId) },
+            include: { pet: true }
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Database query timeout')), 8000)
+          )
+        ]);
 
         if (!user || !user.pet) {
           res.status(404).json({ error: 'User or pet not found' });
@@ -270,23 +275,33 @@ export default async function handler(req, res) {
           return;
         }
 
-        // Update user points and reset pending coins
-        const updatedUser = await prisma.users.update({
-          where: { telegram_id: BigInt(userId) },
-          data: {
-            total_points: user.total_points + BigInt(pendingCoins),
-            lifetime_points: user.lifetime_points + BigInt(pendingCoins)
-          }
-        });
+        console.log(`💰 User ${userId} claiming ${pendingCoins} coins`);
 
-        // Reset pending coins
-        await prisma.pets.update({
-          where: { user_id: BigInt(userId) },
-          data: {
-            pending_coins: 0,
-            last_coin_time: new Date()
-          }
-        });
+        // Update user points and reset pending coins in a transaction with timeout
+        const [updatedUser] = await Promise.race([
+          prisma.$transaction([
+            prisma.users.update({
+              where: { telegram_id: BigInt(userId) },
+              data: {
+                total_points: user.total_points + BigInt(pendingCoins),
+                lifetime_points: user.lifetime_points + BigInt(pendingCoins)
+              }
+            }),
+            prisma.pets.update({
+              where: { user_id: BigInt(userId) },
+              data: {
+                pending_coins: 0,
+                last_coin_time: new Date()
+              }
+            })
+          ]),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Transaction timeout')), 8000)
+          )
+        ]);
+
+        // Clear cache for this user
+        userCache.delete(userId);
 
         console.log(`✅ Claimed ${pendingCoins} rewards for user: ${userId}`);
 
@@ -301,11 +316,19 @@ export default async function handler(req, res) {
         });
         return;
       } catch (claimError) {
-        console.error('Claim rewards error:', claimError);
-        res.status(500).json({
-          error: 'Failed to claim rewards',
-          message: claimError.message
-        });
+        console.error(`❌ Claim error for user ${userId}:`, claimError);
+        
+        if (claimError.message === 'Database query timeout' || claimError.message === 'Transaction timeout') {
+          res.status(504).json({ 
+            error: 'Claim timeout', 
+            message: 'Please try again in a moment' 
+          });
+        } else {
+          res.status(500).json({ 
+            error: 'Failed to claim rewards', 
+            message: claimError.message 
+          });
+        }
         return;
       }
     }

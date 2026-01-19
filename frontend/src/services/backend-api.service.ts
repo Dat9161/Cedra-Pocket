@@ -480,46 +480,67 @@ export class BackendAPIService {
   }
 
   /**
-   * Claim pet rewards in new game system
+   * Claim pet rewards in new game system with retry logic
    */
   async claimGamePetRewards(telegramId?: string): Promise<any> {
-    try {
-      // Use provided telegram ID or get from Telegram WebApp
-      let userId = telegramId;
-      if (!userId) {
-        // Get telegram ID from Telegram WebApp context
-        if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id) {
-          userId = String((window as any).Telegram.WebApp.initDataUnsafe.user.id);
-        } else {
-          // Fallback: try to get from stored user data
-          const storedUser = localStorage.getItem('tg-mini-app-storage');
-          if (storedUser) {
-            const parsed = JSON.parse(storedUser);
-            if (parsed.state?.user?.telegramId) {
-              userId = parsed.state.user.telegramId;
+    const maxRetries = 3;
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        // Use provided telegram ID or get from Telegram WebApp
+        let userId = telegramId;
+        if (!userId) {
+          // Get telegram ID from Telegram WebApp context
+          if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+            userId = String((window as any).Telegram.WebApp.initDataUnsafe.user.id);
+          } else {
+            // Fallback: try to get from stored user data
+            const storedUser = localStorage.getItem('tg-mini-app-storage');
+            if (storedUser) {
+              const parsed = JSON.parse(storedUser);
+              if (parsed.state?.user?.telegramId) {
+                userId = parsed.state.user.telegramId;
+              }
             }
           }
         }
-      }
 
-      if (!userId) {
-        console.error('❌ User ID not available from any source, using test ID');
-        // Use test ID for development
-        userId = '123456789';
-      }
+        if (!userId) {
+          console.error('❌ User ID not available from any source, using test ID');
+          // Use test ID for development
+          userId = '123456789';
+        }
 
-      const response = await this.client.post(`/game/pet/claim/${userId}`);
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new BackendAPIError(
-          error.response?.data?.message || 'Failed to claim pet rewards',
-          error.response?.status || 500,
-          'GAME_PET_CLAIM_FAILED'
-        );
+        console.log(`💰 [Attempt ${attempt}] Claiming pet rewards for user:`, userId);
+
+        const response = await this.client.post(`/game/pet/claim/${userId}`, {}, {
+          timeout: 10000 // 10 seconds timeout
+        });
+
+        console.log(`✅ [Attempt ${attempt}] Pet rewards claimed successfully:`, response.data);
+        return response.data;
+      } catch (error) {
+        lastError = error;
+        console.error(`❌ [Attempt ${attempt}] Claim pet rewards error:`, error);
+        
+        if (attempt < maxRetries) {
+          const delay = attempt * 1000; // 1s, 2s, 3s delays
+          console.log(`⏳ Retrying claim in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
-      throw error;
     }
+
+    // All retries failed
+    if (axios.isAxiosError(lastError)) {
+      throw new BackendAPIError(
+        lastError.response?.data?.message || 'Failed to claim pet rewards after retries',
+        lastError.response?.status || 500,
+        'GAME_PET_CLAIM_FAILED'
+      );
+    }
+    throw lastError;
   }
 
   /**
