@@ -8,11 +8,11 @@
     "npm": ">=8.0.0"
   },
   "scripts": {
-    "build": "prisma generate && nest build",
-    "postinstall": "prisma generate",
-    "heroku-postbuild": "npm run build",
+    "build": "echo 'Starting build...' && prisma generate && echo 'Prisma generated' && nest build && echo 'Build completed' && ls -la dist/",
+    "postinstall": "echo 'Running postinstall...' && prisma generate && echo 'Postinstall completed'",
+    "heroku-postbuild": "echo 'Running heroku-postbuild...' && npm run build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "node dist/main.js",
+    "start": "echo 'Starting app...' && ls -la dist/ && node dist/main.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main.js",
