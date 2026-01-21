@@ -187,11 +187,11 @@ export class DataSyncService {
       const hoursAgo = 2; // 2 hours ago
       const pastTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
       
-      console.log(`🕐 Setting pet last claim time to ${hoursAgo} hours ago for immediate rewards`);
+      console.log(`🕐 Setting pet last claim time to ${hoursAgo} hours ago for user ${localData.telegramId}`);
       
       // This would require a special admin endpoint to directly update pet claim time
       // For now, we'll just log this - the user can start fresh with the backend pet
-      console.log('ℹ️ Pet sync completed - user can start claiming from backend pet');
+      console.log(`ℹ️ Pet sync completed for user ${localData.telegramId} - user can start claiming from backend pet`);
     } catch (error) {
       console.error('❌ Pet claim time update error:', error);
     }
