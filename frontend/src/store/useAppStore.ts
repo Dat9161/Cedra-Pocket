@@ -365,12 +365,12 @@ export const useAppStore = create<AppStore>()(
                 const result = await Promise.race([
                   backendAPI.addPoints(amount),
                   new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
-                ]);
+                ]) as any; // Cast to handle Promise.race type
                 console.log(`✅ Instant sync success: ${result.total_points}`);
                 
                 // Update local state with backend's authoritative value nếu chênh lệch lớn
                 const currentUser = get().user;
-                if (currentUser) {
+                if (currentUser && result.total_points) {
                   const backendTotal = Number(result.total_points);
                   const localTotal = currentUser.tokenBalance;
                   if (Math.abs(localTotal - backendTotal) > 5) {

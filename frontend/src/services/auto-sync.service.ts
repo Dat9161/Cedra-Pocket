@@ -20,7 +20,6 @@ export class AutoSyncService {
   private isSyncing = false;
   private lastSyncAttempt = 0;
   private readonly MIN_SYNC_INTERVAL = 2000; // Tối thiểu 2s giữa các lần sync
-  private readonly INSTANT_SYNC_THRESHOLD = 1000; // Nếu có thay đổi trong 1s, sync ngay
 
   /**
    * Initialize auto-sync service
@@ -270,19 +269,6 @@ export class AutoSyncService {
     }
 
     return { action: 'none', reason: 'Data is in sync' };
-  }
-
-  /**
-   * Detect data conflicts between local and backend
-   */
-  private detectDataConflicts(localUser: UserData, backendUser: UserData): boolean {
-    const tolerance = 0.01; // Small tolerance for floating point comparison
-    
-    return (
-      Math.abs(localUser.tokenBalance - backendUser.tokenBalance) > tolerance ||
-      Math.abs(localUser.level - backendUser.level) > tolerance ||
-      Math.abs(localUser.currentXP - backendUser.currentXP) > tolerance
-    );
   }
 
   /**
