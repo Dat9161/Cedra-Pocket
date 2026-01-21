@@ -78,6 +78,7 @@ export function PetScreen() {
     regenerateEnergy 
   } = useGameSystemActions();
   const hasFetchedRef = useRef(false);
+  const hasLoadedFromBackend = useRef(false);
   
   // Lấy con giáp từ năm sinh
   const zodiac = pet.birthYear ? getZodiacFromYear(pet.birthYear) : null;
@@ -130,6 +131,7 @@ export function PetScreen() {
         
         // Load complete game dashboard (pet, energy, ranking, stats)
         await loadGameDashboard();
+        hasLoadedFromBackend.current = true; // Mark that we've loaded from backend
         
         // Also try to get pet status directly for debugging
         try {
@@ -171,6 +173,14 @@ export function PetScreen() {
   // Timer logic - chỉ chạy khi pet đã nở
   useEffect(() => {
     if (!pet.hatched) return;
+    
+    // CRITICAL: Don't generate coins immediately after loading from backend
+    if (hasLoadedFromBackend.current && pet.pendingCoins > 0) {
+      console.log(`🚫 Skipping coin generation - just loaded from backend with ${pet.pendingCoins} coins`);
+      setCoinTimer(0);
+      hasLoadedFromBackend.current = false; // Reset flag
+      return;
+    }
     
     const elapsed = Math.floor((Date.now() - pet.lastCoinTime) / 1000);
     const remaining = COIN_INTERVAL_SECONDS - elapsed;
@@ -217,6 +227,9 @@ export function PetScreen() {
 
   // Separate effect to handle coin generation when timer reaches exactly 0
   useEffect(() => {
+    // Don't generate coins if we just loaded from backend
+    if (hasLoadedFromBackend.current) return;
+    
     // Only run when timer is exactly 0 and conditions are met
     if (coinTimer !== 0 || !pet.hatched || pet.pendingCoins > 0) return;
     

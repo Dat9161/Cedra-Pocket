@@ -105,7 +105,12 @@ let PetService = PetService_1 = class PetService {
                     },
                 });
             }
-            await this.updatePendingCoins(userId);
+            if (pet?.pending_coins <= 0) {
+                await this.updatePendingCoins(userId);
+            }
+            else {
+                this.logger.log(`User ${userId} already has ${pet.pending_coins} pending coins, skipping update`);
+            }
             pet = await this.prisma.pets.findUnique({
                 where: { user_id: this.safeToBigInt(userId) },
             });
@@ -156,6 +161,7 @@ let PetService = PetService_1 = class PetService {
             if (intervalsElapsed > 0 && pet.pending_coins <= 0) {
                 const coinsPerInterval = 100 + (pet.level - 1) * 50;
                 const newCoins = coinsPerInterval;
+                this.logger.log(`Generating ${newCoins} coins for user ${userId} (level ${pet.level}, ${intervalsElapsed} intervals elapsed)`);
                 await this.prisma.pets.update({
                     where: { user_id: this.safeToBigInt(userId) },
                     data: {
@@ -163,7 +169,13 @@ let PetService = PetService_1 = class PetService {
                         updated_at: new Date(),
                     },
                 });
-                this.logger.log(`Generated pending coins for user ${userId}: ${newCoins} coins (level ${pet.level})`);
+                this.logger.log(`✅ Generated pending coins for user ${userId}: ${newCoins} coins (level ${pet.level})`);
+            }
+            else if (pet.pending_coins > 0) {
+                this.logger.log(`⚠️ User ${userId} already has ${pet.pending_coins} pending coins, skipping generation`);
+            }
+            else {
+                this.logger.log(`⏰ User ${userId} needs to wait ${Math.ceil((COIN_INTERVAL_MS - elapsedMs) / 1000)}s more for coins`);
             }
         }
         catch (error) {
