@@ -886,7 +886,7 @@ export class BackendAPIService {
         console.error(`❌ [Attempt ${attempt}] Claim pet rewards error:`, error);
         
         // Check if it's a "User not found" error - don't retry for this
-        if (error.response?.status === 400 && error.response?.data?.message === 'User not found') {
+        if (axios.isAxiosError(error) && error.response?.status === 400 && error.response?.data?.message === 'User not found') {
           console.log('⚠️ User not found in backend, using local fallback for pet claim');
           return {
             success: true,
@@ -1319,7 +1319,7 @@ export class BackendAPIService {
         console.error(`❌ [Attempt ${attempt}] Game dashboard API error:`, error);
         
         // Check if it's a "User not found" error - don't retry for this
-        if (error.response?.status === 400 && error.response?.data?.message === 'User not found') {
+        if (axios.isAxiosError(error) && error.response?.status === 400 && error.response?.data?.message === 'User not found') {
           console.log('⚠️ User not found in backend, using local fallback dashboard');
           return {
             success: true,
