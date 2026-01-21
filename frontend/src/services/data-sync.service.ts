@@ -185,7 +185,6 @@ export class DataSyncService {
     try {
       // Set pet last claim time to a reasonable past time so user can claim rewards
       const hoursAgo = 2; // 2 hours ago
-      const pastTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
       
       console.log(`🕐 Setting pet last claim time to ${hoursAgo} hours ago for user ${localData.telegramId}`);
       
