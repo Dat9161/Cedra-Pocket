@@ -74,7 +74,6 @@ export function PetScreen() {
   const { updateBalance, setPet, claimPetCoins } = useAppStore();
   const { 
     feedGamePet, 
-    claimGamePetRewards, 
     loadGameDashboard,
     regenerateEnergy 
   } = useGameSystemActions();
@@ -223,23 +222,12 @@ export function PetScreen() {
       setTimeout(() => setShowCoinAnimation(false), 1000);
       
       // Update local state immediately for instant feedback
-      claimPetCoins(); // This updates local state instantly
+      claimPetCoins(); // This updates local state instantly AND updates user balance
       setCoinTimer(COIN_INTERVAL_SECONDS);
       
-      // Then sync to backend in background (non-blocking)
-      try {
-        // Use new game system API to claim pet rewards (background sync)
-        claimGamePetRewards().catch(error => {
-          console.error('❌ Background sync failed:', error);
-          // Don't revert local changes - user already got the coins
-        });
-        console.log('🔄 Background sync started for pet rewards');
-      } catch (error) {
-        console.error('❌ Failed to start background sync:', error);
-        // Still don't revert - local claim already happened
-      }
+      console.log(`💰 Claimed ${coinsToCollect} coins locally`);
     }
-  }, [pet.pendingCoins, claimGamePetRewards, claimPetCoins]);
+  }, [pet.pendingCoins, claimPetCoins]);
 
   const handleFeed = async () => {
     if ((user?.tokenBalance || 0) >= 20 && pet.hunger < 100) { // New system uses 20 points per feed

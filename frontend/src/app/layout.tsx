@@ -62,7 +62,6 @@ export default function RootLayout({
           <ErrorBoundaryProvider>
             <TelegramProvider>
               <OfflineProvider>
-                <SyncIndicator />
                 {children}
               </OfflineProvider>
             </TelegramProvider>
