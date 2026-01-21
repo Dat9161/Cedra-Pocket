@@ -6,6 +6,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { autoSyncService } from '../services/auto-sync.service';
 import type {
   UserData,
   Quest,
@@ -327,7 +328,15 @@ export const useAppStore = create<AppStore>()(
       ...initialState,
 
       // User Actions
-      setUser: (user) => set({ user }),
+      setUser: (user) => {
+        set({ user });
+        // Trigger auto-sync when user data changes (but not during sync updates)
+        if (autoSyncService.getSyncStatus().isInitialized && !autoSyncService.getSyncStatus().isSyncing) {
+          autoSyncService.forceSyncNow().catch(error => {
+            console.warn('Auto-sync failed after user update:', error);
+          });
+        }
+      },
 
       updateBalance: async (amount, currency) => {
         const { user } = get();
@@ -395,6 +404,13 @@ export const useAppStore = create<AppStore>()(
             },
           });
         }
+        
+        // Trigger auto-sync after balance update (but not during sync)
+        if (autoSyncService.getSyncStatus().isInitialized && !autoSyncService.getSyncStatus().isSyncing) {
+          autoSyncService.forceSyncNow().catch(error => {
+            console.warn('Auto-sync failed after balance update:', error);
+          });
+        }
       },
 
       addXP: (amount) => {
@@ -422,6 +438,13 @@ export const useAppStore = create<AppStore>()(
             updatedAt: new Date(),
           },
         });
+        
+        // Trigger auto-sync after XP update (but not during sync)
+        if (autoSyncService.getSyncStatus().isInitialized && !autoSyncService.getSyncStatus().isSyncing) {
+          autoSyncService.forceSyncNow().catch(error => {
+            console.warn('Auto-sync failed after XP update:', error);
+          });
+        }
       },
 
       setLoading: (isLoading) => set({ isLoading }),

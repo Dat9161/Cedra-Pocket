@@ -20,3 +20,6 @@ export {
   NetworkErrorFallback,
   NotFoundFallback,
 } from './ErrorBoundary';
+
+// Sync indicator
+export { SyncIndicator } from './SyncIndicator';

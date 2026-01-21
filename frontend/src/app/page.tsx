@@ -691,8 +691,8 @@ export default function HomePage() {
         style={{ 
           zIndex: 2, 
           paddingBottom: '120px',
-          overflowY: 'auto',
-          height: '100vh', // Đảm bảo có height cố định để scroll
+          overflowY: activeTab === 'home' ? 'hidden' : 'auto', // Tắt scroll cho trang Home
+          height: '100vh',
           maxHeight: '100vh'
         }}
       >

@@ -43,39 +43,6 @@ export function HeroSection({
         </div>
       )}
 
-      {/* Rong bien image - with wavy animation (outside mascot container) */}
-      <div className="absolute z-5" style={{ right: '-5%', bottom: '-5%', width: '25%' }}>
-        <img
-          src="/rongbien.png"
-          alt="Rong Bien"
-          className="w-full h-auto object-contain animate-seaweed-wave"
-          style={{
-            filter: 'drop-shadow(0 5px 5px rgba(0,0,0,0.3))',
-            transformOrigin: 'bottom center',
-            opacity: 0.85
-          }}
-          onError={(e) => {
-            e.currentTarget.style.display = 'none';
-          }}
-        />
-      </div>
-
-      {/* San ho image - left side (outside mascot container) */}
-      <div className="absolute z-5" style={{ left: '-5%', bottom: '5%', width: '22%' }}>
-        <img
-          src="/sanho.png"
-          alt="San Ho"
-          className="w-full h-auto object-contain"
-          style={{
-            filter: 'drop-shadow(0 5px 5px rgba(0,0,0,0.3))',
-            opacity: 0.9
-          }}
-          onError={(e) => {
-            e.currentTarget.style.display = 'none';
-          }}
-        />
-      </div>
-
       {/* Con ca 1 - swim left to right */}
       <div className="absolute z-5 animate-fish-swim-right" style={{ top: '-15%', width: '25%' }}>
         <img

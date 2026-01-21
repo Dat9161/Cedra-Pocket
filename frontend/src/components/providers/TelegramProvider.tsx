@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { telegramService } from '../../services/telegram.service';
 import { backendAPI } from '../../services/backend-api.service';
+import { autoSyncService } from '../../services/auto-sync.service';
+import { useSyncEventListener } from '../../hooks/useSyncEventListener';
 import { useAppStore } from '../../store/useAppStore';
 import type { TelegramUser } from '../../models';
 
@@ -99,6 +101,9 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
   const [telegramUser, setTelegramUser] = useState<TelegramUser | null>(null);
   const { setUser, setActiveTab } = useAppStore();
 
+  // Listen for sync events
+  useSyncEventListener();
+
   /**
    * Authenticate with backend
    */
@@ -128,6 +133,14 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
       setUser(userData);
       setIsAuthenticated(true);
       console.log('✅ Backend authentication successful');
+      
+      // Initialize auto-sync service after successful authentication
+      try {
+        await autoSyncService.initialize();
+        console.log('🔄 Auto-sync service started');
+      } catch (syncError) {
+        console.warn('⚠️ Auto-sync initialization failed:', syncError);
+      }
     } catch (error) {
       console.error('❌ Backend authentication failed:', error);
       setAuthError(error instanceof Error ? error.message : 'Authentication failed');
@@ -259,6 +272,11 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
     };
 
     initialize();
+    
+    // Cleanup function
+    return () => {
+      autoSyncService.stop();
+    };
   }, []); // Empty dependency array - only run once on mount
 
   // Set up back button handler

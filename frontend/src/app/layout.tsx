@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fredoka } from "next/font/google";
 import "./globals.css";
 import { TelegramProvider, OfflineProvider, ErrorBoundaryProvider } from "../components/providers";
+import { SyncIndicator } from "../components/shared";
 
 const fredoka = Fredoka({
   variable: "--font-fredoka",
@@ -61,6 +62,7 @@ export default function RootLayout({
           <ErrorBoundaryProvider>
             <TelegramProvider>
               <OfflineProvider>
+                <SyncIndicator />
                 {children}
               </OfflineProvider>
             </TelegramProvider>
