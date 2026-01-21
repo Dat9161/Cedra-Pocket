@@ -5,8 +5,18 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS
-  app.enableCors();
+  // Enable CORS with specific configuration
+  app.enableCors({
+    origin: [
+      'http://localhost:3000', // Next.js dev server
+      'http://localhost:3001', // Alternative port
+      'https://t.me', // Telegram Web App
+      'https://web.telegram.org', // Telegram Web
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  });
 
   // Global Validation Pipe
   app.useGlobalPipes(

@@ -11,7 +11,7 @@ import type {
 } from '../models';
 
 // API Base URL from environment
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://cedra-pocket-wybm.vercel.app';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333';
 
 /**
  * API Error class
