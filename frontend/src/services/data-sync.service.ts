@@ -201,10 +201,11 @@ export class DataSyncService {
    */
   private async syncUserData(localData: LocalUserData): Promise<void> {
     try {
-      console.log('👤 Syncing user data...');
+      console.log(`👤 Syncing user data for ${localData.telegramId}...`);
       
       // For now, we'll let the backend handle user data initialization
       // The important thing is that the user exists and can start using the backend system
+      console.log(`📊 User ${localData.telegramId} has ${localData.totalPoints} points and level ${localData.level}`);
       
       console.log('✅ User data sync completed');
     } catch (error) {
