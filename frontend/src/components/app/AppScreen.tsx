@@ -57,7 +57,7 @@ export function AppScreen() {
     >
       {/* Suggested for you */}
       <div style={{ marginBottom: 'clamp(24px, 6vw, 40px)' }}>
-        <h2 style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: '700', color: '#fff', marginBottom: 'clamp(12px, 3vw, 20px)' }}>
+        <h2 style={{ fontSize: 'var(--fs-lg)', fontWeight: '700', color: '#fff', marginBottom: 'clamp(12px, 3vw, 20px)' }}>
           Suggested for you
         </h2>
         
@@ -98,10 +98,10 @@ export function AppScreen() {
               }}
             >
               <div style={{ position: 'relative', zIndex: 1 }}>
-                <h3 style={{ fontSize: 'clamp(22px, 5.5vw, 32px)', fontWeight: '700', color: 'rgba(26,26,46,0.3)', marginBottom: 'clamp(2px, 0.5vw, 6px)' }}>
+                <h3 style={{ fontSize: 'var(--fs-xl)', fontWeight: '700', color: 'rgba(26,26,46,0.3)', marginBottom: 'clamp(2px, 0.5vw, 6px)' }}>
                   App {index}
                 </h3>
-                <p style={{ fontSize: 'clamp(14px, 3.5vw, 18px)', color: 'rgba(26,26,46,0.5)', marginBottom: 'clamp(16px, 4vw, 24px)' }}>
+                <p style={{ fontSize: 'var(--fs-md)', color: 'rgba(26,26,46,0.5)', marginBottom: 'clamp(16px, 4vw, 24px)' }}>
                   Coming soon...
                 </p>
               </div>
@@ -124,8 +124,8 @@ export function AppScreen() {
                   🚀
                 </div>
                 <div>
-                  <div style={{ fontSize: 'clamp(14px, 3.5vw, 18px)', fontWeight: '600', color: 'rgba(26,26,46,0.4)' }}>App Name {index}</div>
-                  <div style={{ fontSize: 'clamp(12px, 3vw, 16px)', color: 'rgba(26,26,46,0.3)' }}>Description</div>
+                  <div style={{ fontSize: 'var(--fs-md)', fontWeight: '600', color: 'rgba(26,26,46,0.4)' }}>App Name {index}</div>
+                  <div style={{ fontSize: 'var(--fs-sm)', color: 'rgba(26,26,46,0.3)' }}>Description</div>
                 </div>
                 <div style={{ marginLeft: 'auto', fontSize: 'clamp(24px, 6vw, 32px)', color: 'rgba(26,26,46,0.6)' }}>›</div>
               </div>
@@ -137,7 +137,7 @@ export function AppScreen() {
       {/* Recent */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: '700', color: '#fff' }}>
+          <h2 style={{ fontSize: 'var(--fs-lg)', fontWeight: '700', color: '#fff' }}>
             Recent
           </h2>
         </div>
@@ -175,10 +175,10 @@ export function AppScreen() {
                   🔧
                 </div>
                 <div className="flex-1">
-                  <div style={{ fontSize: 'clamp(14px, 3.5vw, 18px)', fontWeight: '600', color: 'rgba(26,26,46,0.4)', marginBottom: '2px' }}>
+                  <div style={{ fontSize: 'var(--fs-md)', fontWeight: '600', color: 'rgba(26,26,46,0.4)', marginBottom: '2px' }}>
                     Recent App {index}
                   </div>
-                  <div style={{ fontSize: 'clamp(12px, 3vw, 16px)', color: 'rgba(26,26,46,0.3)' }}>
+                  <div style={{ fontSize: 'var(--fs-sm)', color: 'rgba(26,26,46,0.3)' }}>
                     Coming soon...
                   </div>
                 </div>

@@ -159,14 +159,14 @@ export function GameScreen() {
                   : 'linear-gradient(135deg, rgba(255,255,255,0.8), rgba(232,220,200,0.6))',
                 border: '1px solid rgba(255,255,255,0.5)',
                 color: '#1a1a2e',
-                fontSize: 'clamp(12px, 3vw, 16px)',
+                fontSize: 'var(--fs-sm)',
                 fontWeight: selectedCategory === cat.id ? '600' : '400',
                 padding: 'clamp(5px, 1.2vw, 7px) clamp(10px, 2.5vw, 14px)',
                 borderRadius: 'clamp(6px, 1.5vw, 8px)',
                 gap: 'clamp(4px, 1vw, 6px)',
               }}
             >
-              <span style={{ fontSize: 'clamp(12px, 3vw, 16px)' }}>{cat.icon}</span>
+              <span style={{ fontSize: 'var(--fs-sm)' }}>{cat.icon}</span>
               <span>{cat.name}</span>
             </button>
           ))}
@@ -175,7 +175,7 @@ export function GameScreen() {
 
       {/* Featured Games Section */}
       <div style={{ marginBottom: 'clamp(24px, 6vw, 32px)' }}>
-        <h2 className="font-bold" style={{ fontSize: 'clamp(18px, 4.5vw, 24px)', color: '#fff', marginBottom: 'clamp(12px, 3vw, 16px)' }}>
+        <h2 className="font-bold" style={{ fontSize: 'var(--fs-lg)', color: '#fff', marginBottom: 'clamp(12px, 3vw, 16px)' }}>
           Featured Games
         </h2>
         
@@ -240,7 +240,7 @@ export function GameScreen() {
                   >
                     {game.image}
                   </div>
-                  <span className="font-bold" style={{ fontSize: 'clamp(14px, 3.5vw, 18px)', color: '#fff' }}>{game.name}</span>
+                  <span className="font-bold" style={{ fontSize: 'var(--fs-md)', color: '#fff' }}>{game.name}</span>
                 </div>
                 <button
                   onClick={() => handlePlayGame(game.name)}
@@ -248,7 +248,7 @@ export function GameScreen() {
                   style={{
                     background: 'linear-gradient(135deg, #FFD700, #FFA500)',
                     color: '#1a1a2e',
-                    fontSize: 'clamp(12px, 3vw, 16px)',
+                    fontSize: 'var(--fs-sm)',
                     boxShadow: '0 4px 15px rgba(255,200,0,0.3)',
                     padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px)',
                     borderRadius: 'clamp(6px, 1.5vw, 8px)',
@@ -266,7 +266,7 @@ export function GameScreen() {
 
       {/* All Games Section */}
       <div>
-        <h2 className="font-bold" style={{ fontSize: 'clamp(18px, 4.5vw, 24px)', color: '#fff', marginBottom: 'clamp(12px, 3vw, 16px)' }}>
+        <h2 className="font-bold" style={{ fontSize: 'var(--fs-lg)', color: '#fff', marginBottom: 'clamp(12px, 3vw, 16px)' }}>
           {selectedCategory === 'all' ? 'All Games' : `${CATEGORIES.find(c => c.id === selectedCategory)?.name} Games`}
         </h2>
 
@@ -305,12 +305,12 @@ export function GameScreen() {
 
                 {/* Game Info */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold" style={{ fontSize: 'clamp(14px, 3.5vw, 18px)', marginBottom: 'clamp(2px, 0.5vw, 4px)', color: '#1a1a2e' }}>
+                  <h3 className="font-bold" style={{ fontSize: 'var(--fs-md)', marginBottom: 'clamp(2px, 0.5vw, 4px)', color: '#1a1a2e' }}>
                     {game.name}
                   </h3>
                   <p 
                     className="truncate"
-                    style={{ fontSize: 'clamp(12px, 3vw, 16px)', color: 'rgba(26,26,46,0.6)' }}
+                    style={{ fontSize: 'var(--fs-sm)', color: 'rgba(26,26,46,0.6)' }}
                   >
                     {game.description}
                   </p>
@@ -323,7 +323,7 @@ export function GameScreen() {
                   style={{
                     background: 'linear-gradient(135deg, #FFD700, #FFA500)',
                     color: '#1a1a2e',
-                    fontSize: 'clamp(12px, 3vw, 16px)',
+                    fontSize: 'var(--fs-sm)',
                     boxShadow: '0 4px 15px rgba(255,200,0,0.3)',
                     padding: 'clamp(8px, 2vw, 12px) clamp(16px, 4vw, 20px)',
                     borderRadius: 'clamp(8px, 2vw, 12px)',

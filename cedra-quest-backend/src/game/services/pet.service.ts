@@ -40,7 +40,7 @@ export class PetService {
    */
   async getPetStatus(userId: string): Promise<PetStatus> {
     try {
-      const user = await this.prisma.users.findUnique({
+      let user = await this.prisma.users.findUnique({
         where: { telegram_id: this.safeToBigInt(userId) },
         select: {
           pet_level: true,
@@ -50,8 +50,39 @@ export class PetService {
       });
 
       if (!user) {
-        throw new BadRequestException('User not found');
+        // Create user with default pet data if not exists
+        this.logger.log(`Creating new user with pet data for userId: ${userId}`);
+        await this.prisma.users.create({
+          data: {
+            telegram_id: this.safeToBigInt(userId),
+            username: `user_${userId}`,
+            wallet_address: `temp_wallet_${userId}`,
+            public_key: `temp_key_${userId}`,
+            pet_level: 1,
+            pet_current_xp: 0,
+            pet_last_claim_time: new Date(),
+          },
+        });
+
+        // Fetch the newly created user
+        user = await this.prisma.users.findUnique({
+          where: { telegram_id: this.safeToBigInt(userId) },
+          select: {
+            pet_level: true,
+            pet_current_xp: true,
+            pet_last_claim_time: true,
+          },
+        });
+
+        if (!user) {
+          throw new BadRequestException('Failed to create user');
+        }
       }
+
+      // Ensure pet data has default values
+      const petLevel = user.pet_level || 1;
+      const petCurrentXp = user.pet_current_xp || 0;
+      const petLastClaimTime = user.pet_last_claim_time || new Date();
 
       // Get daily feeding spent
       const today = new Date().toISOString().split('T')[0];
@@ -68,19 +99,19 @@ export class PetService {
 
       // Calculate pending rewards
       const pendingRewards = await this.calculatePendingRewards(
-        user.pet_level,
-        user.pet_last_claim_time,
+        petLevel,
+        petLastClaimTime,
       );
 
       // Check if can level up
-      const canLevelUp = user.pet_current_xp >= PET_CONSTANTS.XP_FOR_LEVEL_UP && 
-                        user.pet_level < PET_CONSTANTS.MAX_LEVEL;
+      const canLevelUp = petCurrentXp >= PET_CONSTANTS.XP_FOR_LEVEL_UP && 
+                        petLevel < PET_CONSTANTS.MAX_LEVEL;
 
       return {
-        level: user.pet_level,
-        currentXp: user.pet_current_xp,
+        level: petLevel,
+        currentXp: petCurrentXp,
         xpForNextLevel: PET_CONSTANTS.XP_FOR_LEVEL_UP,
-        lastClaimTime: user.pet_last_claim_time,
+        lastClaimTime: petLastClaimTime,
         pendingRewards,
         canLevelUp,
         dailyFeedSpent,

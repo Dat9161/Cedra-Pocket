@@ -23,3 +23,6 @@ export {
 
 // Sync indicator
 export { SyncIndicator } from './SyncIndicator';
+
+// Debug components
+export { SyncDebugInfo } from './SyncDebugInfo';

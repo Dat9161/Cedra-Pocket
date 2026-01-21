@@ -331,14 +331,28 @@ export class BackendAPIService {
     const backendAvailable = await this.isBackendAvailable();
     if (!backendAvailable) {
       console.log('⚠️ Backend not available, points will be stored locally');
-      // Return a mock user response for local gameplay
+      // Get current local total from localStorage
+      const storedData = localStorage.getItem('tg-mini-app-storage');
+      let currentTotal = 0;
+      if (storedData) {
+        try {
+          const parsed = JSON.parse(storedData);
+          currentTotal = parsed?.state?.user?.tokenBalance || 0;
+        } catch (e) {
+          console.warn('Failed to parse stored data:', e);
+        }
+      }
+      
+      const newTotal = currentTotal + points;
+      
+      // Return a mock user response with the new total for local gameplay
       return {
         id: 'local_user',
         telegram_id: '123456789',
         username: 'Local User',
         wallet_address: null,
         is_wallet_connected: false,
-        total_points: points,
+        total_points: newTotal,
         current_rank: 'Shrimp',
         referral_code: null,
         referrer_id: null,
@@ -351,17 +365,32 @@ export class BackendAPIService {
       const response = await this.client.post<BackendUser>('/users/add-points', {
         points,
       });
+      console.log(`✅ Backend add-points response: ${response.data.total_points}`);
       return response.data;
     } catch (error) {
       console.log('⚠️ Failed to add points to backend, storing locally');
-      // Return a mock user response for local gameplay
+      // Get current local total from localStorage
+      const storedData = localStorage.getItem('tg-mini-app-storage');
+      let currentTotal = 0;
+      if (storedData) {
+        try {
+          const parsed = JSON.parse(storedData);
+          currentTotal = parsed?.state?.user?.tokenBalance || 0;
+        } catch (e) {
+          console.warn('Failed to parse stored data:', e);
+        }
+      }
+      
+      const newTotal = currentTotal + points;
+      
+      // Return a mock user response with the new total for local gameplay
       return {
         id: 'local_user',
         telegram_id: '123456789',
         username: 'Local User',
         wallet_address: null,
         is_wallet_connected: false,
-        total_points: points,
+        total_points: newTotal,
         current_rank: 'Shrimp',
         referral_code: null,
         referrer_id: null,

@@ -97,6 +97,8 @@ export function PetScreen() {
   const [isHatching, setIsHatching] = useState(false);
   const [showBirthYearInput, setShowBirthYearInput] = useState(false);
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
+  const [debugData, setDebugData] = useState<any>(null);
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
   
   // Hatch tasks
   const hatchTasks = [
@@ -129,6 +131,15 @@ export function PetScreen() {
         
         // Load complete game dashboard (pet, energy, ranking, stats)
         await loadGameDashboard();
+        
+        // Also try to get pet status directly for debugging
+        try {
+          const petStatus = await backendAPI.getGamePetStatus();
+          setDebugData({ type: 'Pet Status', data: petStatus });
+          console.log('🐾 Direct pet status:', petStatus);
+        } catch (debugError) {
+          console.log('⚠️ Failed to get direct pet status:', debugError);
+        }
         
         // Regenerate energy based on time elapsed
         regenerateEnergy();
@@ -216,16 +227,27 @@ export function PetScreen() {
     if (pet.pendingCoins > 0) {
       const coinsToCollect = pet.pendingCoins;
       
-      // Immediately update UI - claim coins locally first
+      // Immediately update UI for instant feedback
       setClaimedCoins(coinsToCollect);
       setShowCoinAnimation(true);
       setTimeout(() => setShowCoinAnimation(false), 1000);
       
-      // Update local state immediately for instant feedback
+      // Update local state immediately - this is the primary source of truth
       claimPetCoins(); // This updates local state instantly AND updates user balance
       setCoinTimer(COIN_INTERVAL_SECONDS);
       
       console.log(`💰 Claimed ${coinsToCollect} coins locally`);
+      
+      // Background sync to backend (don't block UI or revert on failure)
+      try {
+        // Use the new game system's claim endpoint for better backend integration
+        const { claimGamePetRewards } = useAppStore.getState();
+        await claimGamePetRewards();
+        console.log('✅ Background sync to backend completed');
+      } catch (error) {
+        console.warn('⚠️ Background sync failed, but local coins are already claimed:', error);
+        // Don't revert - user already got their coins locally
+      }
     }
   }, [pet.pendingCoins, claimPetCoins]);
 
@@ -406,7 +428,7 @@ export function PetScreen() {
       <div className="flex flex-col items-center justify-center relative" style={{ backgroundColor: 'transparent', minHeight: 'calc(100vh - 80px)', padding: '20px' }}>
         {/* Egg Display */}
         <div className="flex flex-col items-center">
-          <div style={{ fontSize: 'clamp(12px, 3vw, 16px)', color: 'rgba(255,255,255,0.6)', marginBottom: 'clamp(12px, 3vw, 20px)' }}>
+          <div style={{ fontSize: 'var(--fs-base)', color: 'rgba(255,255,255,0.6)', marginBottom: 'clamp(12px, 3vw, 20px)' }}>
             Your egg is waiting to hatch!
           </div>
           
@@ -482,8 +504,8 @@ export function PetScreen() {
           {/* Progress Bar */}
           <div style={{ width: 'clamp(160px, 50vw, 280px)', marginTop: 'clamp(16px, 4vw, 32px)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'clamp(4px, 1vw, 8px)' }}>
-              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 'clamp(10px, 2.5vw, 14px)' }}>Hatch Progress</span>
-              <span style={{ color: '#ffd700', fontSize: 'clamp(10px, 2.5vw, 14px)', fontWeight: '600' }}>{pet.hatchProgress || 0}%</span>
+              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 'var(--fs-sm)' }}>Hatch Progress</span>
+              <span style={{ color: '#ffd700', fontSize: 'var(--fs-sm)', fontWeight: '600' }}>{pet.hatchProgress || 0}%</span>
             </div>
             <div style={{ height: 'clamp(6px, 1.5vw, 10px)', background: 'rgba(255,255,255,0.2)', borderRadius: 'clamp(3px, 0.8vw, 5px)', overflow: 'hidden' }}>
               <div style={{ width: `${pet.hatchProgress || 0}%`, height: '100%', background: 'linear-gradient(90deg, #ffd700, #f5a623)', borderRadius: 'clamp(3px, 0.8vw, 5px)', transition: 'width 0.5s' }} />
@@ -501,7 +523,7 @@ export function PetScreen() {
               background: 'linear-gradient(135deg, #ffd700, #f5a623)',
               border: 'none',
               color: '#1a1a2e',
-              fontSize: 'clamp(14px, 3.5vw, 18px)',
+              fontSize: 'var(--fs-md)',
               fontWeight: '700',
               cursor: 'pointer',
             }}
@@ -542,12 +564,12 @@ export function PetScreen() {
                       height: 'clamp(22px, 5vw, 30px)', 
                       color: '#333', 
                       cursor: 'pointer', 
-                      fontSize: 'clamp(10px, 2.5vw, 14px)' 
+                      fontSize: 'var(--fs-sm)' 
                     }}
                   >✕</button>
                   <div className="text-center mb-3">
                     <span style={{ fontSize: 'clamp(32px, 8vw, 48px)' }}>🎂</span>
-                    <h3 style={{ color: '#1a1a2e', fontSize: 'clamp(14px, 3.5vw, 18px)', fontWeight: '700', marginTop: 'clamp(4px, 1vw, 8px)' }}>Enter Your Birth Year</h3>
+                    <h3 style={{ color: '#1a1a2e', fontSize: 'var(--fs-md)', fontWeight: '700', marginTop: 'clamp(4px, 1vw, 8px)' }}>Enter Your Birth Year</h3>
                   </div>
                   
                   <input
@@ -562,7 +584,7 @@ export function PetScreen() {
                       border: '2px solid rgba(0,0,0,0.1)',
                       background: 'rgba(0,0,0,0.05)',
                       color: '#1a1a2e',
-                      fontSize: '16px',
+                      fontSize: 'var(--fs-md)',
                       textAlign: 'center',
                       outline: 'none',
                     }}
@@ -617,7 +639,7 @@ export function PetScreen() {
                         margin: '0 auto',
                       }}
                     />
-                    <h3 style={{ color: '#1a1a2e', fontSize: '16px', fontWeight: '700', marginTop: '6px' }}>Hatch Your Pet!</h3>
+                    <h3 style={{ color: '#1a1a2e', fontSize: 'var(--fs-md)', fontWeight: '700', marginTop: '6px' }}>Hatch Your Pet!</h3>
                     <p style={{ color: 'rgba(0,0,0,0.5)', fontSize: '12px', marginTop: '2px' }}>Complete all tasks to hatch your egg</p>
                   </div>
 
@@ -764,22 +786,22 @@ export function PetScreen() {
               <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
               <circle cx="20" cy="20" r="16" fill="none" stroke="#fff" strokeWidth="3" strokeDasharray={`${(pet.exp / pet.maxExp) * 100} 100`} strokeLinecap="round" />
             </svg>
-            <span style={{ fontSize: 'clamp(12px, 3vw, 16px)', fontWeight: '700', color: '#fff' }}>{pet.level}</span>
+            <span style={{ fontSize: 'var(--fs-base)', fontWeight: '700', color: '#fff' }}>{pet.level}</span>
           </div>
           <div>
-            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '16px', fontWeight: '600' }}>{petName}</div>
-            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>EXP: {pet.exp}/{pet.maxExp}</div>
+            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: 'var(--fs-md)', fontWeight: '600' }}>{petName}</div>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 'var(--fs-sm)' }}>EXP: {pet.exp}/{pet.maxExp}</div>
           </div>
         </div>
 
         {/* Energy Display - Top Right */}
         <div className="flex items-center gap-2">
-          <span style={{ fontSize: '16px' }}>⚡</span>
+          <span style={{ fontSize: 'var(--fs-md)' }}>⚡</span>
           <div>
-            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '600' }}>
+            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: 'var(--fs-md)', fontWeight: '600' }}>
               {energy.currentEnergy}/{energy.maxEnergy}
             </div>
-            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '10px' }}>Energy</div>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 'var(--fs-xs)' }}>Energy</div>
           </div>
         </div>
       </div>
@@ -787,8 +809,8 @@ export function PetScreen() {
       {/* Storage Display - Above Pet */}
       <div className="flex flex-col items-center" style={{ marginTop: '10px', marginBottom: '15px' }}>
         <div className="flex items-center gap-3">
-          <span style={{ fontSize: '28px' }}>🪙</span>
-          <span style={{ fontSize: '42px', fontWeight: '700', color: '#ffd700' }}>{pet.pendingCoins}</span>
+          <span style={{ fontSize: 'var(--fs-xl)' }}>🪙</span>
+          <span style={{ fontSize: 'var(--fs-2xl)', fontWeight: '700', color: '#ffd700' }}>{pet.pendingCoins}</span>
         </div>
       </div>
 
@@ -798,7 +820,7 @@ export function PetScreen() {
           <div style={{ 
             position: 'absolute', 
             top: '10%', 
-            fontSize: '28px', 
+            fontSize: 'var(--fs-xl)', 
             fontWeight: '700',
             color: '#ffd700',
             textShadow: '0 0 20px rgba(255,215,0,0.8), 0 2px 4px rgba(0,0,0,0.3)',
@@ -854,7 +876,7 @@ export function PetScreen() {
             background: pet.pendingCoins > 0 ? 'linear-gradient(135deg, #ffd700, #f5a623)' : 'rgba(100,100,100,0.3)', 
             border: 'none', 
             color: pet.pendingCoins > 0 ? '#1a1a1f' : 'rgba(0,0,0,0.4)', 
-            fontSize: '14px', 
+            fontSize: 'var(--fs-md)', 
             fontWeight: '700', 
             cursor: pet.pendingCoins > 0 ? 'pointer' : 'not-allowed',
             boxShadow: pet.pendingCoins > 0 ? '0 4px 20px rgba(255,215,0,0.4)' : 'none',
@@ -884,17 +906,17 @@ export function PetScreen() {
         <div className="flex justify-around items-center">
           <button onClick={handleFeed} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '6px 10px', cursor: 'pointer' }}>
             <img src="/icons/mission.png" alt="Missions" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
-            <span style={{ color: '#1a1a2e', fontSize: '11px', fontWeight: '600' }}>Missions</span>
+            <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>Missions</span>
           </button>
           <div style={{ width: '1px', height: '32px', background: 'rgba(0,0,0,0.1)' }} />
           <button onClick={handleBoost} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '6px 10px', cursor: 'pointer' }}>
             <img src="/icons/care.png" alt="Care" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
-            <span style={{ color: '#1a1a2e', fontSize: '11px', fontWeight: '600' }}>Care</span>
+            <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>Care</span>
           </button>
           <div style={{ width: '1px', height: '32px', background: 'rgba(0,0,0,0.1)' }} />
           <button onClick={() => setShowFriendsModal(true)} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ padding: '6px 10px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
             <img src="/icons/friend.png" alt="Friends" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
-            <span style={{ color: '#1a1a2e', fontSize: '11px', fontWeight: '600' }}>Friends</span>
+            <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>Friends</span>
           </button>
         </div>
       </div>
@@ -919,21 +941,21 @@ export function PetScreen() {
             <div className="text-center mb-3">
               <div className="flex items-center justify-center gap-1 mb-1">
                 <span style={{ fontSize: '14px' }}>🪙</span>
-                <span style={{ fontSize: '18px', fontWeight: '700', color: '#f5a623' }}>{(user?.tokenBalance || 0).toLocaleString()}</span>
+                <span style={{ fontSize: 'var(--fs-md)', fontWeight: '700', color: '#f5a623' }}>{(user?.tokenBalance || 0).toLocaleString()}</span>
               </div>
-              <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#1a1a2e' }}>Care for your pet!</h2>
+              <h2 style={{ fontSize: 'var(--fs-md)', fontWeight: '700', color: '#1a1a2e' }}>Care for your pet!</h2>
             </div>
             <div className="overflow-y-auto" style={{ maxHeight: 'calc(70vh - 100px)', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {petBoosts.map((boost) => (
                 <button key={boost.id} onClick={() => handleBuyBoost(boost)} disabled={(user?.tokenBalance || 0) < boost.cost} className="w-full mb-2 transition-all hover:scale-[1.02] active:scale-[0.98]" style={{ background: 'rgba(0,0,0,0.05)', borderRadius: '12px', padding: '10px', border: '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: '8px', opacity: (user?.tokenBalance || 0) < boost.cost ? 0.5 : 1, cursor: (user?.tokenBalance || 0) < boost.cost ? 'not-allowed' : 'pointer' }}>
                   <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #fff8e1, #ffe082)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>{boost.icon}</div>
                   <div className="flex-1 text-left">
-                    <div style={{ color: '#1a1a2e', fontSize: '13px', fontWeight: '600' }}>{boost.name}</div>
-                    <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: '10px' }}>{boost.desc}</div>
+                    <div style={{ color: '#1a1a2e', fontSize: 'var(--fs-sm)', fontWeight: '600' }}>{boost.name}</div>
+                    <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 'var(--fs-xs)' }}>{boost.desc}</div>
                     <div className="flex items-center gap-1" style={{ marginTop: '2px' }}>
                       <span style={{ fontSize: '10px' }}>🪙</span>
-                      <span style={{ color: '#f5a623', fontWeight: '600', fontSize: '11px' }}>{boost.cost}</span>
-                      <span style={{ color: 'rgba(0,0,0,0.4)', fontSize: '10px' }}>• L{boost.level}</span>
+                      <span style={{ color: '#f5a623', fontWeight: '600', fontSize: 'var(--fs-xs)' }}>{boost.cost}</span>
+                      <span style={{ color: 'rgba(0,0,0,0.4)', fontSize: 'var(--fs-xs)' }}>• L{boost.level}</span>
                     </div>
                   </div>
                   <span style={{ color: 'rgba(0,0,0,0.3)', fontSize: '14px' }}>›</span>
@@ -954,9 +976,9 @@ export function PetScreen() {
               <>
                 {/* Recover Inviter View */}
                 <div>
-                  <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1a1a2e' }}>Recover inviter</h2>
+                  <h2 style={{ fontSize: 'var(--fs-lg)', fontWeight: '700', color: '#1a1a2e' }}>Recover inviter</h2>
                   
-                  <p style={{ fontSize: '14px', color: 'rgba(0,0,0,0.6)', marginTop: '12px', lineHeight: 1.5 }}>
+                  <p style={{ fontSize: 'var(--fs-md)', color: 'rgba(0,0,0,0.6)', marginTop: '12px', lineHeight: 1.5 }}>
                     You can link the account that invited you if this did not happen automatically.
                   </p>
                   
@@ -974,7 +996,7 @@ export function PetScreen() {
                       border: '1px solid rgba(0,0,0,0.15)',
                       background: 'rgba(0,0,0,0.03)',
                       color: '#1a1a2e',
-                      fontSize: '14px',
+                      fontSize: 'var(--fs-md)',
                       outline: 'none',
                     }}
                   />
@@ -1150,6 +1172,43 @@ export function PetScreen() {
               Get referral link
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Debug Info - Only show in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed top-4 right-4 z-50">
+          <button
+            onClick={() => setShowDebugInfo(!showDebugInfo)}
+            className="px-3 py-1 bg-red-500 text-white text-xs rounded"
+          >
+            Debug
+          </button>
+          {showDebugInfo && (
+            <div className="absolute top-8 right-0 w-80 max-h-96 overflow-auto bg-white border rounded shadow-lg p-2 text-xs">
+              <h3 className="font-bold mb-2">Pet Debug Info</h3>
+              <div className="mb-2">
+                <strong>Pet State:</strong>
+                <pre className="bg-gray-100 p-1 rounded text-xs overflow-auto">
+                  {JSON.stringify(pet, null, 2)}
+                </pre>
+              </div>
+              {debugData && (
+                <div className="mb-2">
+                  <strong>{debugData.type}:</strong>
+                  <pre className="bg-gray-100 p-1 rounded text-xs overflow-auto">
+                    {JSON.stringify(debugData.data, null, 2)}
+                  </pre>
+                </div>
+              )}
+              <div className="mb-2">
+                <strong>User:</strong>
+                <pre className="bg-gray-100 p-1 rounded text-xs overflow-auto">
+                  {JSON.stringify(user, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

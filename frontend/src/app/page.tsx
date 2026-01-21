@@ -13,6 +13,8 @@ import { PetScreen } from '../components/pet/PetScreen';
 import { useTelegram } from '../components/providers';
 import { useSpinsLeft } from '../store/useAppStore';
 import { backendAPI } from '../services/backend-api.service';
+import { useSyncEventListener } from '../hooks/useSyncEventListener';
+import { SyncDebugInfo } from '../components/shared/SyncDebugInfo';
 
 // Rank tiers based on points
 const RANK_TIERS = [
@@ -49,6 +51,10 @@ export default function HomePage() {
   const [showBalance, setShowBalance] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [gameDataLoaded, setGameDataLoaded] = useState(false);
+  const [showSyncDebug, setShowSyncDebug] = useState(false);
+
+  // Enable sync event listener for cross-device synchronization
+  useSyncEventListener();
 
   // Refresh balance function
   const handleRefreshBalance = async () => {
@@ -289,10 +295,16 @@ export default function HomePage() {
                 {/* Empty top row - space for notch */}
                 <div style={{ height: 'clamp(14px, 4vw, 20px)' }} />
 
-                {/* LVL + EXP Bar - Inside glass at bottom */}
+                {/* Rank Progress Bar - Inside glass at bottom */}
                 <div className="px-2">
                   <div className="text-center mb-1">
-                    <span style={{ fontSize: 'var(--fs-sm)' }} className="text-gray-600 font-semibold">LVL {user.level}/10</span>
+                    <span style={{ fontSize: 'var(--fs-sm)' }} className="text-gray-600 font-semibold">
+                      RANK {(() => {
+                        const currentRank = getUserRankTier(user.tokenBalance);
+                        const currentIndex = RANK_TIERS.findIndex(tier => tier.name === currentRank.name);
+                        return `${currentIndex + 1}/${RANK_TIERS.length}`;
+                      })()}
+                    </span>
                   </div>
                   <div 
                     className="w-full rounded-full overflow-hidden"
@@ -304,7 +316,16 @@ export default function HomePage() {
                     <div 
                       className="h-full rounded-full transition-all duration-500"
                       style={{ 
-                        width: `${(user.currentXP / user.requiredXP) * 100}%`,
+                        width: `${(() => {
+                          const currentRank = getUserRankTier(user.tokenBalance);
+                          const currentIndex = RANK_TIERS.findIndex(tier => tier.name === currentRank.name);
+                          const nextRank = RANK_TIERS[currentIndex + 1];
+                          
+                          if (!nextRank) return 100; // Max rank reached
+                          
+                          const progress = ((user.tokenBalance - currentRank.minPoints) / (nextRank.minPoints - currentRank.minPoints)) * 100;
+                          return Math.min(Math.max(progress, 0), 100);
+                        })()}%`,
                         background: 'linear-gradient(90deg, #4facfe 0%, #00f2fe 100%)'
                       }}
                     />
@@ -337,7 +358,7 @@ export default function HomePage() {
               >
                 {/* Header with eye icon */}
 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-600 font-medium" style={{ fontSize: '13px' }}>
+                  <span className="text-gray-600 font-medium" style={{ fontSize: 'var(--fs-sm)' }}>
                     Total Balance
                   </span>
                   <button 
@@ -362,7 +383,7 @@ export default function HomePage() {
 
                 {/* Balance Amount */}
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-gray-800 font-bold" style={{ fontSize: 'clamp(24px, 6vw, 32px)' }}>
+                  <span className="text-gray-800 font-bold" style={{ fontSize: 'var(--fs-xl)' }}>
                     {showBalance 
                       ? `$${(user?.walletBalance || 0).toLocaleString()}` 
                       : '****'
@@ -411,7 +432,7 @@ export default function HomePage() {
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                       </svg>
                     </div>
-                    <span className="text-gray-700 font-medium" style={{ fontSize: 'clamp(9px, 2.2vw, 13px)' }}>Deposit</span>
+                    <span className="text-gray-700 font-medium" style={{ fontSize: 'var(--fs-xs)' }}>Deposit</span>
                   </button>
 
                   <button className="flex flex-col items-center p-2 rounded-xl transition-all hover:scale-105">
@@ -424,7 +445,7 @@ export default function HomePage() {
                         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                       </svg>
                     </div>
-                    <span className="text-gray-700 font-medium" style={{ fontSize: 'clamp(9px, 2.2vw, 13px)' }}>Bridge</span>
+                    <span className="text-gray-700 font-medium" style={{ fontSize: 'var(--fs-xs)' }}>Bridge</span>
                   </button>
 
                   <button className="flex flex-col items-center p-2 rounded-xl transition-all hover:scale-105">
@@ -438,7 +459,7 @@ export default function HomePage() {
                         <path d="m9 12 2 2 4-4"></path>
                       </svg>
                     </div>
-                    <span className="text-gray-700 font-medium" style={{ fontSize: 'clamp(9px, 2.2vw, 13px)' }}>Earn</span>
+                    <span className="text-gray-700 font-medium" style={{ fontSize: 'var(--fs-xs)' }}>Earn</span>
                   </button>
 
                   <button className="flex flex-col items-center p-2 rounded-xl transition-all hover:scale-105">
@@ -452,7 +473,7 @@ export default function HomePage() {
                         <polyline points="7,7 17,7 17,17"></polyline>
                       </svg>
                     </div>
-                    <span className="text-gray-700 font-medium" style={{ fontSize: 'clamp(9px, 2.2vw, 13px)' }}>Transfer</span>
+                    <span className="text-gray-700 font-medium" style={{ fontSize: 'var(--fs-xs)' }}>Transfer</span>
                   </button>
                 </div>
               </div>
@@ -526,14 +547,14 @@ export default function HomePage() {
                   
                   {/* Center Content */}
                   <div className="flex flex-col items-center">
-                    <div className="text-gray-800 font-bold" style={{ fontSize: 'clamp(14px, 3.5vw, 18px)' }}>
+                    <div className="text-gray-800 font-bold" style={{ fontSize: 'var(--fs-md)' }}>
                       {Math.round((pet.hunger + pet.happiness) / 2)}
                     </div>
                   </div>
                 </div>
                 
                 {/* Status Text */}
-                <div className="text-gray-600 font-medium mt-1" style={{ fontSize: 'clamp(8px, 2vw, 12px)' }}>
+                <div className="text-gray-600 font-medium mt-1" style={{ fontSize: 'var(--fs-xs)' }}>
                   {Math.round((pet.hunger + pet.happiness) / 2) >= 75 ? 'Ready' : 
                    Math.round((pet.hunger + pet.happiness) / 2) >= 50 ? 'Neutral' : 
                    Math.round((pet.hunger + pet.happiness) / 2) >= 25 ? 'Low' : 'Empty'}
@@ -592,20 +613,20 @@ export default function HomePage() {
                 </div>
                 
                 {/* Spin Title */}
-                <div className="text-gray-800 font-bold mb-1" style={{ fontSize: 'clamp(10px, 2.5vw, 14px)' }}>
+                <div className="text-gray-800 font-bold mb-1" style={{ fontSize: 'var(--fs-sm)' }}>
                   Lucky Spin
                 </div>
                 
                 {/* Status Text */}
-                <div className="text-gray-600 font-medium" style={{ fontSize: 'clamp(8px, 2vw, 12px)' }}>
+                <div className="text-gray-600 font-medium" style={{ fontSize: 'var(--fs-xs)' }}>
                   {spinsLeft > 0 ? `${spinsLeft} spins left` : 'No spins'}
                 </div>
               </button>
 
-              {/* Storage Widget */}
+              {/* Pet Storage Widget - Shows pending coins from pet */}
               <button
                 onClick={() => handleTabChange('pet')}
-                className="flex flex-col items-start justify-start transition-all hover:scale-105 active:scale-95"
+                className="flex flex-col items-center justify-center transition-all hover:scale-105 active:scale-95"
                 style={{ 
                   width: 'clamp(80px, 22vw, 120px)',
                   height: 'clamp(80px, 22vw, 120px)',
@@ -616,45 +637,39 @@ export default function HomePage() {
                   boxShadow: '0 4px 16px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.5)',
                   cursor: 'pointer',
                   animation: 'bubble-float 3.2s ease-in-out infinite',
-                  padding: 'clamp(8px, 2vw, 12px)',
+                  padding: 'clamp(6px, 1.5vw, 10px)',
                 }}
               >
-                {/* Storage Title */}
-                <div className="text-gray-800 font-bold mb-1" style={{ fontSize: 'clamp(10px, 2.5vw, 14px)' }}>
-                  Storage
+                {/* Pet Coin Icon */}
+                <div className="flex items-center justify-center mb-1" style={{ 
+                  width: 'clamp(24px, 6vw, 32px)', 
+                  height: 'clamp(24px, 6vw, 32px)',
+                  borderRadius: '50%',
+                  background: pet.pendingCoins > 0 ? 'rgba(255, 215, 0, 0.2)' : 'rgba(0,0,0,0.1)'
+                }}>
+                  <span style={{ fontSize: 'clamp(12px, 3vw, 16px)' }}>🪙</span>
                 </div>
                 
-                {/* Storage Bar */}
-                <div className="w-full mb-1">
-                  <div 
-                    className="w-full rounded-lg overflow-hidden"
-                    style={{ 
-                      background: 'rgba(0,0,0,0.1)',
-                      height: 'clamp(16px, 4vw, 24px)'
-                    }}
-                  >
-                    <div 
-                      className="h-full rounded-lg"
-                      style={{ 
-                        width: pet.pendingCoins > 0 ? '100%' : '100%',
-                        background: 'linear-gradient(90deg, #f59e0b, #eab308)',
-                      }}
-                    />
-                  </div>
+                {/* Pet Storage Title */}
+                <div className="text-gray-800 font-bold mb-1" style={{ fontSize: 'var(--fs-xs)' }}>
+                  Pet Coins
                 </div>
                 
-                {/* Status */}
-                <div className="flex items-center mb-1">
-                  <span className="text-green-600 font-medium" style={{ fontSize: 'clamp(9px, 2.2vw, 13px)' }}>
-                    {pet.pendingCoins > 0 ? 'Ready' : 'Empty'}
-                  </span>
-                </div>
-                
-                {/* Collected Amount */}
-                <div>
-                  <div className="text-gray-500" style={{ fontSize: 'clamp(7px, 1.8vw, 11px)' }}>Collected</div>
-                  <div className="text-gray-800 font-bold" style={{ fontSize: 'clamp(12px, 3vw, 16px)' }}>
+                {/* Pending Coins Amount */}
+                <div className="text-center w-full px-1">
+                  <div className="text-gray-800 font-bold" style={{ 
+                    fontSize: 'var(--fs-sm)',
+                    lineHeight: '1.1',
+                    wordBreak: 'break-all',
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
                     {pet.pendingCoins.toLocaleString()}
+                  </div>
+                  <div className="text-gray-500" style={{ fontSize: 'var(--fs-xs)' }}>
+                    {pet.pendingCoins > 0 ? 'Ready' : 'Empty'}
                   </div>
                 </div>
               </button>
@@ -863,6 +878,19 @@ export default function HomePage() {
 
       {/* Spin Modal */}
       <SpinModal isOpen={showSpinModal} onClose={() => setShowSpinModal(false)} />
+
+      {/* Sync Debug Info - Development Only */}
+      {process.env.NODE_ENV === 'development' && (
+        <>
+          <button
+            onClick={() => setShowSyncDebug(!showSyncDebug)}
+            className="fixed bottom-4 left-4 z-40 px-2 py-1 bg-red-500 text-white text-xs rounded"
+          >
+            Sync
+          </button>
+          <SyncDebugInfo show={showSyncDebug} onClose={() => setShowSyncDebug(false)} />
+        </>
+      )}
 
       {/* Custom CSS for reverse spin animation */}
       <style jsx global>{`

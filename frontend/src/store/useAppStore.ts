@@ -343,7 +343,7 @@ export const useAppStore = create<AppStore>()(
         if (!user) return;
 
         if (currency === 'token') {
-          // Update local state immediately
+          // Update local state immediately for instant UI feedback
           const newBalance = user.tokenBalance + amount;
           set({
             user: {
@@ -353,7 +353,7 @@ export const useAppStore = create<AppStore>()(
             },
           });
           
-          // Sync to backend
+          // Sync to backend (but don't block UI)
           if (amount !== 0) {
             try {
               const { backendAPI } = await import('../services/backend-api.service');
@@ -364,25 +364,22 @@ export const useAppStore = create<AppStore>()(
               // Update local state with backend's authoritative value
               const currentUser = get().user;
               if (currentUser) {
-                set({
-                  user: {
-                    ...currentUser,
-                    tokenBalance: Number(result.total_points),
-                  },
-                });
+                const backendTotal = Number(result.total_points);
+                // Only update if there's a significant difference (more than 1 point)
+                if (Math.abs(currentUser.tokenBalance - backendTotal) > 1) {
+                  console.log(`🔄 Adjusting local balance from ${currentUser.tokenBalance} to ${backendTotal}`);
+                  set({
+                    user: {
+                      ...currentUser,
+                      tokenBalance: backendTotal,
+                    },
+                  });
+                }
               }
             } catch (err) {
               console.error('❌ Failed to sync points to backend:', err);
-              // Revert local change on error
-              const currentUser = get().user;
-              if (currentUser) {
-                set({
-                  user: {
-                    ...currentUser,
-                    tokenBalance: currentUser.tokenBalance - amount,
-                  },
-                });
-              }
+              // Don't revert local change - keep optimistic update
+              // The auto-sync will handle eventual consistency
             }
           }
         } else if (currency === 'wallet') {
@@ -673,7 +670,13 @@ export const useAppStore = create<AppStore>()(
       claimPetCoins: () => {
         const { pet } = get();
         if (pet.pendingCoins > 0) {
-          get().updateBalance(pet.pendingCoins, 'token');
+          const coinsToAdd = pet.pendingCoins;
+          console.log(`🪙 Claiming ${coinsToAdd} pet coins locally`);
+          
+          // Update user balance immediately
+          get().updateBalance(coinsToAdd, 'token');
+          
+          // Reset pet pending coins and update last claim time
           set({ 
             pet: { 
               ...pet, 
@@ -681,6 +684,8 @@ export const useAppStore = create<AppStore>()(
               lastCoinTime: Date.now() 
             } 
           });
+          
+          console.log(`✅ Pet coins claimed: +${coinsToAdd} tokens`);
         }
       },
 

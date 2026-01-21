@@ -134,8 +134,12 @@ export class AutoSyncService {
         console.log('✅ Data already in sync');
       }
       
+      // Update last successful sync time
+      localStorage.setItem('last_sync_time', Date.now().toString());
+      
     } catch (error) {
       console.error('❌ Auto-sync failed:', error);
+      // Don't throw - let the app continue working offline
     } finally {
       this.isSyncing = false;
     }
@@ -209,13 +213,13 @@ export class AutoSyncService {
     
     const backendUpdateTime = backendData.lastSyncTime;
 
-    // If local is significantly newer (more than 1 minute), push to backend
-    if (localUpdateTime > backendUpdateTime + 60000) {
+    // If local is significantly newer (more than 2 minutes), push to backend
+    if (localUpdateTime > backendUpdateTime + 120000) {
       return { action: 'push', reason: 'Local data is newer' };
     }
 
-    // If backend is significantly newer (more than 1 minute), pull from backend
-    if (backendUpdateTime > localUpdateTime + 60000) {
+    // If backend is significantly newer (more than 2 minutes), pull from backend
+    if (backendUpdateTime > localUpdateTime + 120000) {
       return { action: 'pull', reason: 'Backend data is newer' };
     }
 
@@ -224,6 +228,7 @@ export class AutoSyncService {
     
     if (hasDataConflict) {
       // In case of conflict, prefer the data with higher token balance
+      // This handles the case where user earned coins on one device
       if (localData.user.tokenBalance > backendData.user.tokenBalance) {
         return { action: 'push', reason: 'Local has higher balance' };
       } else if (backendData.user.tokenBalance > localData.user.tokenBalance) {
@@ -252,8 +257,18 @@ export class AutoSyncService {
    */
   private async pushToBackend(localData: SyncData): Promise<void> {
     try {
-      // Update user points in backend
-      await backendAPI.addPoints(localData.user.tokenBalance);
+      // Get current backend user to compare
+      const backendUser = await backendAPI.getUserProfile();
+      const currentBackendTotal = Number(backendUser.total_points);
+      const localTotal = localData.user.tokenBalance;
+      
+      // Calculate the difference to add
+      const pointsToAdd = localTotal - currentBackendTotal;
+      
+      if (Math.abs(pointsToAdd) > 0.01) { // Only sync if there's a meaningful difference
+        console.log(`🔄 Syncing ${pointsToAdd > 0 ? '+' : ''}${pointsToAdd} points to backend`);
+        await backendAPI.addPoints(pointsToAdd);
+      }
       
       // Update last sync time
       localStorage.setItem('last_sync_time', Date.now().toString());
@@ -290,6 +305,14 @@ export class AutoSyncService {
           detail: { user: backendData.user } 
         });
         window.dispatchEvent(event);
+        
+        // Also trigger storage event for cross-tab sync
+        const storageEvent = new StorageEvent('storage', {
+          key: 'tg-mini-app-storage',
+          newValue: JSON.stringify(parsedData),
+          storageArea: localStorage
+        });
+        window.dispatchEvent(storageEvent);
       }
       
       console.log('✅ Successfully pulled data from backend');

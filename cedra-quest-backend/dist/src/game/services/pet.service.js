@@ -37,7 +37,7 @@ let PetService = PetService_1 = class PetService {
     }
     async getPetStatus(userId) {
         try {
-            const user = await this.prisma.users.findUnique({
+            let user = await this.prisma.users.findUnique({
                 where: { telegram_id: this.safeToBigInt(userId) },
                 select: {
                     pet_level: true,
@@ -46,8 +46,33 @@ let PetService = PetService_1 = class PetService {
                 },
             });
             if (!user) {
-                throw new common_1.BadRequestException('User not found');
+                this.logger.log(`Creating new user with pet data for userId: ${userId}`);
+                await this.prisma.users.create({
+                    data: {
+                        telegram_id: this.safeToBigInt(userId),
+                        username: `user_${userId}`,
+                        wallet_address: `temp_wallet_${userId}`,
+                        public_key: `temp_key_${userId}`,
+                        pet_level: 1,
+                        pet_current_xp: 0,
+                        pet_last_claim_time: new Date(),
+                    },
+                });
+                user = await this.prisma.users.findUnique({
+                    where: { telegram_id: this.safeToBigInt(userId) },
+                    select: {
+                        pet_level: true,
+                        pet_current_xp: true,
+                        pet_last_claim_time: true,
+                    },
+                });
+                if (!user) {
+                    throw new common_1.BadRequestException('Failed to create user');
+                }
             }
+            const petLevel = user.pet_level || 1;
+            const petCurrentXp = user.pet_current_xp || 0;
+            const petLastClaimTime = user.pet_last_claim_time || new Date();
             const today = new Date().toISOString().split('T')[0];
             const feedingLog = await this.prisma.pet_feeding_logs.findUnique({
                 where: {
@@ -58,14 +83,14 @@ let PetService = PetService_1 = class PetService {
                 },
             });
             const dailyFeedSpent = feedingLog?.total_daily_spent || 0;
-            const pendingRewards = await this.calculatePendingRewards(user.pet_level, user.pet_last_claim_time);
-            const canLevelUp = user.pet_current_xp >= game_constants_1.PET_CONSTANTS.XP_FOR_LEVEL_UP &&
-                user.pet_level < game_constants_1.PET_CONSTANTS.MAX_LEVEL;
+            const pendingRewards = await this.calculatePendingRewards(petLevel, petLastClaimTime);
+            const canLevelUp = petCurrentXp >= game_constants_1.PET_CONSTANTS.XP_FOR_LEVEL_UP &&
+                petLevel < game_constants_1.PET_CONSTANTS.MAX_LEVEL;
             return {
-                level: user.pet_level,
-                currentXp: user.pet_current_xp,
+                level: petLevel,
+                currentXp: petCurrentXp,
                 xpForNextLevel: game_constants_1.PET_CONSTANTS.XP_FOR_LEVEL_UP,
-                lastClaimTime: user.pet_last_claim_time,
+                lastClaimTime: petLastClaimTime,
                 pendingRewards,
                 canLevelUp,
                 dailyFeedSpent,
