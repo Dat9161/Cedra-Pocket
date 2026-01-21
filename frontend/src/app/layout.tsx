@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { TelegramProvider, OfflineProvider, ErrorBoundaryProvider } from "../components/providers";
+import { DataMigration } from "../components/shared";
 
 const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
@@ -61,6 +62,7 @@ export default function RootLayout({
           <ErrorBoundaryProvider>
             <TelegramProvider>
               <OfflineProvider>
+                <DataMigration />
                 {children}
               </OfflineProvider>
             </TelegramProvider>

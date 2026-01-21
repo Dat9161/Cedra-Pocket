@@ -20,3 +20,6 @@ export {
   NetworkErrorFallback,
   NotFoundFallback,
 } from './ErrorBoundary';
+
+// Data migration
+export { DataMigration } from './DataMigration';
