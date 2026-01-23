@@ -245,7 +245,7 @@ enum quest_status {
 
 enum quest_type {
   SOCIAL
-  ONCHAIN
+  GAME
 }
 
 enum user_role {
