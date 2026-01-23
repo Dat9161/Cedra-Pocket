@@ -829,7 +829,7 @@ export function PetScreen() {
 
   // Pet đã nở - hiển thị giao diện chính
   return (
-    <div className="flex flex-col relative" style={{ backgroundColor: 'transparent', height: 'calc(100vh - 160px)', overflow: 'visible' }}>
+    <div className="flex flex-col relative" style={{ backgroundColor: 'transparent', height: 'calc(100vh - 160px)', overflow: 'visible', paddingBottom: '80px' }}>
       {/* Pet Info - Top Left */}
       <div className="flex items-center justify-between" style={{ marginTop: '16px', marginBottom: '8px', marginLeft: '20px', marginRight: '20px' }}>
         <div className="flex items-center">
@@ -867,10 +867,15 @@ export function PetScreen() {
       </div>
 
       {/* Storage Display - Above Pet */}
-      <div className="flex flex-col items-center" style={{ marginTop: '10px', marginBottom: '15px' }}>
-        <div className="flex items-center gap-3">
-          <span style={{ fontSize: 'var(--fs-xl)' }}>🪙</span>
-          <span style={{ fontSize: 'var(--fs-2xl)', fontWeight: '700', color: '#ffd700' }}>{pet.pendingCoins}</span>
+      <div className="flex flex-col items-center" style={{ marginTop: '20px', marginBottom: '25px' }}>
+        <div className="flex items-center gap-4">
+          <span style={{ fontSize: 'clamp(32px, 8vw, 48px)' }}>🪙</span>
+          <span style={{ 
+            fontSize: 'clamp(36px, 10vw, 56px)', 
+            fontWeight: '700', 
+            color: '#ffd700',
+            textShadow: '0 2px 8px rgba(255, 215, 0, 0.3)'
+          }}>{pet.pendingCoins}</span>
         </div>
       </div>
 
@@ -918,11 +923,11 @@ export function PetScreen() {
       {/* Spacer to push content up and make room for fixed elements */}
       <div style={{ flex: 1, minHeight: '30px' }} />
 
-      {/* Claim Button - Separate from care bar */}
+      {/* Claim Button - Centered and separate */}
       <div 
         className="absolute left-1/2 transform -translate-x-1/2"
         style={{ 
-          bottom: '50px',
+          bottom: '140px', // Adjusted to be above the care bar
           zIndex: 10
         }}
       >
@@ -931,51 +936,51 @@ export function PetScreen() {
           disabled={!canClaim() || isClaimingCoins} 
           className="transition-all hover:scale-105 active:scale-95"
           style={{ 
-            padding: '10px 28px', 
-            borderRadius: '14px', 
+            padding: '10px 24px', // Smaller padding
+            borderRadius: '14px', // Less rounded
             background: canClaim() && !isClaimingCoins ? 'linear-gradient(135deg, #ffd700, #f5a623)' : 'rgba(100,100,100,0.3)', 
             border: 'none', 
             color: canClaim() && !isClaimingCoins ? '#1a1a1f' : 'rgba(0,0,0,0.4)', 
-            fontSize: 'var(--fs-md)', 
+            fontSize: 'var(--fs-md)', // Back to medium font size
             fontWeight: '700', 
             cursor: canClaim() && !isClaimingCoins ? 'pointer' : 'not-allowed',
-            boxShadow: canClaim() && !isClaimingCoins ? '0 4px 20px rgba(255,215,0,0.4)' : 'none',
-            transform: showCoinAnimation ? 'scale(0.95)' : 'scale(1)', // Immediate visual feedback
-            opacity: showCoinAnimation ? 0.8 : 1, // Immediate visual feedback
+            boxShadow: canClaim() && !isClaimingCoins ? '0 4px 16px rgba(255,215,0,0.4)' : 'none', // Smaller shadow
+            transform: showCoinAnimation ? 'scale(0.95)' : 'scale(1)',
+            opacity: showCoinAnimation ? 0.8 : 1,
           }}
         >
           {isClaimingCoins ? 'Claiming...' : canClaim() ? (showCoinAnimation ? 'Claimed!' : 'Claim') : `Next in ${Math.floor(coinTimer / 60)}:${(coinTimer % 60).toString().padStart(2, '0')}`}
         </button>
       </div>
 
-      {/* Care Actions Bar - Separate */}
+      {/* Care Actions Bar - Bottom with full rounded rectangle */}
       <div 
-        className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
+        className="absolute left-1/2 transform -translate-x-1/2"
         style={{ 
+          bottom: '-10px', // Moved up from bottom edge
           background: 'rgba(255, 255, 255, 0.95)', 
-          borderRadius: '18px', 
+          borderRadius: '18px', // Full rounded corners on all sides
           border: '1px solid rgba(255, 255, 255, 0.4)', 
           backdropFilter: 'blur(20px)',
-          width: '240px',
-          marginBottom: '-30px',
+          width: '280px', // Fixed width instead of 100%
           zIndex: 5,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          padding: '8px 12px 12px 12px'
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)', // Shadow going down
+          padding: '12px 16px' // Balanced padding
         }}
       >
         <div className="flex justify-around items-center">
-          <button onClick={handleFeed} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '6px 10px', cursor: 'pointer' }}>
-            <img src="/icons/mission.png" alt="Missions" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+          <button onClick={handleFeed} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer' }}>
+            <img src="/icons/mission.png" alt="Missions" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
             <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>Missions</span>
           </button>
-          <div style={{ width: '1px', height: '32px', background: 'rgba(0,0,0,0.1)' }} />
-          <button onClick={handleBoost} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '6px 10px', cursor: 'pointer' }}>
-            <img src="/icons/care.png" alt="Care" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+          <div style={{ width: '1px', height: '36px', background: 'rgba(0,0,0,0.1)' }} />
+          <button onClick={handleBoost} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer' }}>
+            <img src="/icons/care.png" alt="Care" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
             <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>Care</span>
           </button>
-          <div style={{ width: '1px', height: '32px', background: 'rgba(0,0,0,0.1)' }} />
-          <button onClick={() => setShowFriendsModal(true)} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ padding: '6px 10px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
-            <img src="/icons/friend.png" alt="Friends" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+          <div style={{ width: '1px', height: '36px', background: 'rgba(0,0,0,0.1)' }} />
+          <button onClick={() => setShowFriendsModal(true)} className="flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95" style={{ padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+            <img src="/icons/friend.png" alt="Friends" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
             <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>Friends</span>
           </button>
         </div>
