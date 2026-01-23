@@ -15,6 +15,7 @@ const user_module_1 = require("./user/user.module");
 const wallet_module_1 = require("./wallet/wallet.module");
 const game_module_1 = require("./game/game.module");
 const blockchain_module_1 = require("./blockchain/blockchain.module");
+const quest_module_1 = require("./quest/quest.module");
 const blockchain_controller_1 = require("./blockchain/blockchain.controller");
 const health_controller_1 = require("./health/health.controller");
 let AppModule = class AppModule {
@@ -32,6 +33,7 @@ exports.AppModule = AppModule = __decorate([
             wallet_module_1.WalletModule,
             game_module_1.GameModule,
             blockchain_module_1.BlockchainModule,
+            quest_module_1.QuestModule,
         ],
         controllers: [health_controller_1.HealthController, blockchain_controller_1.BlockchainController],
     })

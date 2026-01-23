@@ -42,6 +42,7 @@ export interface Quest {
   targetValue: number;
   reward: QuestReward;
   expiresAt?: Date;
+  url?: string; // External URL for social media quests
 }
 
 /**

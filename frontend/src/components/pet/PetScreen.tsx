@@ -927,7 +927,7 @@ export function PetScreen() {
       <div 
         className="absolute left-1/2 transform -translate-x-1/2"
         style={{ 
-          bottom: '140px', // Adjusted to be above the care bar
+          bottom: '10px', // Adjusted to be above the care bar
           zIndex: 10
         }}
       >
@@ -957,7 +957,7 @@ export function PetScreen() {
       <div 
         className="absolute left-1/2 transform -translate-x-1/2"
         style={{ 
-          bottom: '-10px', // Moved up from bottom edge
+          bottom: '-50px', // Moved up from bottom edge
           background: 'rgba(255, 255, 255, 0.95)', 
           borderRadius: '18px', // Full rounded corners on all sides
           border: '1px solid rgba(255, 255, 255, 0.4)', 

@@ -6,6 +6,7 @@ import { UserModule } from './user/user.module';
 import { WalletModule } from './wallet/wallet.module';
 import { GameModule } from './game/game.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
+import { QuestModule } from './quest/quest.module';
 import { BlockchainController } from './blockchain/blockchain.controller';
 import { HealthController } from './health/health.controller';
 
@@ -20,6 +21,7 @@ import { HealthController } from './health/health.controller';
     WalletModule,
     GameModule,
     BlockchainModule,
+    QuestModule,
   ],
   controllers: [HealthController, BlockchainController],
 })

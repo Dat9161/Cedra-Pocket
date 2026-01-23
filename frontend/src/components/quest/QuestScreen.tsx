@@ -68,7 +68,37 @@ export function QuestScreen() {
 
     // If claimable, claim the reward and mark as completed
     if (quest.status === 'claimable') {
-      // Add reward to balance
+      // Try to claim via backend first
+      try {
+        const result = await backendAPI.claimQuestReward(Number(questId));
+        if (result.success) {
+          // Add reward to balance
+          if (quest.reward) {
+            if (quest.reward.type === 'token') {
+              updateBalance(quest.reward.amount, 'token');
+            } else if (quest.reward.type === 'gem') {
+              updateBalance(quest.reward.amount, 'gem');
+            } else if (quest.reward.type === 'xp') {
+              addXP(quest.reward.amount);
+            }
+          }
+          
+          // Mark as completed
+          updateQuest(questId, { 
+            status: 'completed', 
+            progress: 100,
+            currentValue: quest.targetValue 
+          });
+          
+          telegramService.triggerHapticFeedback('medium');
+          console.log('✅ Quest reward claimed from backend!');
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to claim quest reward from backend:', error);
+      }
+
+      // Fallback to local claim
       if (quest.reward) {
         if (quest.reward.type === 'token') {
           updateBalance(quest.reward.amount, 'token');
@@ -87,12 +117,37 @@ export function QuestScreen() {
       });
       
       telegramService.triggerHapticFeedback('medium');
-      console.log('✅ Quest reward claimed!');
+      console.log('✅ Quest reward claimed locally!');
       return;
     }
 
-    // If active, try to complete the quest
+    // If active, handle based on quest type
     if (quest.status === 'active') {
+      // For social quests with URLs, open external link first
+      if (quest.type === 'social' && quest.url) {
+        console.log('🔗 Opening external URL for social quest:', quest.url);
+        
+        // Try to use Telegram WebApp navigation if available
+        if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.openLink) {
+          (window as any).Telegram.WebApp.openLink(quest.url);
+        } else {
+          // Fallback to regular window.open
+          window.open(quest.url, '_blank');
+        }
+        
+        // Mark as claimable after opening the link (user needs to complete the action and then claim)
+        updateQuest(questId, { 
+          status: 'claimable', 
+          progress: 100,
+          currentValue: quest.targetValue 
+        });
+        
+        telegramService.triggerHapticFeedback('medium');
+        console.log('✅ Social quest link opened, marked as claimable');
+        return;
+      }
+
+      // For non-social quests or quests without URLs, try to verify with backend
       // Check if authenticated before verifying with backend
       if (!backendAPI.isAuthenticated()) {
         console.log('⚠️ Not authenticated, marking as claimable locally (demo mode)');
