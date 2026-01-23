@@ -48,5 +48,3 @@ export function ErrorBoundaryProvider({ children }: ErrorBoundaryProviderProps) 
     </ErrorBoundary>
   );
 }
-
-export default ErrorBoundaryProvider;

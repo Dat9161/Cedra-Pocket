@@ -4,10 +4,6 @@
  */
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import type {
-  UserData,
-  Quest,
-} from '../models';
 
 // API Base URL from environment
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://cedra-pocket-wybm.vercel.app';
@@ -348,6 +344,58 @@ export class BackendAPIService {
           is_active: true,
           user_status: 'NOT_STARTED',
         },
+        {
+          id: 6,
+          title: 'Hatch Your Pet Egg',
+          description: 'Enter your birth year and hatch your first pet egg to start your journey',
+          type: 'GAME',
+          category: 'pet',
+          config: { requiresBirthYear: true },
+          reward_amount: 300,
+          reward_type: 'POINT',
+          frequency: 'ONCE',
+          is_active: true,
+          user_status: 'NOT_STARTED',
+        },
+        {
+          id: 7,
+          title: 'Follow on Twitter',
+          description: 'Follow our official Twitter account @CedraQuest',
+          type: 'SOCIAL',
+          category: 'pet_task',
+          config: { url: 'https://twitter.com/intent/follow?screen_name=CedraQuest' },
+          reward_amount: 0,
+          reward_type: 'POINT',
+          frequency: 'ONCE',
+          is_active: true,
+          user_status: 'NOT_STARTED',
+        },
+        {
+          id: 8,
+          title: 'Join Telegram Group',
+          description: 'Join our official Telegram channel for updates',
+          type: 'SOCIAL',
+          category: 'pet_task',
+          config: { url: 'https://t.me/cedra_quest_official' },
+          reward_amount: 0,
+          reward_type: 'POINT',
+          frequency: 'ONCE',
+          is_active: true,
+          user_status: 'NOT_STARTED',
+        },
+        {
+          id: 9,
+          title: 'Invite 1 Friend',
+          description: 'Invite your first friend to join the game',
+          type: 'GAME',
+          category: 'pet_task',
+          config: {},
+          reward_amount: 0,
+          reward_type: 'POINT',
+          frequency: 'ONCE',
+          is_active: true,
+          user_status: 'NOT_STARTED',
+        },
       ];
     }
   }
@@ -366,7 +414,32 @@ export class BackendAPIService {
       return response.data;
     } catch (error) {
       console.log('⚠️ Failed to verify quest via backend, using local fallback');
-      // Return mock success for local gameplay
+      
+      // Special handling for pet hatching quest (ID 6)
+      if (questId === 6 && proofData?.birthYear) {
+        const birthYear = Number(proofData.birthYear);
+        const currentYear = new Date().getFullYear();
+        
+        if (isNaN(birthYear) || birthYear < 1900 || birthYear > currentYear - 5) {
+          return {
+            success: false,
+            message: 'Please enter a valid birth year',
+          };
+        }
+        
+        // Store birth year and hatched status locally for demo
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user_birth_year', String(birthYear));
+          localStorage.setItem('pet_hatched', 'true');
+        }
+        
+        return {
+          success: true,
+          message: 'Pet egg hatched successfully! Your pet is now ready to grow.',
+        };
+      }
+      
+      // Return mock success for other quests
       return {
         success: true,
         message: 'Quest completed successfully (offline mode)',
@@ -421,40 +494,64 @@ export class BackendAPIService {
         userId = '123456789';
       }
 
-      console.log(`🚀 Calling game dashboard API with user ID:`, userId);
+      console.log(`🎮 Loading game dashboard for user: ${userId}`);
       
-      // Add timeout for the request
-      const response = await this.client.get(`/game/dashboard/${userId}`, {
-        timeout: 10000 // 10 seconds timeout
-      });
+      // Call the new backend dashboard endpoint
+      const response = await this.client.get(`/game/dashboard/${userId}`);
       
-      console.log(`✅ Game dashboard API response:`, response.data);
+      console.log('📊 Raw dashboard response:', response.data);
       
-      return response.data;
+      // Check if response has data
+      if (response.data && typeof response.data === 'object') {
+        // If response has success flag and it's true
+        if (response.data.success === true) {
+          console.log('✅ Game dashboard loaded successfully with success flag');
+          return response.data;
+        }
+        // If response has data but no success flag, assume it's valid data
+        else if (response.data.pet || response.data.energy || response.data.ranking || response.data.gameStats) {
+          console.log('✅ Game dashboard loaded successfully (no success flag but has data)');
+          return {
+            ...response.data,
+            success: true, // Add success flag
+          };
+        }
+        // If response is empty object or has error
+        else {
+          console.warn('⚠️ Dashboard response is empty or invalid:', response.data);
+          throw new Error('Dashboard response is empty or invalid');
+        }
+      } else {
+        throw new Error('Invalid response format');
+      }
     } catch (error) {
-      console.error(`❌ Game dashboard API error:`, error);
+      console.error('❌ Failed to load game dashboard:', error);
       
-      // Return local fallback
-      console.log('⚠️ Using local fallback dashboard');
+      // Return fallback data structure matching the new backend
       return {
-        success: true,
         pet: {
           level: 1,
           currentXp: 0,
           xpForNextLevel: 100,
+          lastClaimTime: new Date(),
           pendingRewards: 0,
-          lastClaimTime: new Date().toISOString(),
+          canLevelUp: false,
+          dailyFeedSpent: 0,
+          dailyFeedLimit: 1000,
+          feedCost: 50,
         },
         energy: {
-          currentEnergy: 100,
-          maxEnergy: 100,
-          lastUpdate: new Date().toISOString(),
+          currentEnergy: 10,
+          maxEnergy: 10,
+          lastUpdate: new Date(),
+          regenerationRate: 1,
+          nextRegenTime: null,
         },
         ranking: {
-          rank: 'Shrimp',
-          position: 1000,
-          lifetimePoints: 0,
-          nextRankThreshold: 1000,
+          rank: 'BRONZE',
+          position: 999,
+          totalUsers: 1000,
+          pointsToNextRank: 1000,
         },
         gameStats: {
           totalGamesPlayed: 0,
@@ -463,134 +560,180 @@ export class BackendAPIService {
           bestScore: 0,
           totalPointsEarned: 0,
         },
+        success: false,
+        error: 'Using offline mode - backend not available',
       };
     }
   }
 
   /**
-   * Claim pet rewards in new game system with optimized retry logic
+   * Get pet status
    */
-  async claimGamePetRewards(telegramId?: string): Promise<any> {
+  async getPetStatus(telegramId?: string): Promise<any> {
     try {
-      // Use provided telegram ID or get from Telegram WebApp
-      let userId = telegramId;
-      if (!userId) {
-        // Get telegram ID from Telegram WebApp context
-        if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id) {
-          userId = String((window as any).Telegram.WebApp.initDataUnsafe.user.id);
-        } else {
-          // Fallback: try to get from stored user data
-          const storedUser = localStorage.getItem('tg-mini-app-storage');
-          if (storedUser) {
-            const parsed = JSON.parse(storedUser);
-            if (parsed.state?.user?.telegramId) {
-              userId = parsed.state.user.telegramId;
-            }
-          }
-        }
-      }
-
-      if (!userId) {
-        console.error('❌ User ID not available from any source, using test ID');
-        // Use test ID for development
-        userId = '123456789';
-      }
-
-      console.log(`💰 Claiming pet rewards for user:`, userId);
-
-      const response = await this.client.post(`/game/pet/claim/${userId}`, {}, {
-        timeout: 5000 // 5 seconds timeout
-      });
-
-      console.log(`✅ Pet rewards claimed successfully:`, response.data);
+      let userId = telegramId || this.getCurrentUserId();
+      
+      console.log(`🐾 Getting pet status for user: ${userId}`);
+      const response = await this.client.get(`/game/pet/status/${userId}`);
+      
+      console.log('✅ Pet status loaded:', response.data);
       return response.data;
     } catch (error) {
-      console.error(`❌ Claim pet rewards error:`, error);
+      console.error('❌ Failed to get pet status:', error);
       
-      // Return local fallback
-      console.log('⚠️ Using local fallback for pet claim');
+      // Return fallback pet data
       return {
-        success: true,
-        pointsEarned: Math.floor(Math.random() * 100) + 50, // Random points 50-150
+        level: 1,
+        currentXp: 0,
+        xpForNextLevel: 100,
+        lastClaimTime: new Date(),
+        pendingRewards: 0,
+        canLevelUp: false,
+        dailyFeedSpent: 0,
+        dailyFeedLimit: 1000,
+        feedCost: 50,
+      };
+    }
+  }
+
+  /**
+   * Claim pet rewards
+   */
+  async claimPetRewards(telegramId?: string): Promise<any> {
+    try {
+      let userId = telegramId || this.getCurrentUserId();
+      
+      console.log(`💰 Claiming pet rewards for user: ${userId}`);
+      const response = await this.client.post(`/game/pet/claim/${userId}`);
+      
+      console.log('✅ Pet rewards claimed:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Failed to claim pet rewards:', error);
+      
+      return {
+        success: false,
+        pointsEarned: 0,
         newTotalPoints: 0,
         newLifetimePoints: 0,
         claimTime: new Date(),
+        error: 'Failed to claim rewards (offline mode)',
       };
     }
   }
 
   /**
-   * Convert backend quest to frontend Quest format
+   * Feed pet
    */
-  backendQuestToQuest(backendQuest: BackendQuest): Quest {
-    const statusMap: Record<string, 'active' | 'claimable' | 'completed' | 'locked'> = {
-      'NOT_STARTED': 'active',
-      'PENDING': 'active',
-      'COMPLETED': 'claimable', // Backend completed = frontend claimable
-      'CLAIMED': 'completed',   // Backend claimed = frontend completed
-      'FAILED': 'active',
-    };
-
-    // Extract URL from config if it's a social quest
-    const url = backendQuest.type === 'SOCIAL' && backendQuest.config?.url 
-      ? String(backendQuest.config.url) 
-      : undefined;
-
-    // Map quest types
-    let questType: 'social' | 'daily' | 'achievement' | 'referral' = 'achievement';
-    if (backendQuest.type === 'SOCIAL') {
-      questType = 'social';
-    } else if (backendQuest.category === 'daily') {
-      questType = 'daily';
-    } else if (backendQuest.category === 'achievement') {
-      questType = 'achievement';
+  async feedPet(feedCount: number, telegramId?: string): Promise<any> {
+    try {
+      let userId = telegramId || this.getCurrentUserId();
+      
+      console.log(`🍖 Feeding pet for user: ${userId}, count: ${feedCount}`);
+      const response = await this.client.post(`/game/pet/feed/${userId}`, {
+        feedCount: feedCount,
+      });
+      
+      console.log('✅ Pet fed successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Failed to feed pet:', error);
+      
+      return {
+        success: false,
+        pointsSpent: 0,
+        xpGained: 0,
+        newXp: 0,
+        canLevelUp: false,
+        dailySpentTotal: 0,
+        error: 'Failed to feed pet (offline mode)',
+      };
     }
-
-    return {
-      id: String(backendQuest.id),
-      title: backendQuest.title,
-      description: backendQuest.description || '',
-      iconUrl: '',
-      type: questType,
-      status: statusMap[backendQuest.user_status || 'NOT_STARTED'] || 'active',
-      progress: backendQuest.user_status === 'COMPLETED' || backendQuest.user_status === 'CLAIMED' ? 100 : 0,
-      currentValue: backendQuest.user_status === 'COMPLETED' || backendQuest.user_status === 'CLAIMED' ? 1 : 0,
-      targetValue: 1,
-      reward: {
-        type: backendQuest.reward_type === 'POINT' ? 'token' : 'token',
-        amount: Number(backendQuest.reward_amount),
-      },
-      url,
-    };
   }
 
   /**
-   * Convert backend user to frontend UserData format
+   * Get energy status
    */
-  backendUserToUserData(backendUser: BackendUser, telegramUser?: { username?: string; firstName?: string; photoUrl?: string }): UserData {
-    return {
-      id: String(backendUser.id),
-      telegramId: backendUser.telegram_id,
-      username: telegramUser?.username || telegramUser?.firstName || backendUser.username || 'Player',
-      avatarUrl: telegramUser?.photoUrl,
-      level: this.calculateLevel(Number(backendUser.total_points)),
-      currentXP: Number(backendUser.total_points) % 1000,
-      requiredXP: 1000,
-      tokenBalance: Number(backendUser.total_points),
-      walletBalance: 0, // Backend doesn't have wallet balance yet
-      gemBalance: 0, // Backend doesn't have gems yet
-      earningRate: 10,
-      walletAddress: backendUser.wallet_address || undefined,
-      createdAt: new Date(backendUser.created_at),
-      updatedAt: new Date(backendUser.updated_at),
-    };
+  async getEnergyStatus(telegramId?: string): Promise<any> {
+    try {
+      let userId = telegramId || this.getCurrentUserId();
+      
+      console.log(`⚡ Getting energy status for user: ${userId}`);
+      const response = await this.client.get(`/game/energy/status/${userId}`);
+      
+      console.log('✅ Energy status loaded:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Failed to get energy status:', error);
+      
+      return {
+        currentEnergy: 10,
+        maxEnergy: 10,
+        lastUpdate: new Date(),
+        regenerationRate: 1,
+        nextRegenTime: null,
+      };
+    }
   }
 
   /**
-   * Calculate level from total points
+   * Complete game session
    */
-  private calculateLevel(totalPoints: number): number {
-    return Math.floor(totalPoints / 1000) + 1;
+  async completeGameSession(gameType: string, score: number, pointsEarned: number, telegramId?: string): Promise<any> {
+    try {
+      let userId = telegramId || this.getCurrentUserId();
+      
+      console.log(`🎮 Completing game session for user: ${userId}, type: ${gameType}, score: ${score}`);
+      const response = await this.client.post(`/game/session/complete/${userId}`, {
+        gameType: gameType,
+        score: score,
+        pointsEarned: pointsEarned,
+        energyUsed: 1,
+        duration: 60, // Default duration in seconds
+      });
+      
+      console.log('✅ Game session completed:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Failed to complete game session:', error);
+      
+      return {
+        success: false,
+        pointsEarned: 0,
+        newTotalPoints: 0,
+        energyUsed: 1,
+        error: 'Failed to save game session (offline mode)',
+      };
+    }
+  }
+
+  /**
+   * Get current user ID from various sources
+   */
+  private getCurrentUserId(): string {
+    // Try to get from Telegram WebApp
+    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+      return String((window as any).Telegram.WebApp.initDataUnsafe.user.id);
+    }
+    
+    // Try to get from stored user data
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('tg-mini-app-storage');
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          if (parsed.state?.user?.telegramId) {
+            return parsed.state.user.telegramId;
+          }
+        } catch (e) {
+          console.warn('Failed to parse stored user data');
+        }
+      }
+    }
+    
+    // Fallback to test ID
+    console.warn('Using fallback test user ID');
+    return '123456789';
   }
 }
 

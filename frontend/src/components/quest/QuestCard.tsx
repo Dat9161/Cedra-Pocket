@@ -145,7 +145,7 @@ const QuestDetailModal = ({
               {quest.type === 'social' && '🐦'}
               {quest.type === 'daily' && '🎁'}
               {quest.type === 'referral' && '👥'}
-              {quest.type === 'achievement' && '🏆'}
+              {quest.type === 'achievement' && (quest.title === 'Hatch Your Pet Egg' ? '🥚' : '🏆')}
             </span>
           </div>
 
@@ -230,7 +230,7 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
               {quest.type === 'social' && '🐦'}
               {quest.type === 'daily' && '🎁'}
               {quest.type === 'referral' && '👥'}
-              {quest.type === 'achievement' && '🏆'}
+              {quest.type === 'achievement' && (quest.title === 'Hatch Your Pet Egg' ? '🥚' : '🏆')}
             </span>
           </div>
 

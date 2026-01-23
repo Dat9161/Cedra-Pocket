@@ -92,6 +92,7 @@ model users {
   pet_current_xp       Int?               @default(0)
   pet_last_claim_time  DateTime?          @default(now()) @db.Timestamptz(6)
   pet_level            Int?               @default(1)
+  birth_year           Int?
   game_sessions        game_sessions[]
   feeding_logs         pet_feeding_logs[]
   pet                  pets?

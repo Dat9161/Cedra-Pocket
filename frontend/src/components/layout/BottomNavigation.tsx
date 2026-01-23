@@ -36,7 +36,7 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
 
   return (
     <nav
-      className="fixed z-50"
+      className="fixed z-50 bottom-navigation-bar"
       style={{ 
         bottom: 'clamp(10px, 3vw, 16px)',
         left: '50%',

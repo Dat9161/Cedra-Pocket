@@ -1,3 +1,3 @@
 export { TelegramProvider, useTelegram } from './TelegramProvider';
 export { OfflineProvider, useOffline } from './OfflineProvider';
-export { ErrorBoundaryProvider } from './ErrorBoundaryProvider';
+export { SimpleErrorBoundary as ErrorBoundaryProvider } from './SimpleErrorBoundary';
