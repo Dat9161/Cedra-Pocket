@@ -150,9 +150,9 @@ function GameScreenNew({ onGameStateChange }: GameScreenProps) {
         paddingLeft: 'clamp(12px, 3vw, 16px)',
         paddingRight: 'clamp(12px, 3vw, 16px)',
         backgroundColor: 'transparent',
-        height: 'calc(100vh - clamp(56px, 14vw, 72px))',
+        height: '100%', // Để main container xử lý height
         overflowY: 'auto',
-        paddingBottom: 'clamp(60px, 15vw, 80px)'
+        paddingBottom: '20px'
       }}
     >
 

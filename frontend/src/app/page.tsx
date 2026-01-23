@@ -708,7 +708,7 @@ export default function HomePage() {
         className="flex-1 flex flex-col" 
         style={{ 
           zIndex: 2, 
-          paddingBottom: '120px',
+          paddingBottom: activeTab === 'game' ? '80px' : '120px',
           overflowY: activeTab === 'home' ? 'hidden' : 'auto', // Tắt scroll cho trang Home
           height: '100vh',
           maxHeight: '100vh'
