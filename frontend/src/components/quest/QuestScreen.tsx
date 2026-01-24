@@ -100,6 +100,19 @@ export function QuestScreen() {
           // Use fallback quests if backend fails
           backendQuests = [
             {
+              id: 4,
+              title: 'Daily Check-in',
+              description: 'Check in daily to earn rewards',
+              type: 'GAME' as const,
+              category: 'daily',
+              config: {},
+              reward_amount: 50,
+              reward_type: 'POINT' as const,
+              frequency: 'DAILY' as const,
+              is_active: true,
+              user_status: 'NOT_STARTED' as const,
+            },
+            {
               id: 1,
               title: 'Follow on Twitter',
               description: 'Follow our official Twitter account @CedraQuest',
@@ -129,24 +142,35 @@ export function QuestScreen() {
         }
 
         // Convert to frontend format
-        const frontendQuests = backendQuests.map((q) => ({
-          id: String(q.id),
-          title: q.title,
-          description: q.description || '',
-          iconUrl: '',
-          type: q.type === 'SOCIAL' ? 'social' as const : 
-                q.category === 'daily' ? 'daily' as const : 'achievement' as const,
-          status: q.user_status === 'COMPLETED' ? 'claimable' as const :
-                  q.user_status === 'CLAIMED' ? 'completed' as const : 'active' as const,
-          progress: q.user_status === 'COMPLETED' || q.user_status === 'CLAIMED' ? 100 : 0,
-          currentValue: q.user_status === 'COMPLETED' || q.user_status === 'CLAIMED' ? 1 : 0,
-          targetValue: 1,
-          reward: {
-            type: 'token' as const,
-            amount: Number(q.reward_amount),
-          },
-          url: q.type === 'SOCIAL' && q.config?.url ? String(q.config.url) : undefined,
-        }));
+        const frontendQuests = backendQuests.map((q) => {
+          const questType = q.type === 'SOCIAL' ? 'social' as const : 
+                           q.category === 'daily' ? 'daily' as const : 'achievement' as const;
+          
+          // For daily quests, auto-mark as claimable if not already claimed
+          let questStatus = q.user_status === 'COMPLETED' ? 'claimable' as const :
+                           q.user_status === 'CLAIMED' ? 'completed' as const : 'active' as const;
+          
+          if (questType === 'daily' && questStatus === 'active') {
+            questStatus = 'claimable' as const;
+          }
+          
+          return {
+            id: String(q.id),
+            title: q.title,
+            description: q.description || '',
+            iconUrl: '',
+            type: questType,
+            status: questStatus,
+            progress: questStatus === 'claimable' || questStatus === 'completed' ? 100 : 0,
+            currentValue: questStatus === 'claimable' || questStatus === 'completed' ? 1 : 0,
+            targetValue: 1,
+            reward: {
+              type: 'token' as const,
+              amount: Number(q.reward_amount),
+            },
+            url: q.type === 'SOCIAL' && q.config?.url ? String(q.config.url) : undefined,
+          };
+        });
         
         // Check pet hatching quest status based on pet state
         const updatedQuests = frontendQuests.map((quest) => {
@@ -267,6 +291,20 @@ export function QuestScreen() {
 
     // If active, handle based on quest type
     if (quest.status === 'active') {
+      // Special handling for daily quests - auto mark as claimable
+      if (quest.type === 'daily') {
+        console.log('🎁 Daily quest auto-completed, marking as claimable');
+        updateQuest(questId, { 
+          status: 'claimable', 
+          progress: 100,
+          currentValue: quest.targetValue 
+        });
+        
+        // Trigger haptic feedback and return to let user claim
+        telegramService.triggerHapticFeedback('light');
+        return;
+      }
+
       // Special handling for pet hatching quest
       if (quest.type === 'achievement' && quest.title === 'Hatch Your Pet Egg') {
         // Check if pet is already hatched

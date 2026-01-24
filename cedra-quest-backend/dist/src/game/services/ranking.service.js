@@ -31,6 +31,46 @@ let RankingService = RankingService_1 = class RankingService {
         }
         return BigInt(userId);
     }
+    async checkAndAwardRankRewards(userId, oldPoints, newPoints) {
+        try {
+            const oldRank = this.calculateRank(oldPoints);
+            const newRank = this.calculateRank(newPoints);
+            if (oldRank !== newRank) {
+                const coinsAwarded = game_constants_1.RANK_REWARDS[newRank];
+                this.logger.log(`🎉 User ${userId} ranked up from ${oldRank} to ${newRank}! Awarding ${coinsAwarded} coins`);
+                await this.prisma.$transaction(async (tx) => {
+                    await tx.users.update({
+                        where: { telegram_id: this.safeToBigInt(userId) },
+                        data: {
+                            current_rank: newRank,
+                            total_points: { increment: coinsAwarded },
+                            lifetime_points: { increment: coinsAwarded },
+                            updated_at: new Date(),
+                        },
+                    });
+                    await tx.point_transactions.create({
+                        data: {
+                            user_id: this.safeToBigInt(userId),
+                            amount: coinsAwarded,
+                            type: 'RANK_REWARD',
+                            description: `Rank up reward: ${oldRank} → ${newRank}`,
+                            reference_id: `rank_${newRank}_${Date.now()}`,
+                        },
+                    });
+                });
+                return {
+                    rankUp: true,
+                    newRank,
+                    coinsAwarded,
+                };
+            }
+            return { rankUp: false };
+        }
+        catch (error) {
+            this.logger.error(`Failed to check rank rewards for user ${userId}`, error);
+            return { rankUp: false };
+        }
+    }
     async getUserRankInfo(userId) {
         try {
             const user = await this.prisma.users.findUnique({
@@ -162,7 +202,7 @@ let RankingService = RankingService_1 = class RankingService {
                 return rank;
             }
         }
-        return 'BRONZE';
+        return 'RANK1';
     }
 };
 exports.RankingService = RankingService;

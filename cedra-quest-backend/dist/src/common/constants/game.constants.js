@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ANTI_CHEAT = exports.DATE_FORMAT = exports.TIME_CONSTANTS = exports.BLOCKCHAIN_CONSTANTS = exports.DEFAULT_CYCLE = exports.RANK_ORDER = exports.RANK_THRESHOLDS = exports.GAME_CONSTANTS = exports.ENERGY_CONSTANTS = exports.PET_CONSTANTS = void 0;
+exports.ANTI_CHEAT = exports.DATE_FORMAT = exports.TIME_CONSTANTS = exports.BLOCKCHAIN_CONSTANTS = exports.DEFAULT_CYCLE = exports.RANK_REWARDS = exports.RANK_ORDER = exports.RANK_THRESHOLDS = exports.GAME_CONSTANTS = exports.ENERGY_CONSTANTS = exports.PET_CONSTANTS = void 0;
 exports.PET_CONSTANTS = {
     FEED_COST: 20,
     MAX_DAILY_SPEND: 600,
@@ -21,14 +21,22 @@ exports.GAME_CONSTANTS = {
     MAX_GAME_DURATION: 300,
 };
 exports.RANK_THRESHOLDS = {
-    BRONZE: 0,
-    SILVER: 10000,
-    GOLD: 50000,
-    PLATINUM: 200000,
-    DIAMOND: 1000000,
-    LEVIATHAN: 5000000,
+    RANK1: 0,
+    RANK2: 10000,
+    RANK3: 25000,
+    RANK4: 45000,
+    RANK5: 60000,
+    RANK6: 75000,
 };
-exports.RANK_ORDER = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND', 'LEVIATHAN'];
+exports.RANK_ORDER = ['RANK1', 'RANK2', 'RANK3', 'RANK4', 'RANK5', 'RANK6'];
+exports.RANK_REWARDS = {
+    RANK1: 0,
+    RANK2: 1000,
+    RANK3: 2000,
+    RANK4: 3000,
+    RANK5: 4000,
+    RANK6: 5000,
+};
 exports.DEFAULT_CYCLE = {
     cycleNumber: 1,
     growthRate: 0.8,

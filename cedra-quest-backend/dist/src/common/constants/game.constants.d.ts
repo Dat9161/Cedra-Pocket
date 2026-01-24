@@ -18,14 +18,22 @@ export declare const GAME_CONSTANTS: {
     MAX_GAME_DURATION: number;
 };
 export declare const RANK_THRESHOLDS: {
-    readonly BRONZE: 0;
-    readonly SILVER: 10000;
-    readonly GOLD: 50000;
-    readonly PLATINUM: 200000;
-    readonly DIAMOND: 1000000;
-    readonly LEVIATHAN: 5000000;
+    readonly RANK1: 0;
+    readonly RANK2: 10000;
+    readonly RANK3: 25000;
+    readonly RANK4: 45000;
+    readonly RANK5: 60000;
+    readonly RANK6: 75000;
 };
-export declare const RANK_ORDER: readonly ["BRONZE", "SILVER", "GOLD", "PLATINUM", "DIAMOND", "LEVIATHAN"];
+export declare const RANK_ORDER: readonly ["RANK1", "RANK2", "RANK3", "RANK4", "RANK5", "RANK6"];
+export declare const RANK_REWARDS: {
+    readonly RANK1: 0;
+    readonly RANK2: 1000;
+    readonly RANK3: 2000;
+    readonly RANK4: 3000;
+    readonly RANK5: 4000;
+    readonly RANK6: 5000;
+};
 export declare const DEFAULT_CYCLE: {
     cycleNumber: number;
     growthRate: number;

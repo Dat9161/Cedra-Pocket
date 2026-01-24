@@ -110,6 +110,19 @@ export interface AppState {
     endDate: string;
     isActive: boolean;
   } | null;
+
+  // Transaction state to prevent dashboard from overwriting recent changes
+  recentTransaction: {
+    timestamp: number;
+    amount: number;
+  } | null;
+
+  // Rank up notification state
+  rankUpNotification: {
+    show: boolean;
+    newRank: string;
+    coinsAwarded: number;
+  } | null;
 }
 
 /**
@@ -184,6 +197,10 @@ export interface AppActions {
 
   // Global Actions
   reset: () => void;
+
+  // Rank up notification actions
+  showRankUpNotification: (newRank: string, coinsAwarded: number) => void;
+  hideRankUpNotification: () => void;
 }
 
 /**
@@ -270,13 +287,19 @@ const initialState: AppState = {
   },
 
   ranking: {
-    rank: 'BRONZE',
+    rank: 'RANK1',
     position: 0,
     lifetimePoints: 0,
     nextRankThreshold: 10000,
   },
 
   gameCycle: null,
+
+  // Transaction state
+  recentTransaction: null,
+
+  // Rank up notification state
+  rankUpNotification: null,
 };
 
 
@@ -796,14 +819,20 @@ export const useAppStore = create<AppStore>()(
               lastCoinTime: Date.now(),
             });
             
-            // Update user points
-            if (result.pointsEarned > 0) {
+            // Update user points - ALWAYS use backend's authoritative value
+            if (result.pointsEarned > 0 && result.newTotalPoints !== undefined) {
               const currentUser = get().user;
               if (currentUser) {
+                console.log(`💰 Pet claim: ${result.pointsEarned} points earned, new total: ${result.newTotalPoints}`);
+                
                 set({
                   user: {
                     ...currentUser,
-                    tokenBalance: result.newTotalPoints || (currentUser.tokenBalance + result.pointsEarned),
+                    tokenBalance: result.newTotalPoints,
+                  },
+                  recentTransaction: {
+                    timestamp: Date.now(),
+                    amount: result.pointsEarned,
                   }
                 });
               }
@@ -839,14 +868,20 @@ export const useAppStore = create<AppStore>()(
           if (result.success) {
             console.log('✅ Game session completed successfully:', result);
             
-            // Update user points
-            if (result.pointsEarned > 0) {
+            // Update user points - ALWAYS use backend's authoritative value
+            if (result.pointsEarned > 0 && result.newTotalPoints !== undefined) {
               const currentUser = get().user;
               if (currentUser) {
+                console.log(`💰 Game complete: ${result.pointsEarned} points earned, new total: ${result.newTotalPoints}`);
+                
                 set({
                   user: {
                     ...currentUser,
-                    tokenBalance: result.newTotalPoints || (currentUser.tokenBalance + result.pointsEarned),
+                    tokenBalance: result.newTotalPoints,
+                  },
+                  recentTransaction: {
+                    timestamp: Date.now(),
+                    amount: result.pointsEarned,
                   }
                 });
               }
@@ -915,7 +950,7 @@ export const useAppStore = create<AppStore>()(
             if (dashboard.ranking) {
               console.log('🏆 Updating ranking:', dashboard.ranking);
               get().setRanking({
-                rank: dashboard.ranking.rank || 'BRONZE',
+                rank: dashboard.ranking.rank || 'RANK1',
                 position: dashboard.ranking.position || 999,
                 lifetimePoints: dashboard.ranking.lifetimePoints || 0,
                 nextRankThreshold: dashboard.ranking.pointsToNextRank || 1000,
@@ -936,13 +971,35 @@ export const useAppStore = create<AppStore>()(
 
             // Update user points if available in dashboard
             if (dashboard.user && dashboard.user.total_points !== undefined) {
-              console.log('💰 Updating user points from dashboard:', dashboard.user.total_points);
-              set((state) => ({
-                user: state.user ? {
-                  ...state.user,
-                  tokenBalance: Number(dashboard.user.total_points),
-                } : state.user
-              }));
+              console.log('💰 Dashboard user points:', dashboard.user.total_points);
+              const dashboardPoints = Number(dashboard.user.total_points);
+              
+              set((state) => {
+                const currentBalance = state.user?.tokenBalance || 0;
+                
+                // Check if there's a recent transaction (within last 10 seconds)
+                const hasRecentTransaction = state.recentTransaction && 
+                  (Date.now() - state.recentTransaction.timestamp) < 10000;
+                
+                if (hasRecentTransaction) {
+                  console.log('⏰ Recent transaction detected, keeping current balance to avoid overwrite');
+                  return state; // Don't update balance
+                }
+                
+                // Only update if dashboard has higher value (to avoid overwriting recent claims)
+                const shouldUpdate = dashboardPoints > currentBalance;
+                
+                console.log(`💰 Current: ${currentBalance}, Dashboard: ${dashboardPoints}, Update: ${shouldUpdate}`);
+                
+                return {
+                  user: state.user ? {
+                    ...state.user,
+                    tokenBalance: shouldUpdate ? dashboardPoints : currentBalance,
+                  } : state.user,
+                  // Clear old transaction flags
+                  recentTransaction: hasRecentTransaction ? state.recentTransaction : null,
+                };
+              });
             } else if (dashboard.userExists === false) {
               console.log('👤 User does not exist in database yet - keeping local balance');
               // Don't update balance if user doesn't exist in DB
@@ -994,6 +1051,21 @@ export const useAppStore = create<AppStore>()(
 
       // Global Actions
       reset: () => set(initialState),
+
+      // Rank up notification actions
+      showRankUpNotification: (newRank: string, coinsAwarded: number) => {
+        set({
+          rankUpNotification: {
+            show: true,
+            newRank,
+            coinsAwarded,
+          }
+        });
+      },
+
+      hideRankUpNotification: () => {
+        set({ rankUpNotification: null });
+      },
     }),
     {
       name: 'tg-mini-app-storage',

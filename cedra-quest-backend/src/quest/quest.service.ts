@@ -1,5 +1,6 @@
 import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { user_rank, pet_tier } from '@prisma/client';
 
 export interface QuestWithUserStatus {
   id: number;
@@ -46,7 +47,7 @@ export class QuestService {
             username: `User${userId}`,
             total_points: 0,
             lifetime_points: 0,
-            current_rank: 'BRONZE',
+            current_rank: 'RANK1' as any,
             level: 1,
             current_xp: 0,
             is_wallet_connected: true,
@@ -123,7 +124,7 @@ export class QuestService {
             username: `User${userId}`,
             total_points: 0,
             lifetime_points: 0,
-            current_rank: 'BRONZE',
+            current_rank: 'RANK1' as any,
             level: 1,
             current_xp: 0,
             is_wallet_connected: true,
@@ -250,7 +251,7 @@ export class QuestService {
                   pending_coins: 0,
                   total_coins_earned: 0,
                   coin_rate: 1.0,
-                  tier: 'BRONZE',
+                  tier: 'RANK1' as any,
                 },
               });
             }
@@ -350,7 +351,7 @@ export class QuestService {
             username: `User${userId}`,
             total_points: 0,
             lifetime_points: 0,
-            current_rank: 'BRONZE',
+            current_rank: 'RANK1' as any,
             level: 1,
             current_xp: 0,
             is_wallet_connected: true,

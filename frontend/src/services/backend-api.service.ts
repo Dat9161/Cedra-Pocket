@@ -188,7 +188,7 @@ export class BackendAPIService {
         wallet_address: null,
         is_wallet_connected: false,
         total_points: 0,
-        current_rank: 'BRONZE',
+        current_rank: 'RANK1',
         referral_code: 'local_ref',
         referrer_id: null,
         created_at: new Date().toISOString(),
@@ -252,17 +252,43 @@ export class BackendAPIService {
   /**
    * Add points to user (sync with backend)
    */
-  async addPoints(points: number): Promise<BackendUser> {
+  async addPoints(points: number): Promise<BackendUser & { 
+    rankReward?: { 
+      rankUp: boolean; 
+      newRank?: string; 
+      coinsAwarded?: number; 
+    } 
+  }> {
     try {
       // Get current user ID from various sources
       const userId = this.getCurrentUserId();
       
       // Use the main add-points endpoint with userId in body
-      const response = await this.client.post<BackendUser>('/users/add-points', {
+      const response = await this.client.post<BackendUser & { 
+        rankReward?: { 
+          rankUp: boolean; 
+          newRank?: string; 
+          coinsAwarded?: number; 
+        } 
+      }>('/users/add-points', {
         points,
         userId, // Include userId in request body
       });
       console.log(`✅ Backend add-points response: ${response.data.total_points}`);
+      
+      // Check for rank up notification
+      if (response.data.rankReward?.rankUp) {
+        console.log(`🎉 Rank up detected: ${response.data.rankReward.newRank}, coins: ${response.data.rankReward.coinsAwarded}`);
+        
+        // Show rank up notification
+        const { useAppStore } = await import('../store/useAppStore');
+        const { showRankUpNotification } = useAppStore.getState();
+        showRankUpNotification(
+          response.data.rankReward.newRank!, 
+          response.data.rankReward.coinsAwarded!
+        );
+      }
+      
       return response.data;
     } catch (error) {
       console.log('⚠️ Failed to add points to backend, using local fallback');
@@ -275,7 +301,7 @@ export class BackendAPIService {
         wallet_address: null,
         is_wallet_connected: false,
         total_points: points, // Just return the points added
-        current_rank: 'BRONZE',
+        current_rank: 'RANK1',
         referral_code: null,
         referrer_id: null,
         created_at: new Date().toISOString(),
@@ -582,7 +608,7 @@ export class BackendAPIService {
           nextRegenTime: null,
         },
         ranking: {
-          rank: 'BRONZE',
+          rank: 'RANK1',
           position: 999,
           totalUsers: 1000,
           pointsToNextRank: 1000,

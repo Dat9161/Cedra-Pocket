@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RankInfo } from '../../common/interfaces/game.interface';
-import { RANK_THRESHOLDS, RANK_ORDER } from '../../common/constants/game.constants';
+import { RANK_THRESHOLDS, RANK_ORDER, RANK_REWARDS } from '../../common/constants/game.constants';
 
 @Injectable()
 export class RankingService {
@@ -30,6 +30,62 @@ export class RankingService {
   }
 
   /**
+   * Check and award rank up rewards when user's points increase
+   */
+  async checkAndAwardRankRewards(userId: string, oldPoints: number, newPoints: number): Promise<{
+    rankUp: boolean;
+    newRank?: string;
+    coinsAwarded?: number;
+  }> {
+    try {
+      const oldRank = this.calculateRank(oldPoints);
+      const newRank = this.calculateRank(newPoints);
+      
+      if (oldRank !== newRank) {
+        const coinsAwarded = RANK_REWARDS[newRank as keyof typeof RANK_REWARDS];
+        
+        this.logger.log(`🎉 User ${userId} ranked up from ${oldRank} to ${newRank}! Awarding ${coinsAwarded} coins`);
+        
+        // Award coins and update rank in transaction
+        await this.prisma.$transaction(async (tx) => {
+          // Update user's rank and add coins
+          await tx.users.update({
+            where: { telegram_id: this.safeToBigInt(userId) },
+            data: {
+              current_rank: newRank as any,
+              total_points: { increment: coinsAwarded },
+              lifetime_points: { increment: coinsAwarded },
+              updated_at: new Date(),
+            },
+          });
+
+          // Create transaction log for rank reward
+          await tx.point_transactions.create({
+            data: {
+              user_id: this.safeToBigInt(userId),
+              amount: coinsAwarded,
+              type: 'RANK_REWARD',
+              description: `Rank up reward: ${oldRank} → ${newRank}`,
+              reference_id: `rank_${newRank}_${Date.now()}`,
+            },
+          });
+        });
+
+        return {
+          rankUp: true,
+          newRank,
+          coinsAwarded,
+        };
+      }
+
+      return { rankUp: false };
+    } catch (error) {
+      this.logger.error(`Failed to check rank rewards for user ${userId}`, error);
+      return { rankUp: false };
+    }
+  }
+
+  /**
    * Get user's rank information
    */
   async getUserRankInfo(userId: string): Promise<RankInfo> {
@@ -49,7 +105,7 @@ export class RankingService {
       const lifetimePoints = Number(user.lifetime_points);
       const currentRank = this.calculateRank(lifetimePoints);
 
-      // Update rank if it changed
+      // Update rank if it changed (but don't award coins here - only when points increase)
       if (currentRank !== user.current_rank) {
         await this.prisma.users.update({
           where: { telegram_id: this.safeToBigInt(userId) },
@@ -206,6 +262,6 @@ export class RankingService {
         return rank;
       }
     }
-    return 'BRONZE';
+    return 'RANK1';
   }
 }

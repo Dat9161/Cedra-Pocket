@@ -12,15 +12,16 @@ import GameScreenNew from '../components/game/GameScreenNew';
 import { PetScreen } from '../components/pet/PetScreen';
 import { useTelegram } from '../components/providers';
 import { useSpinsLeft } from '../store/useAppStore';
+import { RankUpModal } from '../components/shared/RankUpModal';
 
-// Rank tiers based on points
+// Rank tiers based on points - Updated system
 const RANK_TIERS = [
-  { name: 'Shrimp', icon: '/icons/Shrimp-Bronze.png', minPoints: 0, bonus: 0, color: '#CD7F32' },
-  { name: 'Fish', icon: '/icons/Fish-Silver.png', minPoints: 1000, bonus: 0.1, color: '#C0C0C0' },
-  { name: 'Dolphin', icon: '/icons/Dolphin-Gold.png', minPoints: 5000, bonus: 0.3, color: '#FFD700' },
-  { name: 'Shark', icon: '/icons/Shark-Emerald.png', minPoints: 20000, bonus: 0.5, color: '#50C878' },
-  { name: 'Whale', icon: '/icons/Whale-Diamond.png', minPoints: 100000, bonus: 1, color: '#B9F2FF' },
-  { name: 'Leviathan', icon: '/icons/Leviathan-Obsidian.png', minPoints: 500000, bonus: 2, color: '#3D3D3D' },
+  { name: 'Rank 1', icon: '/icons/Shrimp-Bronze.png', minPoints: 0, reward: 0, color: '#CD7F32' },
+  { name: 'Rank 2', icon: '/icons/Fish-Silver.png', minPoints: 10000, reward: 1000, color: '#C0C0C0' },
+  { name: 'Rank 3', icon: '/icons/Dolphin-Gold.png', minPoints: 25000, reward: 2000, color: '#FFD700' },
+  { name: 'Rank 4', icon: '/icons/Shark-Emerald.png', minPoints: 45000, reward: 3000, color: '#50C878' },
+  { name: 'Rank 5', icon: '/icons/Whale-Diamond.png', minPoints: 60000, reward: 4000, color: '#B9F2FF' },
+  { name: 'Rank 6', icon: '/icons/Leviathan-Obsidian.png', minPoints: 75000, reward: 5000, color: '#3D3D3D' },
 ];
 
 // Get user rank tier based on points
@@ -39,7 +40,7 @@ export default function HomePage() {
   const energy = useEnergy();
   const isLoading = useIsLoading();
   const error = useError();
-  const { activeTab, setActiveTab, setError, setEnergy } = useAppStore();
+  const { activeTab, setActiveTab, setError, setEnergy, rankUpNotification, hideRankUpNotification } = useAppStore();
   const { loadGameDashboard } = useGameSystemActions();
   const { isInitialized, isAvailable } = useTelegram();
   const [isAppReady, setIsAppReady] = useState(false);
@@ -798,9 +799,9 @@ export default function HomePage() {
                     )}
                     {displayRankIndex === RANK_TIERS.length - 1 && '+'} points
                   </div>
-                  {RANK_TIERS[displayRankIndex].bonus > 0 && (
+                  {RANK_TIERS[displayRankIndex].reward > 0 && (
                     <div className="text-green-400 font-medium" style={{ fontSize: 'var(--fs-xs)', marginTop: '2px' }}>
-                      +{Math.round(RANK_TIERS[displayRankIndex].bonus * 100)}% bonus
+                      +{RANK_TIERS[displayRankIndex].reward.toLocaleString()} coins reward
                     </div>
                   )}
                 </div>
@@ -883,6 +884,16 @@ export default function HomePage() {
 
       {/* Spin Modal */}
       <SpinModal isOpen={showSpinModal} onClose={() => setShowSpinModal(false)} />
+
+      {/* Rank Up Modal */}
+      {rankUpNotification?.show && (
+        <RankUpModal
+          isOpen={true}
+          onClose={hideRankUpNotification}
+          newRank={rankUpNotification.newRank}
+          coinsAwarded={rankUpNotification.coinsAwarded}
+        />
+      )}
 
       {/* Custom CSS for reverse spin animation */}
       <style jsx global>{`

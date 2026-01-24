@@ -1,9 +1,11 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { UserInfo } from '../common/interfaces/auth.interface';
+import { RankingService } from '../game/services/ranking.service';
 export declare class UserService {
     private prisma;
+    private rankingService;
     private readonly logger;
-    constructor(prisma: PrismaService);
+    constructor(prisma: PrismaService, rankingService: RankingService);
     private safeToBigInt;
     createUser(userData: {
         telegram_id: string;
@@ -19,6 +21,12 @@ export declare class UserService {
     findUserByTelegramId(telegramId: string): Promise<UserInfo | null>;
     getUserProfile(telegramId: string): Promise<UserInfo | null>;
     checkWalletAddressExists(walletAddress: string): Promise<boolean>;
-    addPoints(telegramId: string, points: number): Promise<UserInfo>;
+    addPoints(telegramId: string, points: number): Promise<UserInfo & {
+        rankReward?: {
+            rankUp: boolean;
+            newRank?: string;
+            coinsAwarded?: number;
+        };
+    }>;
     findUserByPublicKey(publicKey: string): Promise<UserInfo | null>;
 }

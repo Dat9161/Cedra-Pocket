@@ -25,15 +25,25 @@ export const GAME_CONSTANTS = {
 
 // Ranking System Constants
 export const RANK_THRESHOLDS = {
-  BRONZE: 0,
-  SILVER: 10000,
-  GOLD: 50000,
-  PLATINUM: 200000,
-  DIAMOND: 1000000,
-  LEVIATHAN: 5000000,
+  RANK1: 0,
+  RANK2: 10000,
+  RANK3: 25000,
+  RANK4: 45000,
+  RANK5: 60000,
+  RANK6: 75000,
 } as const;
 
-export const RANK_ORDER = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND', 'LEVIATHAN'] as const;
+export const RANK_ORDER = ['RANK1', 'RANK2', 'RANK3', 'RANK4', 'RANK5', 'RANK6'] as const;
+
+// Rank Rewards - coins earned when reaching each rank
+export const RANK_REWARDS = {
+  RANK1: 0,     // No reward for starting rank
+  RANK2: 1000,  // 1000 coins when reaching 10,000 points
+  RANK3: 2000,  // 2000 coins when reaching 25,000 points
+  RANK4: 3000,  // 3000 coins when reaching 45,000 points
+  RANK5: 4000,  // 4000 coins when reaching 60,000 points
+  RANK6: 5000,  // 5000 coins when reaching 75,000 points
+} as const;
 
 // Default Game Cycle (if no active cycle)
 export const DEFAULT_CYCLE = {

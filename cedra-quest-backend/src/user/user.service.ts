@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserInfo } from '../common/interfaces/auth.interface';
+import { RankingService } from '../game/services/ranking.service';
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private rankingService: RankingService,
+  ) {}
 
   /**
    * Safely convert userId to BigInt, handling both numeric and non-numeric strings
@@ -84,7 +88,7 @@ export class UserService {
           username_at_creation: userData.username || null,
           total_points: userData.total_points || 0,
           lifetime_points: userData.total_points || 0,
-          current_rank: 'BRONZE',
+          current_rank: 'RANK1',
           level: 1,
           current_xp: 0,
           is_wallet_connected: isWalletConnected,
@@ -239,12 +243,18 @@ export class UserService {
   }
 
   /**
-   * Add points to user
+   * Add points to user with rank reward system
    * @param telegramId Telegram user ID
    * @param points Points to add (can be negative for deduction)
-   * @returns Updated user info
+   * @returns Updated user info with rank reward info
    */
-  async addPoints(telegramId: string, points: number): Promise<UserInfo> {
+  async addPoints(telegramId: string, points: number): Promise<UserInfo & { 
+    rankReward?: { 
+      rankUp: boolean; 
+      newRank?: string; 
+      coinsAwarded?: number; 
+    } 
+  }> {
     try {
       this.logger.log(`💰 Adding ${points} points to user: ${telegramId}`);
       
@@ -267,9 +277,12 @@ export class UserService {
         return newUser;
       }
 
+      // Store old points for rank comparison
+      const oldLifetimePoints = Number(user.lifetime_points || 0);
+      
       // Calculate new points
       const newTotalPoints = Math.max(0, Number(user.total_points) + points);
-      const newLifetimePoints = Math.max(Number(user.lifetime_points || 0), newTotalPoints);
+      const newLifetimePoints = Math.max(oldLifetimePoints, newTotalPoints);
       
       // Update user points with transaction
       const updatedUser = await this.prisma.$transaction(async (tx) => {
@@ -313,6 +326,25 @@ export class UserService {
         return user;
       });
 
+      // Check for rank rewards (only if points increased)
+      let rankReward = { rankUp: false };
+      if (points > 0 && newLifetimePoints > oldLifetimePoints) {
+        try {
+          rankReward = await this.rankingService.checkAndAwardRankRewards(
+            telegramId, 
+            oldLifetimePoints, 
+            newLifetimePoints
+          );
+          
+          if (rankReward.rankUp && 'coinsAwarded' in rankReward) {
+            this.logger.log(`🎉 User ${telegramId} ranked up! Awarded ${rankReward.coinsAwarded} coins`);
+          }
+        } catch (rankError) {
+          this.logger.error(`Failed to check rank rewards for user ${telegramId}`, rankError);
+          // Don't fail the main operation if rank check fails
+        }
+      }
+
       this.logger.log(`✅ Points updated: ${user.total_points} → ${updatedUser.total_points}`);
 
       return {
@@ -324,6 +356,7 @@ export class UserService {
         current_xp: updatedUser.current_xp,
         current_rank: updatedUser.current_rank,
         created_at: updatedUser.created_at,
+        rankReward,
       };
     } catch (error) {
       this.logger.error(`❌ Failed to add points to user: ${telegramId}`, error);

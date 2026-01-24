@@ -13,6 +13,9 @@ export { EmptyState, type EmptyStateProps } from './EmptyState';
 // Skeleton component
 export { Skeleton } from './Skeleton';
 
+// Modal components
+export { RankUpModal } from './RankUpModal';
+
 // Error handling components
 export {
   ErrorBoundary,

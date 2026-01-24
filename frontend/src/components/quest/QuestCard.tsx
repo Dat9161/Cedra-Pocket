@@ -88,7 +88,7 @@ const CompletedBadge = () => (
 /**
  * Claim Button component
  */
-const ClaimButton = ({ onClick }: { onClick?: () => void }) => (
+const ClaimButton = ({ onClick }: { onClick?: (e?: React.MouseEvent) => void }) => (
   <button 
     onClick={onClick}
     style={{ width: 'clamp(44px, 12vw, 56px)', height: 'clamp(18px, 5vw, 24px)', fontSize: 'var(--fs-sm)' }}
@@ -166,7 +166,7 @@ const QuestDetailModal = ({
               <RewardBadge type={quest.reward.type} amount={quest.reward.amount} />
               {isCompleted ? (
                 <CompletedBadge />
-              ) : isClaimable ? (
+              ) : (quest.type === 'daily' || isClaimable) ? (
                 <button
                   onClick={() => {
                     onAction();
@@ -203,13 +203,15 @@ const QuestDetailModal = ({
 export function QuestCard({ quest, onAction }: QuestCardProps) {
   const [showDetail, setShowDetail] = useState(false);
   const isLocked = quest.status === 'locked';
-  const isClaimable = quest.status === 'claimable';
   const isCompleted = quest.status === 'completed';
+
+  const hasClaimButton = (quest.type === 'daily' && (quest.status === 'active' || quest.status === 'claimable')) ||
+                        (quest.type !== 'daily' && quest.status === 'claimable');
 
   return (
     <>
       <div
-        onClick={isLocked || isCompleted ? undefined : () => setShowDetail(true)}
+        onClick={isLocked || isCompleted || hasClaimButton ? undefined : () => setShowDetail(true)}
         style={{
           background: 'linear-gradient(135deg, #ffffff, #e8dcc8)',
           border: '1px solid rgba(0, 0, 0, 0.1)',
@@ -218,7 +220,7 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
           width: '100%',
         }}
-        className={`${isLocked || isCompleted ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]'}`}
+        className={`${isLocked ? 'opacity-60 cursor-not-allowed' : hasClaimButton ? '' : 'cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]'}`}
       >
         <div className="flex items-center" style={{ gap: 'clamp(6px, 1.5vw, 10px)' }}>
           {/* Quest Icon */}
@@ -270,8 +272,17 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
           {/* Reward + Action - Right side */}
           <div className="flex items-center flex-shrink-0" style={{ gap: 'clamp(4px, 1vw, 8px)' }}>
             <RewardBadge type={quest.reward.type} amount={quest.reward.amount} />
-            {isClaimable && (
-              <ClaimButton onClick={() => {
+            {/* Daily quests always show Claim button when active or claimable */}
+            {(quest.type === 'daily' && (quest.status === 'active' || quest.status === 'claimable')) && (
+              <ClaimButton onClick={(e) => {
+                e?.stopPropagation(); // Prevent opening modal
+                onAction();
+              }} />
+            )}
+            {/* Other quest types show Claim only when claimable */}
+            {(quest.type !== 'daily' && quest.status === 'claimable') && (
+              <ClaimButton onClick={(e) => {
+                e?.stopPropagation(); // Prevent opening modal
                 onAction();
               }} />
             )}

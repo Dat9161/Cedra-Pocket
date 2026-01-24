@@ -55,7 +55,7 @@ export class AuthService {
             first_name: telegramUser.first_name,
             last_name: telegramUser.last_name,
             total_points: 0,
-            current_rank: 'BRONZE',
+            current_rank: 'RANK1',
           });
           
           this.logger.log(`✅ New user created successfully: ${newUser.telegram_id}`);

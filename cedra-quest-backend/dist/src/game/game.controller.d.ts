@@ -16,7 +16,13 @@ export declare class GameController {
     constructor(petService: PetService, energyService: EnergyService, gameSessionService: GameSessionService, rankingService: RankingService, gameCycleService: GameCycleService, prisma: PrismaService);
     getPetStatus(userId: string): Promise<import("../common/interfaces/game.interface").PetStatus>;
     feedPet(userId: string, feedPetDto: FeedPetDto): Promise<import("../common/interfaces/game.interface").FeedPetResult>;
-    claimRewards(userId: string): Promise<import("../common/interfaces/game.interface").ClaimRewardsResult>;
+    claimRewards(userId: string): Promise<import("../common/interfaces/game.interface").ClaimRewardsResult & {
+        rankReward?: {
+            rankUp: boolean;
+            newRank?: string;
+            coinsAwarded?: number;
+        };
+    }>;
     getEnergyStatus(userId: string): Promise<import("../common/interfaces/game.interface").EnergyStatus>;
     refillEnergy(userId: string, refillDto: RefillEnergyDto): Promise<{
         success: boolean;

@@ -5,6 +5,11 @@ export declare class RankingService {
     private readonly logger;
     constructor(prisma: PrismaService);
     private safeToBigInt;
+    checkAndAwardRankRewards(userId: string, oldPoints: number, newPoints: number): Promise<{
+        rankUp: boolean;
+        newRank?: string;
+        coinsAwarded?: number;
+    }>;
     getUserRankInfo(userId: string): Promise<RankInfo>;
     getLeaderboard(limit?: number, offset?: number): Promise<{
         users: Array<{

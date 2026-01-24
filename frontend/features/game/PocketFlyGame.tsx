@@ -3,18 +3,18 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { useAppStore, useEnergy } from '../../src/store/useAppStore';
 
-// Game constants
+// Game constants - Adjusted for easier gameplay
 const GAME_CONFIG = {
   CANVAS_WIDTH: 320,
   CANVAS_HEIGHT: 480,
   BIRD_SIZE: 20,
   BIRD_X: 80,
-  GRAVITY: 0.6,
-  JUMP_FORCE: -6, // Reduced from -8 to -6 for less sensitivity
+  GRAVITY: 0.4, // Reduced from 0.6 to 0.4 (slower fall)
+  JUMP_FORCE: -5, // Reduced from -6 to -5 (gentler jump)
   PIPE_WIDTH: 60,
-  PIPE_GAP: 120,
-  PIPE_SPEED: 2,
-  PIPE_SPAWN_RATE: 90, // frames
+  PIPE_GAP: 140, // Increased from 120 to 140 (bigger gap)
+  PIPE_SPEED: 1.5, // Reduced from 2 to 1.5 (slower pipes)
+  PIPE_SPAWN_RATE: 110, // Increased from 90 to 110 (more time between pipes)
 };
 
 // Game types
@@ -134,27 +134,30 @@ export function PocketFlyGame({ onGameEnd, onBackToMenu }: PocketFlyGameProps) {
     };
   }, []);
 
-  // Collision detection
+  // Collision detection - More forgiving hitbox
   const checkCollision = useCallback((bird: Bird, pipes: Pipe[]): boolean => {
+    // Smaller hitbox for more forgiving collision
+    const birdRadius = GAME_CONFIG.BIRD_SIZE / 2 - 2; // Reduced by 2 pixels
+    
     // Ground collision
-    if (bird.y + GAME_CONFIG.BIRD_SIZE / 2 >= GAME_CONFIG.CANVAS_HEIGHT - 20) {
+    if (bird.y + birdRadius >= GAME_CONFIG.CANVAS_HEIGHT - 20) {
       return true;
     }
     
     // Ceiling collision
-    if (bird.y - GAME_CONFIG.BIRD_SIZE / 2 <= 0) {
+    if (bird.y - birdRadius <= 0) {
       return true;
     }
 
-    // Pipe collision
+    // Pipe collision - more forgiving
     for (const pipe of pipes) {
       if (
-        bird.x + GAME_CONFIG.BIRD_SIZE / 2 > pipe.x &&
-        bird.x - GAME_CONFIG.BIRD_SIZE / 2 < pipe.x + GAME_CONFIG.PIPE_WIDTH
+        bird.x + birdRadius > pipe.x + 5 && // Added 5px margin
+        bird.x - birdRadius < pipe.x + GAME_CONFIG.PIPE_WIDTH - 5 // Added 5px margin
       ) {
         if (
-          bird.y - GAME_CONFIG.BIRD_SIZE / 2 < pipe.topHeight ||
-          bird.y + GAME_CONFIG.BIRD_SIZE / 2 > pipe.bottomY
+          bird.y - birdRadius < pipe.topHeight - 3 || // Added 3px margin
+          bird.y + birdRadius > pipe.bottomY + 3 // Added 3px margin
         ) {
           return true;
         }
@@ -337,14 +340,19 @@ export function PocketFlyGame({ onGameEnd, onBackToMenu }: PocketFlyGameProps) {
       return;
     }
 
-    // Update bird physics
+    // Update bird physics with smoother controls
     gameState.bird.velocity += GAME_CONFIG.GRAVITY;
     gameState.bird.y += gameState.bird.velocity;
     
-    // Bird rotation based on velocity
-    gameState.bird.rotation = Math.min(Math.max(gameState.bird.velocity * 0.05, -0.5), 0.5);
+    // Limit maximum fall speed for more control
+    if (gameState.bird.velocity > 8) {
+      gameState.bird.velocity = 8;
+    }
+    
+    // Bird rotation based on velocity (smoother)
+    gameState.bird.rotation = Math.min(Math.max(gameState.bird.velocity * 0.04, -0.4), 0.4);
 
-    // Handle jump input
+    // Handle jump input with better feel
     if (keysRef.current.has('jump')) {
       gameState.bird.velocity = GAME_CONFIG.JUMP_FORCE;
       keysRef.current.delete('jump');
@@ -575,7 +583,8 @@ export function PocketFlyGame({ onGameEnd, onBackToMenu }: PocketFlyGameProps) {
           <div className="text-center text-white opacity-80 space-y-2">
             <p className="text-base">Each game costs 1 energy</p>
             <p className="text-base">Energy regenerates 1 per hour (when below 5)</p>
-            <p className="text-base">Score = Pipes</p>
+            <p className="text-base">Score = Pipes passed</p>
+            <p className="text-sm opacity-60">✨ Easier controls & bigger gaps!</p>
           </div>
         </div>
       )}

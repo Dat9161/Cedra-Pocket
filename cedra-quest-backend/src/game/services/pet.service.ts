@@ -4,6 +4,7 @@ import { PetStatus, FeedPetRequest, FeedPetResult, ClaimRewardsResult } from '..
 import { PET_CONSTANTS, TIME_CONSTANTS } from '../../common/constants/game.constants';
 import { GameCycleService } from './game-cycle.service';
 import { BlockchainService } from '../../blockchain/blockchain.service';
+import { RankingService } from './ranking.service';
 
 @Injectable()
 export class PetService {
@@ -13,6 +14,7 @@ export class PetService {
     private prisma: PrismaService,
     private gameCycleService: GameCycleService,
     private blockchainService: BlockchainService,
+    private rankingService: RankingService,
   ) {}
 
   /**
@@ -364,9 +366,15 @@ export class PetService {
   }
 
   /**
-   * Claim mining rewards with blockchain integration
+   * Claim mining rewards with blockchain integration and rank rewards
    */
-  async claimRewards(userId: string): Promise<ClaimRewardsResult> {
+  async claimRewards(userId: string): Promise<ClaimRewardsResult & { 
+    rankReward?: { 
+      rankUp: boolean; 
+      newRank?: string; 
+      coinsAwarded?: number; 
+    } 
+  }> {
     try {
       return await this.prisma.$transaction(async (tx) => {
         // Get user data
@@ -432,6 +440,9 @@ export class PetService {
           };
         }
 
+        // Store old points for rank comparison
+        const oldLifetimePoints = Number(user.lifetime_points);
+
         // Update user points
         const newTotalPoints = Number(user.total_points) + rewards;
         const newLifetimePoints = Number(user.lifetime_points) + rewards;
@@ -467,6 +478,23 @@ export class PetService {
           },
         });
 
+        // Check for rank rewards after transaction
+        let rankReward = { rankUp: false };
+        try {
+          rankReward = await this.rankingService.checkAndAwardRankRewards(
+            userId, 
+            oldLifetimePoints, 
+            newLifetimePoints
+          );
+          
+          if (rankReward.rankUp && 'coinsAwarded' in rankReward) {
+            this.logger.log(`🎉 User ${userId} ranked up from pet claim! Awarded ${rankReward.coinsAwarded} coins`);
+          }
+        } catch (rankError) {
+          this.logger.error(`Failed to check rank rewards for user ${userId}`, rankError);
+          // Don't fail the main operation if rank check fails
+        }
+
         // Optional: Record on blockchain for transparency (large rewards only)
         const MIN_BLOCKCHAIN_CLAIM = 1000; // Only record claims >= 1000 points on blockchain
         
@@ -500,6 +528,7 @@ export class PetService {
           newTotalPoints,
           newLifetimePoints,
           claimTime: new Date(),
+          rankReward,
         };
       });
     } catch (error) {

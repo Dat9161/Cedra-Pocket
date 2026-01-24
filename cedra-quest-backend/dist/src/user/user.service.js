@@ -13,9 +13,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const ranking_service_1 = require("../game/services/ranking.service");
 let UserService = UserService_1 = class UserService {
-    constructor(prisma) {
+    constructor(prisma, rankingService) {
         this.prisma = prisma;
+        this.rankingService = rankingService;
         this.logger = new common_1.Logger(UserService_1.name);
     }
     safeToBigInt(userId) {
@@ -64,7 +66,7 @@ let UserService = UserService_1 = class UserService {
                     username_at_creation: userData.username || null,
                     total_points: userData.total_points || 0,
                     lifetime_points: userData.total_points || 0,
-                    current_rank: 'BRONZE',
+                    current_rank: 'RANK1',
                     level: 1,
                     current_xp: 0,
                     is_wallet_connected: isWalletConnected,
@@ -209,8 +211,9 @@ let UserService = UserService_1 = class UserService {
                 });
                 return newUser;
             }
+            const oldLifetimePoints = Number(user.lifetime_points || 0);
             const newTotalPoints = Math.max(0, Number(user.total_points) + points);
-            const newLifetimePoints = Math.max(Number(user.lifetime_points || 0), newTotalPoints);
+            const newLifetimePoints = Math.max(oldLifetimePoints, newTotalPoints);
             const updatedUser = await this.prisma.$transaction(async (tx) => {
                 const user = await tx.users.update({
                     where: {
@@ -247,6 +250,18 @@ let UserService = UserService_1 = class UserService {
                 }
                 return user;
             });
+            let rankReward = { rankUp: false };
+            if (points > 0 && newLifetimePoints > oldLifetimePoints) {
+                try {
+                    rankReward = await this.rankingService.checkAndAwardRankRewards(telegramId, oldLifetimePoints, newLifetimePoints);
+                    if (rankReward.rankUp && 'coinsAwarded' in rankReward) {
+                        this.logger.log(`🎉 User ${telegramId} ranked up! Awarded ${rankReward.coinsAwarded} coins`);
+                    }
+                }
+                catch (rankError) {
+                    this.logger.error(`Failed to check rank rewards for user ${telegramId}`, rankError);
+                }
+            }
             this.logger.log(`✅ Points updated: ${user.total_points} → ${updatedUser.total_points}`);
             return {
                 telegram_id: updatedUser.telegram_id.toString(),
@@ -257,6 +272,7 @@ let UserService = UserService_1 = class UserService {
                 current_xp: updatedUser.current_xp,
                 current_rank: updatedUser.current_rank,
                 created_at: updatedUser.created_at,
+                rankReward,
             };
         }
         catch (error) {
@@ -304,6 +320,7 @@ let UserService = UserService_1 = class UserService {
 exports.UserService = UserService;
 exports.UserService = UserService = UserService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        ranking_service_1.RankingService])
 ], UserService);
 //# sourceMappingURL=user.service.js.map

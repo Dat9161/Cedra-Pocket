@@ -16,11 +16,13 @@ const prisma_service_1 = require("../../prisma/prisma.service");
 const game_constants_1 = require("../../common/constants/game.constants");
 const game_cycle_service_1 = require("./game-cycle.service");
 const blockchain_service_1 = require("../../blockchain/blockchain.service");
+const ranking_service_1 = require("./ranking.service");
 let PetService = PetService_1 = class PetService {
-    constructor(prisma, gameCycleService, blockchainService) {
+    constructor(prisma, gameCycleService, blockchainService, rankingService) {
         this.prisma = prisma;
         this.gameCycleService = gameCycleService;
         this.blockchainService = blockchainService;
+        this.rankingService = rankingService;
         this.logger = new common_1.Logger(PetService_1.name);
     }
     safeToBigInt(userId) {
@@ -355,6 +357,7 @@ let PetService = PetService_1 = class PetService {
                         error: 'No rewards to claim',
                     };
                 }
+                const oldLifetimePoints = Number(user.lifetime_points);
                 const newTotalPoints = Number(user.total_points) + rewards;
                 const newLifetimePoints = Number(user.lifetime_points) + rewards;
                 await tx.users.update({
@@ -383,6 +386,16 @@ let PetService = PetService_1 = class PetService {
                         updated_at: new Date(),
                     },
                 });
+                let rankReward = { rankUp: false };
+                try {
+                    rankReward = await this.rankingService.checkAndAwardRankRewards(userId, oldLifetimePoints, newLifetimePoints);
+                    if (rankReward.rankUp && 'coinsAwarded' in rankReward) {
+                        this.logger.log(`🎉 User ${userId} ranked up from pet claim! Awarded ${rankReward.coinsAwarded} coins`);
+                    }
+                }
+                catch (rankError) {
+                    this.logger.error(`Failed to check rank rewards for user ${userId}`, rankError);
+                }
                 const MIN_BLOCKCHAIN_CLAIM = 1000;
                 if (user.wallet_address && rewards >= MIN_BLOCKCHAIN_CLAIM) {
                     try {
@@ -402,6 +415,7 @@ let PetService = PetService_1 = class PetService {
                     newTotalPoints,
                     newLifetimePoints,
                     claimTime: new Date(),
+                    rankReward,
                 };
             });
         }
@@ -441,6 +455,7 @@ exports.PetService = PetService = PetService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         game_cycle_service_1.GameCycleService,
-        blockchain_service_1.BlockchainService])
+        blockchain_service_1.BlockchainService,
+        ranking_service_1.RankingService])
 ], PetService);
 //# sourceMappingURL=pet.service.js.map
