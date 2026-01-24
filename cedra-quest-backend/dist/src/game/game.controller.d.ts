@@ -3,6 +3,7 @@ import { EnergyService } from './services/energy.service';
 import { GameSessionService } from './services/game-session.service';
 import { RankingService } from './services/ranking.service';
 import { GameCycleService } from './services/game-cycle.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { FeedPetDto, GameSessionStartDto, GameSessionCompleteDto, RefillEnergyDto, LeaderboardQueryDto, CreateCycleDto } from '../common/dto/game.dto';
 export declare class GameController {
     private petService;
@@ -10,8 +11,9 @@ export declare class GameController {
     private gameSessionService;
     private rankingService;
     private gameCycleService;
+    private prisma;
     private readonly logger;
-    constructor(petService: PetService, energyService: EnergyService, gameSessionService: GameSessionService, rankingService: RankingService, gameCycleService: GameCycleService);
+    constructor(petService: PetService, energyService: EnergyService, gameSessionService: GameSessionService, rankingService: RankingService, gameCycleService: GameCycleService, prisma: PrismaService);
     getPetStatus(userId: string): Promise<import("../common/interfaces/game.interface").PetStatus>;
     feedPet(userId: string, feedPetDto: FeedPetDto): Promise<import("../common/interfaces/game.interface").FeedPetResult>;
     claimRewards(userId: string): Promise<import("../common/interfaces/game.interface").ClaimRewardsResult>;
@@ -62,6 +64,7 @@ export declare class GameController {
         energy: any;
         ranking: any;
         gameStats: any;
+        user: any;
         success: boolean;
         error?: undefined;
     } | {
@@ -69,6 +72,7 @@ export declare class GameController {
         energy: any;
         ranking: any;
         gameStats: any;
+        user: any;
         success: boolean;
         error: string;
     }>;

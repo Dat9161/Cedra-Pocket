@@ -111,12 +111,25 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
       console.log('🔐 Backend auth response:', response);
       console.log('🔐 Backend user:', response.user);
       
-      // Convert backend user to frontend format
-      const userData = backendAPI.backendUserToUserData(response.user, {
-        username: tgUser?.username,
-        firstName: tgUser?.firstName,
-        photoUrl: tgUser?.photoUrl,
-      });
+      // Create user data from backend response
+      const userData = {
+        id: String(response.user.id),
+        telegramId: response.user.telegram_id,
+        username: tgUser?.username || tgUser?.firstName || response.user.username || 'Player',
+        avatarUrl: tgUser?.photoUrl,
+        level: Math.floor(Number(response.user.total_points) / 1000) + 1,
+        currentXP: Number(response.user.total_points) % 1000,
+        requiredXP: 1000,
+        tokenBalance: Number(response.user.total_points),
+        walletBalance: 0,
+        gemBalance: 0,
+        earningRate: 10,
+        walletAddress: response.user.wallet_address || undefined,
+        createdAt: new Date(response.user.created_at),
+        updatedAt: new Date(response.user.updated_at),
+        totalPoints: Number(response.user.total_points),
+        lifetimePoints: Number(response.user.total_points),
+      };
       console.log('👤 Converted user data:', userData);
       console.log(`💰 Backend balance: ${userData.tokenBalance}`);
       console.log(`💰 Raw backend total_points: ${response.user.total_points}`);

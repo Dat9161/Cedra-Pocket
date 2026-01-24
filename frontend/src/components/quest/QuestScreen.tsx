@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useAppStore, useQuests, useQuestsLoading } from '../../store/useAppStore';
 import { QuestCard } from './QuestCard';
+import { BirthYearModal } from './BirthYearModal';
 import { backendAPI, BackendAPIError } from '../../services/backend-api.service';
 import { telegramService } from '../../services/telegram.service';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
@@ -15,7 +16,64 @@ import { LoadingSpinner } from '../shared/LoadingSpinner';
 export function QuestScreen() {
   const quests = useQuests();
   const questsLoading = useQuestsLoading();
-  const { setQuests, setQuestsLoading, updateQuest, updateBalance, addXP } = useAppStore();
+  const { setQuests, setQuestsLoading, updateQuest, updateBalance, addXP, setPet } = useAppStore();
+  const pet = useAppStore((state) => state.pet);
+  
+  // Birth year modal state
+  const [showBirthYearModal, setShowBirthYearModal] = useState(false);
+  const [currentPetQuest, setCurrentPetQuest] = useState<string | null>(null);
+  const [isHatchingEgg, setIsHatchingEgg] = useState(false);
+
+  // Handle birth year submission for pet hatching
+  const handleBirthYearSubmit = useCallback(async (birthYear: number) => {
+    if (!currentPetQuest) return;
+
+    setIsHatchingEgg(true);
+    
+    try {
+      // Verify quest with birth year
+      const result = await backendAPI.verifyQuest(Number(currentPetQuest), { birthYear });
+      
+      if (result.success) {
+        // Update pet state with birth year and hatched status
+        setPet({
+          birthYear: birthYear,
+          hatched: true,
+        });
+        
+        // Mark as claimable (user needs to click Claim to get reward)
+        updateQuest(currentPetQuest, { 
+          status: 'claimable', 
+          progress: 100,
+          currentValue: 1 
+        });
+        
+        telegramService.triggerHapticFeedback('medium');
+        console.log('✅ Pet egg hatched successfully:', result.message);
+        
+        // Close modal
+        setShowBirthYearModal(false);
+        setCurrentPetQuest(null);
+      } else {
+        console.log('❌ Pet hatching failed:', result.message);
+        telegramService.triggerHapticFeedback('heavy');
+        alert(result.message);
+      }
+    } catch (error) {
+      console.error('Failed to hatch pet egg:', error);
+      telegramService.triggerHapticFeedback('heavy');
+      alert('Failed to hatch pet egg. Please try again.');
+    } finally {
+      setIsHatchingEgg(false);
+    }
+  }, [currentPetQuest, updateQuest, setPet]);
+
+  // Handle closing birth year modal
+  const handleCloseBirthYearModal = useCallback(() => {
+    setShowBirthYearModal(false);
+    setCurrentPetQuest(null);
+    setIsHatchingEgg(false);
+  }, []);
 
   // Filter quests by type
   const dailyQuests = quests.filter((q) => q.type === 'daily');
@@ -42,8 +100,50 @@ export function QuestScreen() {
         }
 
         // Convert to frontend format
-        const frontendQuests = backendQuests.map((q) => backendAPI.backendQuestToQuest(q));
-        setQuests(frontendQuests);
+        const frontendQuests = backendQuests.map((q) => ({
+          id: String(q.id),
+          title: q.title,
+          description: q.description || '',
+          iconUrl: '',
+          type: q.type === 'SOCIAL' ? 'social' as const : 
+                q.category === 'daily' ? 'daily' as const : 'achievement' as const,
+          status: q.user_status === 'COMPLETED' ? 'claimable' as const :
+                  q.user_status === 'CLAIMED' ? 'completed' as const : 'active' as const,
+          progress: q.user_status === 'COMPLETED' || q.user_status === 'CLAIMED' ? 100 : 0,
+          currentValue: q.user_status === 'COMPLETED' || q.user_status === 'CLAIMED' ? 1 : 0,
+          targetValue: 1,
+          reward: {
+            type: 'token' as const,
+            amount: Number(q.reward_amount),
+          },
+          url: q.type === 'SOCIAL' && q.config?.url ? String(q.config.url) : undefined,
+        }));
+        
+        // Check pet hatching quest status based on pet state
+        const updatedQuests = frontendQuests.map((quest) => {
+          if (quest.type === 'achievement' && quest.title === 'Hatch Your Pet Egg') {
+            if (pet.hatched && pet.birthYear) {
+              // Pet is already hatched, mark quest as completed
+              return {
+                ...quest,
+                status: 'completed' as const,
+                progress: 100,
+                currentValue: 1,
+              };
+            } else {
+              // Pet not hatched, ensure quest is active
+              return {
+                ...quest,
+                status: 'active' as const,
+                progress: 0,
+                currentValue: 0,
+              };
+            }
+          }
+          return quest;
+        });
+        
+        setQuests(updatedQuests);
       } catch (error) {
         console.error('Failed to load quests:', error);
       } finally {
@@ -52,7 +152,7 @@ export function QuestScreen() {
     };
 
     loadQuests();
-  }, [setQuests, setQuestsLoading]);
+  }, [setQuests, setQuestsLoading, pet.hatched, pet.birthYear]);
 
   // Handle quest action (Go or Claim)
   const handleQuestSelect = useCallback(async (questId: string) => {
@@ -68,6 +168,21 @@ export function QuestScreen() {
 
     // If claimable, claim the reward and mark as completed
     if (quest.status === 'claimable') {
+      // Special check for pet hatching quest - ensure pet is actually hatched
+      if (quest.type === 'achievement' && quest.title === 'Hatch Your Pet Egg') {
+        if (!pet.hatched || !pet.birthYear) {
+          console.log('❌ Cannot claim pet hatching reward - pet not properly hatched');
+          alert('You must hatch your pet egg first by entering your birth year!');
+          // Reset quest to active state
+          updateQuest(questId, { 
+            status: 'active', 
+            progress: 0,
+            currentValue: 0 
+          });
+          return;
+        }
+      }
+
       // Try to claim via backend first
       try {
         const result = await backendAPI.claimQuestReward(Number(questId));
@@ -123,6 +238,26 @@ export function QuestScreen() {
 
     // If active, handle based on quest type
     if (quest.status === 'active') {
+      // Special handling for pet hatching quest
+      if (quest.type === 'achievement' && quest.title === 'Hatch Your Pet Egg') {
+        // Check if pet is already hatched
+        if (pet.hatched && pet.birthYear) {
+          console.log('🥚 Pet already hatched, marking quest as claimable');
+          updateQuest(questId, { 
+            status: 'claimable', 
+            progress: 100,
+            currentValue: 1 
+          });
+          return;
+        }
+        
+        console.log('🥚 Opening birth year modal for pet hatching quest');
+        setCurrentPetQuest(questId);
+        setShowBirthYearModal(true);
+        telegramService.triggerHapticFeedback('light');
+        return;
+      }
+
       // For social quests with URLs, open external link first
       if (quest.type === 'social' && quest.url) {
         console.log('🔗 Opening external URL for social quest:', quest.url);
@@ -263,6 +398,14 @@ export function QuestScreen() {
           ))}
         </div>
       </section>
+
+      {/* Birth Year Modal */}
+      <BirthYearModal
+        isOpen={showBirthYearModal}
+        onClose={handleCloseBirthYearModal}
+        onSubmit={handleBirthYearSubmit}
+        isLoading={isHatchingEgg}
+      />
     </div>
   );
 }

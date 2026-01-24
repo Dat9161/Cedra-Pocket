@@ -20,14 +20,16 @@ const energy_service_1 = require("./services/energy.service");
 const game_session_service_1 = require("./services/game-session.service");
 const ranking_service_1 = require("./services/ranking.service");
 const game_cycle_service_1 = require("./services/game-cycle.service");
+const prisma_service_1 = require("../prisma/prisma.service");
 const game_dto_1 = require("../common/dto/game.dto");
 let GameController = GameController_1 = class GameController {
-    constructor(petService, energyService, gameSessionService, rankingService, gameCycleService) {
+    constructor(petService, energyService, gameSessionService, rankingService, gameCycleService, prisma) {
         this.petService = petService;
         this.energyService = energyService;
         this.gameSessionService = gameSessionService;
         this.rankingService = rankingService;
         this.gameCycleService = gameCycleService;
+        this.prisma = prisma;
         this.logger = new common_1.Logger(GameController_1.name);
     }
     async getPetStatus(userId) {
@@ -107,7 +109,7 @@ let GameController = GameController_1 = class GameController {
     async getDashboard(userId) {
         this.logger.log(`Getting dashboard data for user: ${userId}`);
         try {
-            const [petStatus, energyStatus, rankInfo, gameStats] = await Promise.all([
+            const [petStatus, energyStatus, rankInfo, gameStats, userProfile] = await Promise.all([
                 this.petService.getPetStatus(userId).catch(err => {
                     this.logger.error('Failed to get pet status', err);
                     return null;
@@ -124,12 +126,26 @@ let GameController = GameController_1 = class GameController {
                     this.logger.error('Failed to get game stats', err);
                     return null;
                 }),
+                this.prisma.users.findUnique({
+                    where: { telegram_id: BigInt(userId) },
+                    select: {
+                        telegram_id: true,
+                        total_points: true,
+                        lifetime_points: true,
+                        current_rank: true,
+                        username: true,
+                    }
+                }).catch(err => {
+                    this.logger.error('Failed to get user profile', err);
+                    return null;
+                }),
             ]);
             return {
                 pet: petStatus,
                 energy: energyStatus,
                 ranking: rankInfo,
                 gameStats,
+                user: userProfile,
                 success: true,
             };
         }
@@ -140,6 +156,7 @@ let GameController = GameController_1 = class GameController {
                 energy: null,
                 ranking: null,
                 gameStats: null,
+                user: null,
                 success: false,
                 error: 'Failed to load dashboard data',
             };
@@ -273,6 +290,7 @@ exports.GameController = GameController = GameController_1 = __decorate([
         energy_service_1.EnergyService,
         game_session_service_1.GameSessionService,
         ranking_service_1.RankingService,
-        game_cycle_service_1.GameCycleService])
+        game_cycle_service_1.GameCycleService,
+        prisma_service_1.PrismaService])
 ], GameController);
 //# sourceMappingURL=game.controller.js.map

@@ -4,6 +4,7 @@ import { EnergyService } from './services/energy.service';
 import { GameSessionService } from './services/game-session.service';
 import { RankingService } from './services/ranking.service';
 import { GameCycleService } from './services/game-cycle.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { 
   FeedPetDto, 
   GameSessionStartDto, 
@@ -23,6 +24,7 @@ export class GameController {
     private gameSessionService: GameSessionService,
     private rankingService: RankingService,
     private gameCycleService: GameCycleService,
+    private prisma: PrismaService,
   ) {}
 
   // Pet Management Endpoints
@@ -150,7 +152,7 @@ export class GameController {
     this.logger.log(`Getting dashboard data for user: ${userId}`);
     
     try {
-      const [petStatus, energyStatus, rankInfo, gameStats] = await Promise.all([
+      const [petStatus, energyStatus, rankInfo, gameStats, userProfile] = await Promise.all([
         this.petService.getPetStatus(userId).catch(err => {
           this.logger.error('Failed to get pet status', err);
           return null;
@@ -167,6 +169,20 @@ export class GameController {
           this.logger.error('Failed to get game stats', err);
           return null;
         }),
+        // Get user profile to include current points
+        this.prisma.users.findUnique({
+          where: { telegram_id: BigInt(userId) },
+          select: {
+            telegram_id: true,
+            total_points: true,
+            lifetime_points: true,
+            current_rank: true,
+            username: true,
+          }
+        }).catch(err => {
+          this.logger.error('Failed to get user profile', err);
+          return null;
+        }),
       ]);
 
       return {
@@ -174,6 +190,7 @@ export class GameController {
         energy: energyStatus,
         ranking: rankInfo,
         gameStats,
+        user: userProfile,
         success: true,
       };
     } catch (error) {
@@ -183,6 +200,7 @@ export class GameController {
         energy: null,
         ranking: null,
         gameStats: null,
+        user: null,
         success: false,
         error: 'Failed to load dashboard data',
       };

@@ -666,7 +666,7 @@ export const useAppStore = create<AppStore>()(
         const { energy } = get();
         const now = Date.now();
         const timeDiff = now - energy.lastUpdate;
-        const REGEN_INTERVAL = 30 * 60 * 1000; // 30 minutes
+        const REGEN_INTERVAL = 60 * 60 * 1000; // 1 hour
         const REGEN_THRESHOLD = 5; // Only regen if energy < 5
 
         if (energy.currentEnergy < REGEN_THRESHOLD) {
@@ -720,14 +720,81 @@ export const useAppStore = create<AppStore>()(
 
       // Game API Actions
       feedGamePet: async (feedCount = 1) => {
-        console.log(`🍖 Feed pet called with count: ${feedCount} (disabled)`);
-        // Disabled to prevent errors - all pet feeding logic is handled locally
+        try {
+          console.log(`🍖 Feeding pet with count: ${feedCount}`);
+          const { backendAPI } = await import('../services/backend-api.service');
+          const result = await backendAPI.feedPet(feedCount);
+          
+          if (result.success) {
+            console.log('✅ Pet fed successfully:', result);
+            
+            // Update pet XP and level
+            get().setPet({
+              exp: result.newXp,
+              level: result.newLevel || get().pet.level,
+            });
+            
+            // Update user points (subtract cost)
+            if (result.pointsSpent > 0) {
+              const currentUser = get().user;
+              if (currentUser) {
+                set({
+                  user: {
+                    ...currentUser,
+                    tokenBalance: Math.max(0, currentUser.tokenBalance - result.pointsSpent),
+                  }
+                });
+              }
+            }
+            
+            console.log(`🎉 Pet gained ${result.xpGained} XP, spent ${result.pointsSpent} points`);
+          } else {
+            console.error('❌ Failed to feed pet:', result.error);
+            throw new Error(result.error || 'Failed to feed pet');
+          }
+        } catch (error) {
+          console.error('❌ Feed pet error:', error);
+          throw error;
+        }
       },
 
       claimGamePetRewards: async () => {
-        // SIMPLIFIED: This function is now a no-op to prevent double claiming
-        // All pet coin claiming is handled through the simple collectCoins() function
-        console.log('🔄 claimGamePetRewards called but disabled to prevent double claiming');
+        try {
+          console.log('💰 Claiming pet rewards...');
+          const { backendAPI } = await import('../services/backend-api.service');
+          const result = await backendAPI.claimPetRewards();
+          
+          if (result.success) {
+            console.log('✅ Pet rewards claimed successfully:', result);
+            
+            // Update pet state (reset pending coins)
+            get().setPet({
+              pendingCoins: 0,
+              lastCoinTime: Date.now(),
+            });
+            
+            // Update user points
+            if (result.pointsEarned > 0) {
+              const currentUser = get().user;
+              if (currentUser) {
+                set({
+                  user: {
+                    ...currentUser,
+                    tokenBalance: result.newTotalPoints || (currentUser.tokenBalance + result.pointsEarned),
+                  }
+                });
+              }
+            }
+            
+            console.log(`🎉 Claimed ${result.pointsEarned} points from pet rewards`);
+          } else {
+            console.error('❌ Failed to claim pet rewards:', result.error);
+            throw new Error(result.error || 'Failed to claim pet rewards');
+          }
+        } catch (error) {
+          console.error('❌ Claim pet rewards error:', error);
+          throw error;
+        }
       },
 
       startGameSession: async (gameType) => {
@@ -737,8 +804,48 @@ export const useAppStore = create<AppStore>()(
       },
 
       completeGameSession: async (score, _duration) => {
-        console.log(`🏁 Complete game session called with score ${score} (disabled)`);
-        // Disabled to prevent errors - return void as expected
+        try {
+          console.log(`🏁 Completing game session with score ${score}`);
+          const { backendAPI } = await import('../services/backend-api.service');
+          
+          // Calculate points earned (same as frontend logic)
+          const pointsEarned = score; // 1 point per score
+          
+          const result = await backendAPI.completeGameSession('pocket-fly', score, pointsEarned);
+          
+          if (result.success) {
+            console.log('✅ Game session completed successfully:', result);
+            
+            // Update user points
+            if (result.pointsEarned > 0) {
+              const currentUser = get().user;
+              if (currentUser) {
+                set({
+                  user: {
+                    ...currentUser,
+                    tokenBalance: result.newTotalPoints || (currentUser.tokenBalance + result.pointsEarned),
+                  }
+                });
+              }
+            }
+            
+            // Update game stats
+            get().updateGameStats(score, result.pointsEarned);
+            
+            console.log(`🎉 Game completed: ${score} score, ${result.pointsEarned} points earned`);
+          } else {
+            console.warn('⚠️ Game session save failed, updating locally:', result.error);
+            // Fallback to local update
+            get().updateGameStats(score, pointsEarned);
+            get().updateBalance(pointsEarned, 'token');
+          }
+        } catch (error) {
+          console.error('❌ Complete game session error:', error);
+          // Fallback to local update
+          const pointsEarned = score;
+          get().updateGameStats(score, pointsEarned);
+          get().updateBalance(pointsEarned, 'token');
+        }
       },
 
       refillGameEnergy: async (amount) => {
@@ -753,17 +860,21 @@ export const useAppStore = create<AppStore>()(
           const dashboard = await backendAPI.getGameDashboard();
           
           if (dashboard && dashboard.success) {
-            console.log('✅ Dashboard has success flag, processing data...');
+            console.log('✅ Dashboard loaded successfully, processing data...');
             
             // Update pet state
             if (dashboard.pet) {
               console.log('🐾 Updating pet state:', dashboard.pet);
               get().setPet({
-                level: dashboard.pet.level,
-                exp: dashboard.pet.currentXp,
-                maxExp: dashboard.pet.xpForNextLevel,
+                level: dashboard.pet.level || 1,
+                exp: dashboard.pet.currentXp || 0,
+                maxExp: dashboard.pet.xpForNextLevel || 100,
                 pendingCoins: dashboard.pet.pendingRewards || 0,
                 lastCoinTime: dashboard.pet.lastClaimTime ? new Date(dashboard.pet.lastClaimTime).getTime() : Date.now(),
+                // Keep existing hatched status and birth year from localStorage
+                hatched: get().pet.hatched,
+                birthYear: get().pet.birthYear,
+                hatchProgress: get().pet.hatchProgress,
               });
             }
 
@@ -771,8 +882,8 @@ export const useAppStore = create<AppStore>()(
             if (dashboard.energy) {
               console.log('⚡ Updating energy state:', dashboard.energy);
               get().setEnergy({
-                currentEnergy: dashboard.energy.currentEnergy,
-                maxEnergy: dashboard.energy.maxEnergy,
+                currentEnergy: dashboard.energy.currentEnergy || 10,
+                maxEnergy: dashboard.energy.maxEnergy || 10,
                 lastUpdate: dashboard.energy.lastUpdate ? new Date(dashboard.energy.lastUpdate).getTime() : Date.now(),
               });
             }
@@ -781,10 +892,10 @@ export const useAppStore = create<AppStore>()(
             if (dashboard.ranking) {
               console.log('🏆 Updating ranking:', dashboard.ranking);
               get().setRanking({
-                rank: dashboard.ranking.rank,
-                position: dashboard.ranking.position,
-                lifetimePoints: dashboard.ranking.lifetimePoints,
-                nextRankThreshold: dashboard.ranking.nextRankThreshold,
+                rank: dashboard.ranking.rank || 'BRONZE',
+                position: dashboard.ranking.position || 999,
+                lifetimePoints: dashboard.ranking.lifetimePoints || 0,
+                nextRankThreshold: dashboard.ranking.pointsToNextRank || 1000,
               });
             }
 
@@ -792,19 +903,60 @@ export const useAppStore = create<AppStore>()(
             if (dashboard.gameStats) {
               console.log('📈 Updating game stats:', dashboard.gameStats);
               get().setGameStats({
-                totalGamesPlayed: dashboard.gameStats.totalGamesPlayed,
-                totalScore: dashboard.gameStats.totalScore,
-                averageScore: dashboard.gameStats.averageScore,
-                bestScore: dashboard.gameStats.bestScore,
-                totalPointsEarned: dashboard.gameStats.totalPointsEarned,
+                totalGamesPlayed: dashboard.gameStats.totalGamesPlayed || 0,
+                totalScore: dashboard.gameStats.totalScore || 0,
+                averageScore: dashboard.gameStats.averageScore || 0,
+                bestScore: dashboard.gameStats.bestScore || 0,
+                totalPointsEarned: dashboard.gameStats.totalPointsEarned || 0,
               });
+            }
+
+            // Update user points if available in dashboard
+            if (dashboard.user && dashboard.user.total_points !== undefined) {
+              console.log('💰 Updating user points:', dashboard.user.total_points);
+              set((state) => ({
+                user: state.user ? {
+                  ...state.user,
+                  tokenBalance: Number(dashboard.user.total_points),
+                } : state.user
+              }));
             }
             
             console.log('✅ Game dashboard loaded successfully');
           } else {
-            console.error('❌ Dashboard response missing success flag:', dashboard);
-            // Don't set error state - app can work without dashboard data
-            console.log('⚠️ Continuing without dashboard data');
+            console.warn('⚠️ Dashboard response missing success flag or empty:', dashboard);
+            
+            // Check if it's completely empty
+            if (!dashboard || Object.keys(dashboard).length === 0) {
+              console.log('📭 Dashboard response is empty - backend may not be available');
+              console.log('🔄 App will continue with local data');
+            } else {
+              console.log('📊 Dashboard has some data but no success flag - processing anyway');
+              
+              // Try to process the data even without success flag
+              if (dashboard.pet) {
+                console.log('🐾 Processing pet data from response');
+                get().setPet({
+                  level: dashboard.pet.level || 1,
+                  exp: dashboard.pet.currentXp || 0,
+                  maxExp: dashboard.pet.xpForNextLevel || 100,
+                  pendingCoins: dashboard.pet.pendingRewards || 0,
+                  lastCoinTime: dashboard.pet.lastClaimTime ? new Date(dashboard.pet.lastClaimTime).getTime() : Date.now(),
+                  hatched: get().pet.hatched,
+                  birthYear: get().pet.birthYear,
+                  hatchProgress: get().pet.hatchProgress,
+                });
+              }
+              
+              if (dashboard.energy) {
+                console.log('⚡ Processing energy data from response');
+                get().setEnergy({
+                  currentEnergy: dashboard.energy.currentEnergy || 10,
+                  maxEnergy: dashboard.energy.maxEnergy || 10,
+                  lastUpdate: dashboard.energy.lastUpdate ? new Date(dashboard.energy.lastUpdate).getTime() : Date.now(),
+                });
+              }
+            }
           }
         } catch (error) {
           console.error('❌ Failed to load game dashboard:', error);
@@ -872,6 +1024,36 @@ export const useAppStore = create<AppStore>()(
                 joinedAt: new Date(friend.joinedAt),
               })),
             };
+          }
+
+          // Check localStorage for pet hatching status and quest progress
+          if (typeof window !== 'undefined') {
+            const storedBirthYear = localStorage.getItem('user_birth_year');
+            const storedHatched = localStorage.getItem('pet_hatched');
+            const completedQuestIds = JSON.parse(localStorage.getItem('completed_pet_quests') || '[]');
+            
+            // Calculate hatch progress based on completed quests (25% per quest, 4 quests total)
+            const hatchProgress = Math.min(100, completedQuestIds.length * 25);
+            
+            if (storedBirthYear && storedHatched === 'true') {
+              state.pet = {
+                ...state.pet,
+                birthYear: parseInt(storedBirthYear),
+                hatched: true,
+                hatchProgress: 100, // If pet is hatched, progress should be 100%
+              };
+            } else if (completedQuestIds.length > 0) {
+              // If pet is not hatched but has quest progress, restore the progress
+              state.pet = {
+                ...state.pet,
+                hatchProgress: hatchProgress,
+              };
+              
+              // If birth year is stored but pet is not hatched, restore birth year
+              if (storedBirthYear) {
+                state.pet.birthYear = parseInt(storedBirthYear);
+              }
+            }
           }
         }
       },

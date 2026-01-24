@@ -52,11 +52,25 @@ export function useAuth(): UseAuthReturn {
     try {
       const response = await backendAPI.authenticate(initData);
       
-      // Convert backend user to frontend format
-      const userData = backendAPI.backendUserToUserData(response.user, {
-        username: telegramUser?.username || telegramUser?.firstName,
-        photoUrl: telegramUser?.photoUrl,
-      });
+      // Create user data from backend response
+      const userData = {
+        id: String(response.user.id),
+        telegramId: response.user.telegram_id,
+        username: telegramUser?.username || telegramUser?.firstName || response.user.username || 'Player',
+        avatarUrl: telegramUser?.photoUrl,
+        level: Math.floor(Number(response.user.total_points) / 1000) + 1,
+        currentXP: Number(response.user.total_points) % 1000,
+        requiredXP: 1000,
+        tokenBalance: Number(response.user.total_points),
+        walletBalance: 0,
+        gemBalance: 0,
+        earningRate: 10,
+        walletAddress: response.user.wallet_address || undefined,
+        createdAt: new Date(response.user.created_at),
+        updatedAt: new Date(response.user.updated_at),
+        totalPoints: Number(response.user.total_points),
+        lifetimePoints: Number(response.user.total_points),
+      };
 
       setUser(userData);
       return true;

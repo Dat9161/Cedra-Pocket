@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser, usePet, useEnergy, useGameSystemActions, useAppStore } from '../../store/useAppStore';
+import { PetQuestModal } from './PetQuestModal';
 // import { backendAPI } from '../../services/backend-api.service';
 
 const getCoinsPerMinute = (level: number) => {
@@ -75,7 +76,8 @@ export function PetScreen() {
   const { 
     feedGamePet, 
     loadGameDashboard,
-    regenerateEnergy 
+    regenerateEnergy,
+    claimGamePetRewards 
   } = useGameSystemActions();
   const hasFetchedRef = useRef(false);
   const hasLoadedFromBackend = useRef(false);
@@ -93,20 +95,11 @@ export function PetScreen() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviterAddress, setInviterAddress] = useState('');
   const [showHatchModal, setShowHatchModal] = useState(false);
-  const [birthYear, setBirthYear] = useState('');
   const [isHatching, setIsHatching] = useState(false);
-  const [showBirthYearInput, setShowBirthYearInput] = useState(false);
-  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
   const [debugData] = useState<any>(null);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
   
-  // Hatch tasks
-  const hatchTasks = [
-    { id: 'follow_twitter', name: 'Follow on Twitter', icon: '🐦', progress: 25 },
-    { id: 'join_telegram', name: 'Join Telegram Group', icon: '📱', progress: 25 },
-    { id: 'invite_friend', name: 'Invite 1 Friend', icon: '👥', progress: 25 },
-    { id: 'enter_birthyear', name: 'Enter Your Birth Year', icon: '🎂', progress: 25 },
-  ];
+  // Hatch tasks - moved to PetQuestModal
   
   const petBoosts = [
     { id: 'food_bowl', name: 'Food Bowl', desc: 'Increase hunger capacity', icon: '🍖', cost: 100, level: 1 },
@@ -290,18 +283,24 @@ export function PetScreen() {
       setShowCoinAnimation(true);
       setTimeout(() => setShowCoinAnimation(false), 1000);
       
-      // Reset pet pending coins immediately and set new claim time
-      setPet({ 
-        pendingCoins: 0, 
-        lastCoinTime: Date.now() 
-      });
-      setCoinTimer(COIN_INTERVAL_SECONDS);
+      console.log(`💰 Claiming ${coinsToCollect} coins via backend...`);
       
-      console.log(`💰 Claiming ${coinsToCollect} coins...`);
-      
-      // SIMPLIFIED: Only call updateBalance once - no complex sync logic
-      await updateBalance(coinsToCollect, 'token');
-      console.log(`✅ Successfully claimed ${coinsToCollect} coins`);
+      // Try to claim via backend first
+      try {
+        await claimGamePetRewards();
+        console.log(`✅ Successfully claimed ${coinsToCollect} coins via backend`);
+      } catch (backendError) {
+        console.warn('⚠️ Backend claim failed, using local fallback:', backendError);
+        
+        // Fallback to local update
+        setPet({ 
+          pendingCoins: 0, 
+          lastCoinTime: Date.now() 
+        });
+        setCoinTimer(COIN_INTERVAL_SECONDS);
+        await updateBalance(coinsToCollect, 'token');
+        console.log(`✅ Successfully claimed ${coinsToCollect} coins locally`);
+      }
     } catch (error) {
       console.error('❌ Failed to claim coins:', error);
       // Revert pet state if failed
@@ -360,6 +359,26 @@ export function PetScreen() {
   const [hatchStage, setHatchStage] = useState(0); // 0: not started, 1: shaking, 2: cracking, 3: pet reveal
   
   const handleHatch = () => {
+    // Validate that all quests are completed
+    const completedQuestIds = JSON.parse(localStorage.getItem('completed_pet_quests') || '[]');
+    const storedBirthYear = localStorage.getItem('user_birth_year');
+    const requiredQuests = ['follow_twitter', 'join_telegram', 'invite_friend', 'enter_birthyear'];
+    
+    // Check if all required quests are completed
+    const allQuestsCompleted = requiredQuests.every(questId => 
+      completedQuestIds.includes(questId) || (questId === 'enter_birthyear' && storedBirthYear)
+    );
+    
+    if (!allQuestsCompleted) {
+      alert('You must complete all tasks before hatching your pet egg!');
+      return;
+    }
+    
+    if (!storedBirthYear) {
+      alert('You must enter your birth year before hatching your pet egg!');
+      return;
+    }
+    
     if ((pet.hatchProgress || 0) >= 100) {
       setShowHatchModal(false);
       setIsHatching(true);
@@ -368,46 +387,16 @@ export function PetScreen() {
       // Stage 2: Pet xuất hiện
       setTimeout(() => setHatchStage(2), 1000);
       
-      // Complete hatch - reset pendingCoins = 0
+      // Complete hatch - reset pendingCoins = 0 and mark as hatched
       setTimeout(() => {
         setPet({ hatched: true, pendingCoins: 0, lastCoinTime: Date.now() });
-        // Note: syncToBackend removed - data will sync automatically
+        // Store hatched status in localStorage for persistence
+        localStorage.setItem('pet_hatched', 'true');
         setIsHatching(false);
         setHatchStage(0);
       }, 3000);
-    }
-  };
-
-  // Complete a hatch task
-  const handleCompleteTask = (taskId: string) => {
-    if (completedTasks.includes(taskId)) return;
-    
-    if (taskId === 'enter_birthyear') {
-      setShowBirthYearInput(true);
     } else {
-      // Mark task as completed
-      const newCompletedTasks = [...completedTasks, taskId];
-      setCompletedTasks(newCompletedTasks);
-      
-      // Update progress
-      const newProgress = Math.min(100, (pet.hatchProgress || 0) + 25);
-      setPet({ hatchProgress: newProgress });
-      // Note: syncToBackend removed - data will sync automatically
-    }
-  };
-  
-  // Submit birth year
-  const handleSubmitBirthYear = () => {
-    const year = parseInt(birthYear);
-    if (year >= 1950 && year <= 2020) {
-      const newCompletedTasks = [...completedTasks, 'enter_birthyear'];
-      setCompletedTasks(newCompletedTasks);
-      setShowBirthYearInput(false);
-      
-      // Update progress
-      const newProgress = Math.min(100, (pet.hatchProgress || 0) + 25);
-      setPet({ hatchProgress: newProgress, birthYear: year });
-      // Note: syncToBackend removed - data will sync automatically
+      alert('Complete all tasks to hatch your pet egg!');
     }
   };
 
@@ -599,193 +588,13 @@ export function PetScreen() {
           </div>
         </div>
 
-        {/* Hatch Modal - Task List */}
-        {showHatchModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div style={{ 
-              background: 'rgba(255, 255, 255, 0.95)', 
-              borderRadius: 'clamp(16px, 4vw, 24px)', 
-              padding: 'clamp(12px, 3vw, 20px)', 
-              maxWidth: 'clamp(280px, 85vw, 360px)', 
-              width: '100%', 
-              maxHeight: '70vh', 
-              overflowY: 'auto', 
-              backdropFilter: 'blur(20px)' 
-            }}>
-              {showBirthYearInput ? (
-                <>
-                  {/* Birth Year Input */}
-                  <button 
-                    onClick={() => setShowBirthYearInput(false)} 
-                    className="absolute top-3 right-3" 
-                    style={{ 
-                      background: 'rgba(0,0,0,0.1)', 
-                      border: 'none', 
-                      borderRadius: '50%', 
-                      width: 'clamp(22px, 5vw, 30px)', 
-                      height: 'clamp(22px, 5vw, 30px)', 
-                      color: '#333', 
-                      cursor: 'pointer', 
-                      fontSize: 'var(--fs-sm)' 
-                    }}
-                  >✕</button>
-                  <div className="text-center mb-3">
-                    <span style={{ fontSize: 'clamp(32px, 8vw, 48px)' }}>🎂</span>
-                    <h3 style={{ color: '#1a1a2e', fontSize: 'var(--fs-md)', fontWeight: '700', marginTop: 'clamp(4px, 1vw, 8px)' }}>Enter Your Birth Year</h3>
-                  </div>
-                  
-                  <input
-                    type="number"
-                    value={birthYear}
-                    onChange={(e) => setBirthYear(e.target.value)}
-                    placeholder="e.g. 1995"
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '10px',
-                      border: '2px solid rgba(0,0,0,0.1)',
-                      background: 'rgba(0,0,0,0.05)',
-                      color: '#1a1a2e',
-                      fontSize: 'var(--fs-md)',
-                      textAlign: 'center',
-                      outline: 'none',
-                    }}
-                  />
-
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={() => setShowBirthYearInput(false)}
-                      style={{ flex: 1, padding: '10px', borderRadius: '10px', background: 'rgba(0,0,0,0.08)', border: 'none', color: '#333', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
-                    >
-                      Back
-                    </button>
-                    <button
-                      onClick={handleSubmitBirthYear}
-                      disabled={!birthYear || parseInt(birthYear) < 1950 || parseInt(birthYear) > 2020}
-                      style={{
-                        flex: 1,
-                        padding: '10px',
-                        borderRadius: '10px',
-                        background: birthYear && parseInt(birthYear) >= 1950 && parseInt(birthYear) <= 2020 
-                          ? 'linear-gradient(135deg, #ffd700, #f5a623)' 
-                          : 'rgba(0,0,0,0.1)',
-                        border: 'none',
-                        color: '#1a1a2e',
-                        fontSize: '13px',
-                        fontWeight: '700',
-                        cursor: birthYear ? 'pointer' : 'not-allowed',
-                      }}
-                    >
-                      Confirm ✓
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Task List */}
-                  <button onClick={() => setShowHatchModal(false)} style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(0,0,0,0.1)', border: 'none', borderRadius: '50%', width: '26px', height: '26px', color: '#333', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>✕</button>
-                  
-                  <div className="text-center mb-3">
-                    {/* Egg image changes based on progress */}
-                    <img 
-                      src={
-                        progress >= 100 ? '/icons/egg4.PNG' :
-                        progress >= 75 ? '/icons/egg3.PNG' :
-                        progress >= 25 ? '/icons/egg2.PNG' :
-                        '/icons/egg1.PNG'
-                      }
-                      alt="Egg"
-                      style={{ 
-                        width: '60px',
-                        height: 'auto',
-                        margin: '0 auto',
-                      }}
-                    />
-                    <h3 style={{ color: '#1a1a2e', fontSize: 'var(--fs-md)', fontWeight: '700', marginTop: '6px' }}>Hatch Your Pet!</h3>
-                    <p style={{ color: 'rgba(0,0,0,0.5)', fontSize: '12px', marginTop: '2px' }}>Complete all tasks to hatch your egg</p>
-                  </div>
-
-                  {/* Progress */}
-                  <div style={{ marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ color: 'rgba(0,0,0,0.5)', fontSize: '11px' }}>Progress</span>
-                      <span style={{ color: '#f5a623', fontSize: '11px', fontWeight: '600' }}>{pet.hatchProgress || 0}%</span>
-                    </div>
-                    <div style={{ height: '6px', background: 'rgba(0,0,0,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ width: `${pet.hatchProgress || 0}%`, height: '100%', background: 'linear-gradient(90deg, #ffd700, #f5a623)', borderRadius: '3px', transition: 'width 0.5s' }} />
-                    </div>
-                  </div>
-
-                  {/* Tasks */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
-                    {hatchTasks.map((task) => {
-                      const isCompleted = completedTasks.includes(task.id);
-                      return (
-                        <button
-                          key={task.id}
-                          onClick={() => handleCompleteTask(task.id)}
-                          disabled={isCompleted}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '10px',
-                            borderRadius: '10px',
-                            background: isCompleted ? 'rgba(34, 197, 94, 0.15)' : 'rgba(0,0,0,0.05)',
-                            border: isCompleted ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(0,0,0,0.08)',
-                            cursor: isCompleted ? 'default' : 'pointer',
-                            transition: 'all 0.2s',
-                          }}
-                        >
-                          <div style={{ 
-                            width: '32px', 
-                            height: '32px', 
-                            borderRadius: '8px', 
-                            background: isCompleted ? 'rgba(34, 197, 94, 0.2)' : 'rgba(0,0,0,0.05)', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center', 
-                            fontSize: '16px' 
-                          }}>
-                            {isCompleted ? '✓' : task.icon}
-                          </div>
-                          <div style={{ flex: 1, textAlign: 'left' }}>
-                            <div style={{ color: isCompleted ? 'rgba(34, 197, 94, 1)' : '#1a1a2e', fontSize: '13px', fontWeight: '600' }}>{task.name}</div>
-                            <div style={{ color: isCompleted ? 'rgba(34, 197, 94, 0.7)' : 'rgba(0,0,0,0.4)', fontSize: '11px' }}>+{task.progress}% progress</div>
-                          </div>
-                          {!isCompleted && (
-                            <span style={{ color: 'rgba(0,0,0,0.3)', fontSize: '14px' }}>›</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Hatch Button */}
-                  <button
-                    onClick={handleHatch}
-                    disabled={(pet.hatchProgress || 0) < 100}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '10px',
-                      background: (pet.hatchProgress || 0) >= 100 
-                        ? 'linear-gradient(135deg, #ffd700, #f5a623)' 
-                        : 'rgba(0,0,0,0.1)',
-                      border: 'none',
-                      color: (pet.hatchProgress || 0) >= 100 ? '#1a1a2e' : 'rgba(0,0,0,0.4)',
-                      fontSize: '14px',
-                      fontWeight: '700',
-                      cursor: (pet.hatchProgress || 0) >= 100 ? 'pointer' : 'not-allowed',
-                    }}
-                  >
-                    🐣 {(pet.hatchProgress || 0) >= 100 ? 'Hatch Now!' : 'Complete all tasks'}
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        )}
+        {/* Pet Quest Modal */}
+        <PetQuestModal
+          isOpen={showHatchModal}
+          onClose={() => setShowHatchModal(false)}
+          onHatch={handleHatch}
+          currentProgress={pet.hatchProgress || 0}
+        />
 
         <style jsx>{`
           @keyframes eggWobble {

@@ -41,7 +41,24 @@ export function useQuests(): UseQuestsReturn {
       }
 
       // Convert to frontend format
-      const frontendQuests = backendQuests.map((q) => backendAPI.backendQuestToQuest(q));
+      const frontendQuests = backendQuests.map((q) => ({
+        id: String(q.id),
+        title: q.title,
+        description: q.description || '',
+        iconUrl: '',
+        type: q.type === 'SOCIAL' ? 'social' as const : 
+              q.category === 'daily' ? 'daily' as const : 'achievement' as const,
+        status: q.user_status === 'COMPLETED' ? 'claimable' as const :
+                q.user_status === 'CLAIMED' ? 'completed' as const : 'active' as const,
+        progress: q.user_status === 'COMPLETED' || q.user_status === 'CLAIMED' ? 100 : 0,
+        currentValue: q.user_status === 'COMPLETED' || q.user_status === 'CLAIMED' ? 1 : 0,
+        targetValue: 1,
+        reward: {
+          type: 'token' as const,
+          amount: Number(q.reward_amount),
+        },
+        url: q.type === 'SOCIAL' && q.config?.url ? String(q.config.url) : undefined,
+      }));
       setQuests(frontendQuests);
     } catch (err) {
       console.error('Failed to fetch quests:', err);

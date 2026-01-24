@@ -1,18 +1,17 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useAppStore, useUser, useIsLoading, useError, NavigationTab, usePet, useGameSystemActions } from '../store/useAppStore';
+import { useAppStore, useUser, useIsLoading, useError, NavigationTab, usePet, useGameSystemActions, useEnergy } from '../store/useAppStore';
 import { HeroSection } from '../components/home';
 import { BottomNavigation } from '../components/layout/BottomNavigation';
 import { LoadingScreen } from '../components/shared';
 import { QuestScreen } from '../components/quest';
 import { SpinModal } from '../components/spin';
 import { AppScreen } from '../components/app';
-import { GameScreen } from '../components/game';
+import GameScreenNew from '../components/game/GameScreenNew';
 import { PetScreen } from '../components/pet/PetScreen';
 import { useTelegram } from '../components/providers';
 import { useSpinsLeft } from '../store/useAppStore';
-import { backendAPI } from '../services/backend-api.service';
 
 // Rank tiers based on points
 const RANK_TIERS = [
@@ -37,9 +36,10 @@ function getUserRankTier(points: number) {
 export default function HomePage() {
   const user = useUser();
   const pet = usePet();
+  const energy = useEnergy();
   const isLoading = useIsLoading();
   const error = useError();
-  const { activeTab, setActiveTab, setUser, setError } = useAppStore();
+  const { activeTab, setActiveTab, setError, setEnergy } = useAppStore();
   const { loadGameDashboard } = useGameSystemActions();
   const { isInitialized, isAvailable } = useTelegram();
   const [isAppReady, setIsAppReady] = useState(false);
@@ -49,6 +49,19 @@ export default function HomePage() {
   const [showBalance, setShowBalance] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [gameDataLoaded, setGameDataLoaded] = useState(false);
+  const [isPlayingGame, setIsPlayingGame] = useState(false);
+
+  // Force reset energy if it's showing wrong values
+  useEffect(() => {
+    if (energy.maxEnergy === 100 || energy.currentEnergy > 10) {
+      console.log('🔄 Resetting energy from', energy, 'to correct values');
+      setEnergy({
+        currentEnergy: 10,
+        maxEnergy: 10,
+        lastUpdate: Date.now(),
+      });
+    }
+  }, [energy, setEnergy]);
 
   // Refresh balance function
   const handleRefreshBalance = async () => {
@@ -56,12 +69,8 @@ export default function HomePage() {
     
     setIsRefreshing(true);
     try {
-      if (backendAPI?.isAuthenticated()) {
-        // Refresh user data from backend
-        const backendUser = await backendAPI.getUserProfile();
-        const userData = backendAPI.backendUserToUserData(backendUser);
-        setUser(userData);
-      }
+      // Refresh game dashboard which includes user data
+      await loadGameDashboard();
     } catch (error) {
       console.error('Failed to refresh balance:', error);
     } finally {
@@ -483,7 +492,7 @@ export default function HomePage() {
                 paddingRight: 'clamp(16px, 4vw, 24px)',
               }}
             >
-              {/* Energy Widget - For Gaming */}
+              {/* Game Energy Widget - For Gaming */}
               <button
                 onClick={() => handleTabChange('game')}
                 className="flex flex-col items-center justify-center transition-all hover:scale-105 active:scale-95"
@@ -507,10 +516,10 @@ export default function HomePage() {
                     <circle
                       cx="25"
                       cy="25"
-                      r="20"
+                      r="18"
                       fill="none"
                       stroke="rgba(0,0,0,0.1)"
-                      strokeWidth="3"
+                      strokeWidth="2"
                     />
                   </svg>
                   
@@ -519,17 +528,17 @@ export default function HomePage() {
                     <circle
                       cx="25"
                       cy="25"
-                      r="20"
+                      r="18"
                       fill="none"
-                      stroke="url(#energyGradient)"
-                      strokeWidth="3"
+                      stroke="url(#gameEnergyGradient)"
+                      strokeWidth="2"
                       strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 20}`}
-                      strokeDashoffset={`${2 * Math.PI * 20 * (1 - (pet.hunger + pet.happiness) / 200)}`}
+                      strokeDasharray={`${2 * Math.PI * 18}`}
+                      strokeDashoffset={`${2 * Math.PI * 18 * (1 - Math.min(energy.currentEnergy, 10) / 10)}`}
                       style={{ transition: 'stroke-dashoffset 0.5s ease' }}
                     />
                     <defs>
-                      <linearGradient id="energyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <linearGradient id="gameEnergyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stopColor="#ef4444" />
                         <stop offset="25%" stopColor="#f97316" />
                         <stop offset="50%" stopColor="#eab308" />
@@ -540,18 +549,18 @@ export default function HomePage() {
                   </svg>
                   
                   {/* Center Content */}
-                  <div className="flex flex-col items-center">
-                    <div className="text-gray-800 font-bold" style={{ fontSize: 'var(--fs-md)' }}>
-                      {Math.round((pet.hunger + pet.happiness) / 2)}
+                  <div className="flex flex-col items-center relative z-10">
+                    <div className="text-gray-800 font-bold" style={{ fontSize: 'var(--fs-sm)' }}>
+                      {Math.min(energy.currentEnergy, 10)}/{Math.min(energy.maxEnergy, 10)}
                     </div>
                   </div>
                 </div>
                 
                 {/* Status Text */}
                 <div className="text-gray-600 font-medium mt-1" style={{ fontSize: 'var(--fs-xs)' }}>
-                  {Math.round((pet.hunger + pet.happiness) / 2) >= 75 ? 'Ready' : 
-                   Math.round((pet.hunger + pet.happiness) / 2) >= 50 ? 'Neutral' : 
-                   Math.round((pet.hunger + pet.happiness) / 2) >= 25 ? 'Low' : 'Empty'}
+                  {Math.min(energy.currentEnergy, 10) >= 5 ? 'Ready' : 
+                   Math.min(energy.currentEnergy, 10) >= 3 ? 'Low' : 
+                   Math.min(energy.currentEnergy, 10) >= 1 ? 'Very Low' : 'Empty'}
                 </div>
               </button>
 
@@ -683,7 +692,7 @@ export default function HomePage() {
       case 'wallet':
         return <AppScreen />;
       case 'game':
-        return <GameScreen />;
+        return <GameScreenNew onGameStateChange={setIsPlayingGame} />;
       default:
         return (
           <div className="flex-1 flex items-center justify-center">
@@ -699,7 +708,7 @@ export default function HomePage() {
         className="flex-1 flex flex-col" 
         style={{ 
           zIndex: 2, 
-          paddingBottom: '120px',
+          paddingBottom: activeTab === 'game' ? '80px' : '120px',
           overflowY: activeTab === 'home' ? 'hidden' : 'auto', // Tắt scroll cho trang Home
           height: '100vh',
           maxHeight: '100vh'
@@ -707,7 +716,9 @@ export default function HomePage() {
       >
         {renderActiveScreen()}
       </main>
-      <BottomNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+      {!isPlayingGame && (
+        <BottomNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+      )}
 
       {/* Rank Progress Modal */}
       {showRankModal && (
