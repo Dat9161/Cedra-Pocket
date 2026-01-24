@@ -149,8 +149,12 @@ export function QuestScreen() {
           // Map backend status to frontend status
           let questStatus: 'active' | 'claimable' | 'completed';
           
-          if (q.user_status === 'CLAIMED') {
-            // Already claimed - always show as completed
+          // FIXED: Check localStorage for locally claimed quests to prevent reset
+          const locallyClaimedQuests = JSON.parse(localStorage.getItem('locally_claimed_quests') || '[]');
+          const isLocallyCompleted = locallyClaimedQuests.includes(String(q.id));
+          
+          if (q.user_status === 'CLAIMED' || isLocallyCompleted) {
+            // Already claimed (backend or locally) - always show as completed
             questStatus = 'completed';
           } else if (q.user_status === 'COMPLETED') {
             // Completed but not claimed - show as claimable
@@ -274,6 +278,107 @@ export function QuestScreen() {
             currentValue: quest.targetValue 
           });
           
+          // FIXED: Save to localStorage to prevent reset on reload
+          const locallyClaimedQuests = JSON.parse(localStorage.getItem('locally_claimed_quests') || '[]');
+          if (!locallyClaimedQuests.includes(questId)) {
+            locallyClaimedQuests.push(questId);
+            localStorage.setItem('locally_claimed_quests', JSON.stringify(locallyClaimedQuests));
+            console.log(`💾 Saved quest ${questId} as locally claimed`);
+          }
+          
+          // FIXED: Refetch quests after successful claim to sync with backend
+          setTimeout(async () => {
+            try {
+              console.log('🔄 Refetching quests after successful claim...');
+              const backendQuests = await backendAPI.getQuests();
+              
+              const frontendQuests = backendQuests.map((q) => {
+                const questType = q.type === 'SOCIAL' ? 'social' as const : 
+                         q.category === 'daily' ? 'daily' as const : 'achievement' as const;
+                
+                // Map backend status to frontend status - prioritize CLAIMED status
+                let questStatus: 'active' | 'claimable' | 'completed';
+                
+                if (q.user_status === 'CLAIMED') {
+                  // Already claimed - always show as completed
+                  questStatus = 'completed';
+                } else if (q.user_status === 'COMPLETED') {
+                  // Completed but not claimed - show as claimable
+                  questStatus = 'claimable';
+                } else {
+                  // Not started or pending
+                  if (questType === 'daily') {
+                    // Daily quests are always claimable unless already claimed
+                    questStatus = 'claimable';
+                  } else {
+                    questStatus = 'active';
+                  }
+                }
+                
+                return {
+                  id: String(q.id),
+                  title: q.title,
+                  description: q.description || '',
+                  iconUrl: '',
+                  type: questType,
+                  status: questStatus,
+                  progress: questStatus === 'claimable' || questStatus === 'completed' ? 100 : 0,
+                  currentValue: questStatus === 'claimable' || questStatus === 'completed' ? 1 : 0,
+                  targetValue: 1,
+                  reward: {
+                    type: 'token' as const,
+                    amount: Number(q.reward_amount),
+                  },
+                  url: q.type === 'SOCIAL' && q.config?.url ? String(q.config.url) : undefined,
+                };
+              });
+              
+              // Check pet hatching quest status based on pet state
+              const updatedQuests = frontendQuests.map((quest) => {
+                if (quest.type === 'achievement' && quest.title === 'Hatch Your Pet Egg') {
+                  if (pet.hatched && pet.birthYear) {
+                    // Pet is already hatched, mark quest as completed
+                    return {
+                      ...quest,
+                      status: 'completed' as const,
+                      progress: 100,
+                      currentValue: 1,
+                    };
+                  } else {
+                    // Pet not hatched, ensure quest is active
+                    return {
+                      ...quest,
+                      status: 'active' as const,
+                      progress: 0,
+                      currentValue: 0,
+                    };
+                  }
+                }
+                return quest;
+              });
+              
+              setQuests(updatedQuests);
+              console.log('✅ Quests refetched and synced with backend after claim');
+              
+              // FIXED: Clean up localStorage for quests that are now confirmed as CLAIMED in backend
+              const locallyClaimedQuests = JSON.parse(localStorage.getItem('locally_claimed_quests') || '[]');
+              const confirmedClaimedQuests = backendQuests
+                .filter(q => q.user_status === 'CLAIMED')
+                .map(q => String(q.id));
+              
+              const updatedLocallyClaimedQuests = locallyClaimedQuests.filter(
+                (questId: string) => !confirmedClaimedQuests.includes(questId)
+              );
+              
+              if (updatedLocallyClaimedQuests.length !== locallyClaimedQuests.length) {
+                localStorage.setItem('locally_claimed_quests', JSON.stringify(updatedLocallyClaimedQuests));
+                console.log('🧹 Cleaned up localStorage for backend-confirmed quests');
+              }
+            } catch (error) {
+              console.error('❌ Failed to refetch quests after claim:', error);
+            }
+          }, 1000); // Wait 1 second for backend to process
+          
           telegramService.triggerHapticFeedback('medium');
           console.log('✅ Quest reward claimed from backend!');
           return;
@@ -303,6 +408,29 @@ export function QuestScreen() {
         progress: 100,
         currentValue: quest.targetValue 
       });
+      
+      // FIXED: Save to localStorage to prevent reset on reload
+      const locallyClaimedQuests = JSON.parse(localStorage.getItem('locally_claimed_quests') || '[]');
+      if (!locallyClaimedQuests.includes(questId)) {
+        locallyClaimedQuests.push(questId);
+        localStorage.setItem('locally_claimed_quests', JSON.stringify(locallyClaimedQuests));
+        console.log(`💾 Saved quest ${questId} as locally claimed (fallback)`);
+      }
+      
+      // FIXED: For local claims, also try to sync with backend after a delay
+      setTimeout(async () => {
+        try {
+          console.log('🔄 Attempting to sync local claim with backend...');
+          // Try to claim on backend as well (might succeed if connection is restored)
+          const syncResult = await backendAPI.claimQuestReward(Number(questId));
+          if (syncResult.success) {
+            console.log('✅ Local claim successfully synced with backend');
+          }
+        } catch (syncError) {
+          console.log('⚠️ Could not sync local claim with backend:', syncError);
+          // This is okay - the claim is still valid locally
+        }
+      }, 2000);
       
       telegramService.triggerHapticFeedback('medium');
       console.log('✅ Quest reward claimed locally!');

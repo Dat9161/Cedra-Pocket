@@ -89,6 +89,9 @@ export function PetScreen() {
   const [isFeeding, setIsFeeding] = useState(false);
   const [showCoinAnimation, setShowCoinAnimation] = useState(false);
   const [claimedCoins, setClaimedCoins] = useState(0);
+  const [showXPAnimation, setShowXPAnimation] = useState(false);
+  const [xpGained, setXPGained] = useState(0);
+  const [showLevelUpAnimation, setShowLevelUpAnimation] = useState(false);
   const [showBoostModal, setShowBoostModal] = useState(false);
   const [showFriendsModal, setShowFriendsModal] = useState(false);
   const [showRecoverInviter, setShowRecoverInviter] = useState(false);
@@ -102,10 +105,46 @@ export function PetScreen() {
   // Hatch tasks - moved to PetQuestModal
   
   const petBoosts = [
-    { id: 'food_bowl', name: 'Food Bowl', desc: 'Increase hunger capacity', icon: '🍖', cost: 100, level: 1 },
-    { id: 'cozy_bed', name: 'Cozy Bed', desc: 'Increase passive mining speed', icon: '🛏️', cost: 200, level: 1 },
-    { id: 'magic_collar', name: 'Magic Collar', desc: 'Boost mining speed by 1.5x.. 2x.. 3x!', icon: '✨', cost: 500, level: 1 },
-    { id: 'golden_treat', name: 'Golden Treat', desc: 'Increase EXP gain per feed', icon: '🦴', cost: 300, level: 1 },
+    { 
+      id: 'food_bowl', 
+      name: 'Food Bowl', 
+      desc: 'Increase hunger capacity', 
+      icon: '🍖', 
+      cost: 100, 
+      level: 1,
+      expGain: 50, // EXP gained when purchased
+      effect: 'Hunger +20 capacity'
+    },
+    { 
+      id: 'cozy_bed', 
+      name: 'Cozy Bed', 
+      desc: 'Increase passive mining speed', 
+      icon: '🛏️', 
+      cost: 200, 
+      level: 1,
+      expGain: 100, // EXP gained when purchased
+      effect: 'Mining speed +10%'
+    },
+    { 
+      id: 'magic_collar', 
+      name: 'Magic Collar', 
+      desc: 'Boost mining speed by 1.5x.. 2x.. 3x!', 
+      icon: '✨', 
+      cost: 500, 
+      level: 1,
+      expGain: 250, // EXP gained when purchased
+      effect: 'Mining speed +50%'
+    },
+    { 
+      id: 'golden_treat', 
+      name: 'Golden Treat', 
+      desc: 'Increase EXP gain per feed', 
+      icon: '🦴', 
+      cost: 300, 
+      level: 1,
+      expGain: 150, // EXP gained when purchased
+      effect: 'Care EXP +5 per feed'
+    },
   ];
   
   const [coinTimer, setCoinTimer] = useState(() => {
@@ -314,77 +353,167 @@ export function PetScreen() {
   }, [pet.pendingCoins, pet.lastCoinTime, setPet, updateBalance, isClaimingCoins]);
 
   const handleFeed = async () => {
-    if ((user?.tokenBalance || 0) >= 20 && pet.level < 10) { // Use correct cost: 20 points per feed
-      setIsFeeding(true);
+    // FIXED: Prevent multiple simultaneous feeds and check conditions properly
+    if (isFeeding || (user?.tokenBalance || 0) < 20 || pet.level >= 10) {
+      if (isFeeding) {
+        console.log('⚠️ Already feeding, please wait...');
+      } else if ((user?.tokenBalance || 0) < 20) {
+        console.log('⚠️ Not enough points to feed (need 20 points)');
+      } else if (pet.level >= 10) {
+        console.log('⭐ Pet is at maximum level (10)');
+      }
+      return;
+    }
+
+    setIsFeeding(true);
+    
+    // FIXED: Immediately update UI for instant feedback
+    const feedCost = 20;
+    const xpGain = 20;
+    
+    // Update balance immediately to prevent race conditions
+    updateBalance(-feedCost, 'token');
+    
+    try {
+      // Store current level to detect level up
+      const currentLevel = pet.level;
       
-      try {
-        // Use new game system API to feed pet
-        await feedGamePet(1);
-        console.log('✅ Pet fed via new game system');
-      } catch (error) {
-        console.error('❌ Failed to feed via new game system, using fallback:', error);
-        // Fallback to local system with CORRECT logic
-        updateBalance(-20, 'token'); // Correct cost: 20 points
-        
-        // FIXED: Use correct XP calculation
-        const newExp = pet.exp + 20; // 20 XP per feed (same as backend)
-        const newHunger = Math.min(100, pet.hunger + 20);
-        
-        let newPetData: Partial<typeof pet>;
-        
-        // FIXED: Use correct XP threshold for level up
-        if (newExp >= 1200 && pet.level < 10) { // 1200 XP needed for level up
-          // Level up - reset XP to remainder
-          const remainingXP = newExp - 1200;
-          newPetData = { 
-            hunger: newHunger, 
-            level: pet.level + 1, 
-            exp: remainingXP, 
-            maxExp: 1200 // Keep consistent maxExp
-          };
-          console.log(`🎉 Pet leveled up! Level ${pet.level} → ${pet.level + 1}, XP: ${remainingXP}/1200`);
-        } else if (pet.level >= 10) {
-          // Max level reached, cap XP at max
-          newPetData = { 
-            hunger: newHunger, 
-            exp: Math.min(newExp, 1200) // Cap at max XP
-          };
-          console.log(`⭐ Pet at max level (10), XP capped at ${Math.min(newExp, 1200)}/1200`);
-        } else {
-          // Normal XP gain
-          newPetData = { 
-            hunger: newHunger, 
-            exp: newExp 
-          };
-          console.log(`🍖 Pet fed! XP: ${newExp}/1200 (Level ${pet.level})`);
+      // Use new game system API to feed pet
+      await feedGamePet(1);
+      console.log('✅ Pet fed via backend system');
+      
+      // FIXED: Show XP gain animation for backend success
+      setShowXPAnimation(true);
+      setXPGained(20); // Standard XP gain
+      
+      // Check for level up after a short delay (to let useAppStore update)
+      setTimeout(() => {
+        if (pet.level > currentLevel) {
+          setShowLevelUpAnimation(true);
+          console.log(`🎉 Level up detected: ${currentLevel} → ${pet.level}`);
         }
-        
-        setPet(newPetData);
+      }, 200);
+      
+      setTimeout(() => {
+        setShowXPAnimation(false);
+        setShowLevelUpAnimation(false);
+      }, 2000);
+      
+    } catch (error) {
+      console.error('❌ Failed to feed via backend, using local fallback:', error);
+      
+      // Fallback to local system with CORRECT logic
+      const currentExp = pet.exp;
+      const newExp = currentExp + xpGain;
+      const newHunger = Math.min(100, pet.hunger + 20);
+      
+      let newPetData: Partial<typeof pet>;
+      let leveledUp = false;
+      
+      // FIXED: Use correct XP threshold for level up
+      if (newExp >= 1200 && pet.level < 10) { // 1200 XP needed for level up
+        // Level up - reset XP to remainder
+        const remainingXP = newExp - 1200;
+        newPetData = { 
+          hunger: newHunger, 
+          level: pet.level + 1, 
+          exp: remainingXP, 
+          maxExp: 1200 // Keep consistent maxExp
+        };
+        leveledUp = true;
+        console.log(`🎉 Pet leveled up! Level ${pet.level} → ${pet.level + 1}, XP: ${remainingXP}/1200`);
+      } else if (pet.level >= 10) {
+        // Max level reached, cap XP at max
+        newPetData = { 
+          hunger: newHunger, 
+          exp: Math.min(newExp, 1200) // Cap at max XP
+        };
+        console.log(`⭐ Pet at max level (10), XP capped at ${Math.min(newExp, 1200)}/1200`);
+      } else {
+        // Normal XP gain
+        newPetData = { 
+          hunger: newHunger, 
+          exp: newExp 
+        };
+        console.log(`🍖 Pet fed! XP: ${newExp}/1200 (Level ${pet.level})`);
       }
       
-      setTimeout(() => setIsFeeding(false), 1000);
+      setPet(newPetData);
+      
+      // FIXED: Show XP gain animation
+      setShowXPAnimation(true);
+      setXPGained(xpGain);
+      if (leveledUp) {
+        setShowLevelUpAnimation(true);
+      }
+      setTimeout(() => {
+        setShowXPAnimation(false);
+        setShowLevelUpAnimation(false);
+      }, 2000);
     }
+    
+    setTimeout(() => setIsFeeding(false), 1000);
   };
 
-  const handleBoost = () => setShowBoostModal(true);
+  const handleCareItems = () => setShowBoostModal(true);
 
-  const handleBuyBoost = (boost: typeof petBoosts[0]) => {
+  const handleBuyCareItem = (boost: typeof petBoosts[0]) => {
     if ((user?.tokenBalance || 0) >= boost.cost) {
       updateBalance(-boost.cost, 'token');
       
-      // FIXED: Boosts should NOT directly level up pet
-      // Instead, they should provide other benefits like increased coin generation, etc.
-      // For now, we'll just consume the points without leveling up
-      console.log(`💰 Bought boost: ${boost.name} for ${boost.cost} points`);
+      // FIXED: Boosts now provide EXP instead of direct level up
+      const currentExp = pet.exp;
+      const newExp = currentExp + boost.expGain;
+      const newHunger = Math.min(100, pet.hunger + 10); // Small hunger boost
       
-      // TODO: Implement actual boost effects (increased coin rate, etc.)
-      // For example:
-      // - Food Bowl: Increase hunger capacity
-      // - Cozy Bed: Increase passive mining speed  
-      // - Magic Collar: Boost mining speed multiplier
-      // - Golden Treat: Increase XP gain per feed
+      let newPetData: Partial<typeof pet>;
+      let leveledUp = false;
       
-      // Note: Pet should only level up through feeding (care), not through buying boosts
+      // Check for level up with correct XP threshold
+      if (newExp >= 1200 && pet.level < 10) {
+        // Level up - reset XP to remainder
+        const remainingXP = newExp - 1200;
+        newPetData = { 
+          hunger: newHunger, 
+          level: pet.level + 1, 
+          exp: remainingXP, 
+          maxExp: 1200
+        };
+        leveledUp = true;
+        console.log(`🎉 Pet leveled up from care item! Level ${pet.level} → ${pet.level + 1}, XP: ${remainingXP}/1200`);
+      } else if (pet.level >= 10) {
+        // Max level reached, cap XP at max
+        newPetData = { 
+          hunger: newHunger, 
+          exp: Math.min(newExp, 1200)
+        };
+        console.log(`⭐ Pet at max level (10), XP capped at ${Math.min(newExp, 1200)}/1200`);
+      } else {
+        // Normal XP gain
+        newPetData = { 
+          hunger: newHunger, 
+          exp: newExp 
+        };
+        console.log(`💰 Care item purchased! ${boost.name}: +${boost.expGain} XP (${newExp}/1200)`);
+      }
+      
+      setPet(newPetData);
+      
+      // Show XP gain animation
+      setShowXPAnimation(true);
+      setXPGained(boost.expGain);
+      if (leveledUp) {
+        setShowLevelUpAnimation(true);
+      }
+      setTimeout(() => {
+        setShowXPAnimation(false);
+        setShowLevelUpAnimation(false);
+      }, 2000);
+      
+      // Close modal after purchase
+      setShowBoostModal(false);
+      
+      console.log(`💰 Bought care item: ${boost.name} for ${boost.cost} points, gained ${boost.expGain} XP`);
     }
   };
 
@@ -740,6 +869,39 @@ export function PetScreen() {
           </div>
         )}
         
+        {/* FIXED: XP Gain Animation */}
+        {showXPAnimation && (
+          <div style={{ 
+            position: 'absolute', 
+            top: '20%', 
+            left: '70%',
+            fontSize: 'var(--fs-lg)', 
+            fontWeight: '700',
+            color: '#4facfe',
+            textShadow: '0 0 15px rgba(79,172,254,0.8), 0 2px 4px rgba(0,0,0,0.3)',
+            animation: 'floatUpXP 1.5s ease-out forwards', 
+            zIndex: 10,
+          }}>
+            +{xpGained} XP
+          </div>
+        )}
+        
+        {/* FIXED: Level Up Animation */}
+        {showLevelUpAnimation && (
+          <div style={{ 
+            position: 'absolute', 
+            top: '5%', 
+            fontSize: 'var(--fs-xl)', 
+            fontWeight: '700',
+            color: '#ff6b6b',
+            textShadow: '0 0 20px rgba(255,107,107,0.8), 0 2px 4px rgba(0,0,0,0.3)',
+            animation: 'levelUpBounce 2s ease-out forwards', 
+            zIndex: 15,
+          }}>
+            🎉 LEVEL UP! 🎉
+          </div>
+        )}
+        
         {/* Zodiac Pet Display */}
         <div 
           className={isFeeding ? 'animate-pulse' : ''}
@@ -801,25 +963,72 @@ export function PetScreen() {
       <div 
         className="absolute left-1/2 transform -translate-x-1/2"
         style={{ 
-          bottom: '-70px', // Moved up from bottom edge
+          bottom: '-85px', // Moved down to make room for XP display
           background: 'rgba(255, 255, 255, 0.95)', 
-          borderRadius: '16px', // Slightly smaller rounded corners
+          borderRadius: '16px',
           border: '1px solid rgba(255, 255, 255, 0.4)', 
           backdropFilter: 'blur(20px)',
-          width: '240px', // Reduced from 240px to 200px
+          width: '260px', // Increased width for better spacing
           zIndex: 5,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)', // Shadow going down
-          padding: '6px 10px' // Slightly reduced vertical padding but not too much
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          padding: '8px 12px'
         }}
       >
+        {/* FIXED: XP Progress Display */}
+        <div style={{ 
+          textAlign: 'center', 
+          marginBottom: '6px',
+          fontSize: 'var(--fs-xs)',
+          color: '#1a1a2e'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+            <span style={{ fontWeight: '600' }}>Level {pet.level}</span>
+            <span style={{ color: '#4facfe', fontWeight: '600' }}>{pet.exp}/{pet.maxExp} XP</span>
+          </div>
+          <div style={{ 
+            height: '3px', 
+            background: 'rgba(0,0,0,0.1)', 
+            borderRadius: '2px', 
+            overflow: 'hidden' 
+          }}>
+            <div style={{ 
+              width: `${(pet.exp / pet.maxExp) * 100}%`, 
+              height: '100%', 
+              background: 'linear-gradient(90deg, #4facfe, #00f2fe)', 
+              borderRadius: '2px',
+              transition: 'width 0.5s ease'
+            }} />
+          </div>
+          <div style={{ 
+            fontSize: '10px', 
+            color: 'rgba(26, 26, 46, 0.6)', 
+            marginTop: '2px' 
+          }}>
+            Care: 20 points → +20 XP
+          </div>
+        </div>
+        
         <div className="flex justify-around items-center">
-          <button onClick={handleFeed} className="flex flex-col items-center gap-0 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '3px 6px', cursor: 'pointer' }}>
-            <img src="/icons/mission.png" alt="Missions" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
-            <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>Missions</span>
+          <button 
+            onClick={handleFeed} 
+            disabled={isFeeding || (user?.tokenBalance || 0) < 20 || pet.level >= 10}
+            className="flex flex-col items-center gap-0 transition-all hover:scale-105 active:scale-95" 
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              padding: '3px 6px', 
+              cursor: (isFeeding || (user?.tokenBalance || 0) < 20 || pet.level >= 10) ? 'not-allowed' : 'pointer',
+              opacity: (isFeeding || (user?.tokenBalance || 0) < 20 || pet.level >= 10) ? 0.5 : 1
+            }}
+          >
+            <img src="/icons/care.png" alt="Care" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+            <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>
+              {isFeeding ? 'Caring...' : pet.level >= 10 ? 'Max Lv' : 'Care'}
+            </span>
           </button>
           <div style={{ width: '1px', height: '24px', background: 'rgba(0,0,0,0.1)' }} />
-          <button onClick={handleBoost} className="flex flex-col items-center gap-0 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '3px 6px', cursor: 'pointer' }}>
-            <img src="/icons/care.png" alt="Care" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+          <button onClick={handleCareItems} className="flex flex-col items-center gap-0 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '3px 6px', cursor: 'pointer' }}>
+            <img src="/icons/application.png" alt="Care Items" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
             <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>Care</span>
           </button>
           <div style={{ width: '1px', height: '24px', background: 'rgba(0,0,0,0.1)' }} />
@@ -837,12 +1046,27 @@ export function PetScreen() {
           40% { transform: translateY(-20px) scale(1.1); }
           100% { opacity: 0; transform: translateY(-80px) scale(1); } 
         }
+        @keyframes floatUpXP { 
+          0% { opacity: 0; transform: translateY(15px) translateX(-10px) scale(0.7); } 
+          25% { opacity: 1; transform: translateY(0) translateX(0) scale(1.1); }
+          50% { transform: translateY(-15px) translateX(5px) scale(1); }
+          100% { opacity: 0; transform: translateY(-60px) translateX(10px) scale(0.8); } 
+        }
+        @keyframes levelUpBounce { 
+          0% { opacity: 0; transform: translateY(30px) scale(0.5); } 
+          15% { opacity: 1; transform: translateY(-10px) scale(1.3); }
+          30% { transform: translateY(5px) scale(1.1); }
+          45% { transform: translateY(-5px) scale(1.2); }
+          60% { transform: translateY(0) scale(1); }
+          80% { transform: translateY(0) scale(1); opacity: 1; }
+          100% { opacity: 0; transform: translateY(-20px) scale(0.9); } 
+        }
         @keyframes floatPet { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
         ::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* Boost Modal */}
+      {/* Care Items Modal */}
       {showBoostModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '20px', padding: '16px', maxWidth: '320px', width: '100%', maxHeight: '70vh', overflowY: 'auto', backdropFilter: 'blur(20px)' }}>
@@ -852,19 +1076,25 @@ export function PetScreen() {
                 <span style={{ fontSize: '14px' }}>🪙</span>
                 <span style={{ fontSize: 'var(--fs-md)', fontWeight: '700', color: '#f5a623' }}>{(user?.tokenBalance || 0).toLocaleString()}</span>
               </div>
-              <h2 style={{ fontSize: 'var(--fs-md)', fontWeight: '700', color: '#1a1a2e' }}>Care for your pet!</h2>
+              <h2 style={{ fontSize: 'var(--fs-md)', fontWeight: '700', color: '#1a1a2e' }}>Care Items for your pet!</h2>
             </div>
             <div className="overflow-y-auto" style={{ maxHeight: 'calc(70vh - 100px)', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {petBoosts.map((boost) => (
-                <button key={boost.id} onClick={() => handleBuyBoost(boost)} disabled={(user?.tokenBalance || 0) < boost.cost} className="w-full mb-2 transition-all hover:scale-[1.02] active:scale-[0.98]" style={{ background: 'rgba(0,0,0,0.05)', borderRadius: '12px', padding: '10px', border: '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: '8px', opacity: (user?.tokenBalance || 0) < boost.cost ? 0.5 : 1, cursor: (user?.tokenBalance || 0) < boost.cost ? 'not-allowed' : 'pointer' }}>
+                <button key={boost.id} onClick={() => handleBuyCareItem(boost)} disabled={(user?.tokenBalance || 0) < boost.cost} className="w-full mb-2 transition-all hover:scale-[1.02] active:scale-[0.98]" style={{ background: 'rgba(0,0,0,0.05)', borderRadius: '12px', padding: '10px', border: '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: '8px', opacity: (user?.tokenBalance || 0) < boost.cost ? 0.5 : 1, cursor: (user?.tokenBalance || 0) < boost.cost ? 'not-allowed' : 'pointer' }}>
                   <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #fff8e1, #ffe082)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>{boost.icon}</div>
                   <div className="flex-1 text-left">
                     <div style={{ color: '#1a1a2e', fontSize: 'var(--fs-sm)', fontWeight: '600' }}>{boost.name}</div>
-                    <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 'var(--fs-xs)' }}>{boost.desc}</div>
-                    <div className="flex items-center gap-1" style={{ marginTop: '2px' }}>
-                      <span style={{ fontSize: '10px' }}>🪙</span>
-                      <span style={{ color: '#f5a623', fontWeight: '600', fontSize: 'var(--fs-xs)' }}>{boost.cost}</span>
-                      <span style={{ color: 'rgba(0,0,0,0.4)', fontSize: 'var(--fs-xs)' }}>• L{boost.level}</span>
+                    <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 'var(--fs-xs)', marginBottom: '2px' }}>{boost.effect}</div>
+                    <div className="flex items-center gap-2" style={{ marginTop: '2px' }}>
+                      <div className="flex items-center gap-1">
+                        <span style={{ fontSize: '10px' }}>🪙</span>
+                        <span style={{ color: '#f5a623', fontWeight: '600', fontSize: 'var(--fs-xs)' }}>{boost.cost}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span style={{ fontSize: '10px', color: '#4facfe' }}>⚡</span>
+                        <span style={{ color: '#4facfe', fontWeight: '600', fontSize: 'var(--fs-xs)' }}>+{boost.expGain} XP</span>
+                      </div>
+                      <span style={{ color: 'rgba(0,0,0,0.4)', fontSize: 'var(--fs-xs)' }}>L{boost.level}</span>
                     </div>
                   </div>
                   <span style={{ color: 'rgba(0,0,0,0.3)', fontSize: '14px' }}>›</span>
