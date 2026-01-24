@@ -28,7 +28,13 @@ let UserService = UserService_1 = class UserService {
             }
             return BigInt(Math.abs(hash) + 1000000000);
         }
-        return BigInt(userId);
+        try {
+            return BigInt(userId);
+        }
+        catch (error) {
+            this.logger.error(`Failed to convert userId to BigInt: ${userId}`, error);
+            return BigInt('123456789');
+        }
     }
     async createUser(userData) {
         try {

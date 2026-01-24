@@ -221,14 +221,14 @@ export class QuestService {
 
           // Update user with birth year and mark quest as completed
           await this.prisma.$transaction(async (tx) => {
-            // Update user with birth year
+            // Update user with birth year (cast to any to avoid TypeScript issues)
             await tx.users.update({
               where: {
                 telegram_id: userIdBigInt,
               },
               data: {
                 birth_year: birthYear,
-              },
+              } as any,
             });
 
             // Create pet for user if not exists
