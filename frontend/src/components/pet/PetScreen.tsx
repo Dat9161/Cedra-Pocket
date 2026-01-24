@@ -993,33 +993,6 @@ export function PetScreen() {
           padding: '8px 12px'
         }}
       >
-        {/* FIXED: XP Progress Display */}
-        <div style={{ 
-          textAlign: 'center', 
-          marginBottom: '6px',
-          fontSize: 'var(--fs-xs)',
-          color: '#1a1a2e'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-            <span style={{ fontWeight: '600' }}>Level {pet.level}</span>
-            <span style={{ color: '#4facfe', fontWeight: '600' }}>{pet.exp}/{pet.maxExp} XP</span>
-          </div>
-          <div style={{ 
-            height: '3px', 
-            background: 'rgba(0,0,0,0.1)', 
-            borderRadius: '2px', 
-            overflow: 'hidden' 
-          }}>
-            <div style={{ 
-              width: `${(pet.exp / pet.maxExp) * 100}%`, 
-              height: '100%', 
-              background: 'linear-gradient(90deg, #4facfe, #00f2fe)', 
-              borderRadius: '2px',
-              transition: 'width 0.5s ease'
-            }} />
-          </div>
-        </div>
-        
         <div className="flex justify-around items-center">
           <button 
             onClick={handleFeed} 
@@ -1033,14 +1006,14 @@ export function PetScreen() {
               opacity: (isFeeding || (user?.tokenBalance || 0) < 20 || pet.level >= 10) ? 0.5 : 1
             }}
           >
-            <img src="/icons/care.png" alt="Care" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+            <img src="/icons/mission.png" alt="Mission" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
             <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>
-              {isFeeding ? 'Caring...' : pet.level >= 10 ? 'Max Lv' : 'Care'}
+              {isFeeding ? 'Caring...' : pet.level >= 10 ? 'Max Lv' : 'Mission'}
             </span>
           </button>
           <div style={{ width: '1px', height: '24px', background: 'rgba(0,0,0,0.1)' }} />
           <button onClick={handleCareItems} className="flex flex-col items-center gap-0 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '3px 6px', cursor: 'pointer' }}>
-            <img src="/icons/application.png" alt="Care Items" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+            <img src="/icons/care.png" alt="Care Items" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
             <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>Care</span>
           </button>
           <div style={{ width: '1px', height: '24px', background: 'rgba(0,0,0,0.1)' }} />
