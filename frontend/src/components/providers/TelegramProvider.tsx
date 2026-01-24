@@ -134,12 +134,20 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
       console.log(`💰 Backend balance: ${userData.tokenBalance}`);
       console.log(`💰 Raw backend total_points: ${response.user.total_points}`);
       
-      // DON'T clear localStorage - let it persist for offline functionality
-      // localStorage.removeItem('tg-mini-app-storage');
-      
       // Always use backend balance as source of truth
       setUser(userData);
       setIsAuthenticated(true);
+      
+      // Load game dashboard to sync all data
+      try {
+        const { useAppStore } = await import('../../store/useAppStore');
+        const { loadGameDashboard } = useAppStore.getState();
+        await loadGameDashboard();
+        console.log('🎮 Game dashboard loaded after authentication');
+      } catch (dashboardError) {
+        console.warn('⚠️ Failed to load dashboard after auth:', dashboardError);
+      }
+      
       console.log('✅ Backend authentication successful');
     } catch (error) {
       console.error('❌ Backend authentication failed:', error);
@@ -222,28 +230,10 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
         const initData = getTelegramInitData();
         console.log('🔑 initData available:', !!initData);
 
-        if (initData && user) {
-          // Authenticate with backend
-          await authenticateWithBackend(initData, user);
-        } else if (user) {
-          // No initData but have user - create local user
-          console.log('⚠️ No initData available, using local user from Telegram');
-          const appUser = {
-            id: `user_${user.id}`,
-            telegramId: String(user.id),
-            username: user.username || user.firstName || 'Player',
-            avatarUrl: user.photoUrl,
-            level: 1,
-            currentXP: 0,
-            requiredXP: 1000,
-            tokenBalance: 0,
-            walletBalance: 0,
-            gemBalance: 0,
-            earningRate: 10,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-          setUser(appUser);
+        if (user) {
+          // Always try to authenticate with backend, even with empty initData for testing
+          const authInitData = initData || 'test'; // Use 'test' as fallback for development
+          await authenticateWithBackend(authInitData, user);
         } else {
           // No Telegram user available - create anonymous user with timestamp
           console.log('⚠️ No Telegram user available, creating anonymous user');

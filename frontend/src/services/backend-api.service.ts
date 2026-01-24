@@ -164,7 +164,7 @@ export class BackendAPIService {
     try {
       // Use /auth/verify endpoint as documented
       const response = await this.client.post<AuthResponse>('/auth/verify', {
-        initData,
+        initData: initData || 'test', // Ensure we always send something
       });
 
       // Save token
@@ -173,6 +173,8 @@ export class BackendAPIService {
       return response.data;
     } catch (error) {
       console.log('⚠️ Failed to authenticate via backend, using local fallback');
+      console.error('Backend auth error:', error);
+      
       // Return mock auth response for local gameplay
       const mockUser: BackendUser = {
         id: 'local_user',
@@ -280,7 +282,8 @@ export class BackendAPIService {
    */
   async getQuests(): Promise<BackendQuest[]> {
     try {
-      const response = await this.client.get<BackendQuest[]>('/quests');
+      const userId = this.getCurrentUserId();
+      const response = await this.client.get<BackendQuest[]>(`/quests/user/${userId}`);
       return response.data;
     } catch (error) {
       console.log('⚠️ Failed to get quests from backend, using local fallback');
@@ -415,8 +418,10 @@ export class BackendAPIService {
     proofData?: Record<string, unknown>
   ): Promise<{ success: boolean; message: string }> {
     try {
+      const userId = this.getCurrentUserId();
       const response = await this.client.post(`/quests/${questId}/verify`, {
         proof_data: proofData || {},
+        userId: userId, // Include userId in request body
       });
       return response.data;
     } catch (error) {
@@ -459,7 +464,10 @@ export class BackendAPIService {
    */
   async claimQuestReward(questId: number): Promise<{ success: boolean; message: string; pointsEarned?: number }> {
     try {
-      const response = await this.client.post(`/quests/${questId}/claim`, {});
+      const userId = this.getCurrentUserId();
+      const response = await this.client.post(`/quests/${questId}/claim`, {
+        userId: userId, // Include userId in request body
+      });
       return response.data;
     } catch (error) {
       console.log('⚠️ Failed to claim quest reward via backend, using local fallback');
