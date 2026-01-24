@@ -401,7 +401,7 @@ export function PocketFlyGame({ onGameEnd, onBackToMenu }: PocketFlyGameProps) {
     if (checkCollision(gameState.bird, gameState.pipes)) {
       gameState.isGameOver = true;
       
-      // Calculate points (score = pipes, 1:1 ratio)
+      // Calculate points (exact 1:1 ratio - score = points)
       const points = gameState.score;
       setLastScore(gameState.score);
       setLastPoints(points);

@@ -18,8 +18,8 @@ export const ENERGY_CONSTANTS = {
 
 // Game Constants
 export const GAME_CONSTANTS = {
-  BASE_POINTS_PER_GAME: 50, // Base points earned per game
-  SCORE_MULTIPLIER: 0.1, // Additional points per score point
+  BASE_POINTS_PER_GAME: 0, // No base points - pure score-based rewards
+  SCORE_MULTIPLIER: 1.0, // 1 point per score (exact 1:1 ratio)
   MAX_GAME_DURATION: 300, // Max game duration in seconds (5 minutes)
 };
 

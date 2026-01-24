@@ -262,6 +262,27 @@ let PetService = PetService_1 = class PetService {
                         updated_at: new Date(),
                     },
                 });
+                await tx.pets.upsert({
+                    where: { user_id: this.safeToBigInt(userId) },
+                    update: {
+                        level: newLevel,
+                        exp: finalXp,
+                        max_exp: game_constants_1.PET_CONSTANTS.XP_FOR_LEVEL_UP,
+                        updated_at: new Date(),
+                    },
+                    create: {
+                        user_id: this.safeToBigInt(userId),
+                        level: newLevel,
+                        exp: finalXp,
+                        max_exp: game_constants_1.PET_CONSTANTS.XP_FOR_LEVEL_UP,
+                        hunger: 100,
+                        happiness: 100,
+                        last_coin_time: new Date(),
+                        pending_coins: 0,
+                        total_coins_earned: 0,
+                        coin_rate: 1.0,
+                    },
+                });
                 await tx.pet_feeding_logs.upsert({
                     where: {
                         user_id_feed_date: {
@@ -355,6 +376,21 @@ let PetService = PetService_1 = class PetService {
                         newLifetimePoints: Number(user.lifetime_points),
                         claimTime: new Date(),
                         error: 'No rewards to claim',
+                    };
+                }
+                const now = new Date();
+                const lastClaimTime = pet.last_coin_time || now;
+                const timeSinceLastClaim = now.getTime() - lastClaimTime.getTime();
+                const MIN_CLAIM_INTERVAL = 55 * 1000;
+                if (timeSinceLastClaim < MIN_CLAIM_INTERVAL) {
+                    const remainingTime = Math.ceil((MIN_CLAIM_INTERVAL - timeSinceLastClaim) / 1000);
+                    return {
+                        success: false,
+                        pointsEarned: 0,
+                        newTotalPoints: Number(user.total_points),
+                        newLifetimePoints: Number(user.lifetime_points),
+                        claimTime: new Date(),
+                        error: `Please wait ${remainingTime} more seconds before claiming`,
                     };
                 }
                 const oldLifetimePoints = Number(user.lifetime_points);

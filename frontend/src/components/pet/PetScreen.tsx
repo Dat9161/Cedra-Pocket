@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useUser, usePet, useEnergy, useGameSystemActions, useAppStore } from '../../store/useAppStore';
 import { PetQuestModal } from './PetQuestModal';
 // import { backendAPI } from '../../services/backend-api.service';
@@ -165,41 +165,27 @@ export function PetScreen() {
         await loadGameDashboard();
         hasLoadedFromBackend.current = true; // Mark that we've loaded from backend
         
-        // Also try to get pet status directly for debugging
-        try {
-          // const petStatus = await backendAPI.getGamePetStatus();
-          // setDebugData({ type: 'Pet Status', data: petStatus });
-          // console.log('🐾 Direct pet status:', petStatus);
-          console.log('🐾 Pet status debug disabled');
-        } catch (debugError) {
-          console.log('⚠️ Failed to get direct pet status:', debugError);
-        }
-        
         // Regenerate energy based on time elapsed
         regenerateEnergy();
         
         console.log('✅ Game dashboard loaded successfully');
       } catch (error) {
         console.error('❌ Failed to load game data:', error);
-        // Fallback to old pet API if new system fails
-        try {
-          // const petData = await backendAPI.getPet();
-          // setPet(petData);
-          console.log('🐾 Old pet API disabled');
-        } catch (fallbackError) {
-          console.error('❌ Fallback pet loading also failed:', fallbackError);
-        }
+        // Reset flag on error so user can retry
+        hasFetchedRef.current = false;
       }
     };
     
+    // OPTIMIZED: Only load once when component mounts
     loadGameData();
   }, []); // Empty dependency array - only run once
 
-  // Energy regeneration timer
+  // OPTIMIZED: Energy regeneration timer - chạy ít thường xuyên hơn
   useEffect(() => {
+    // Chỉ regenerate energy mỗi 5 phút thay vì mỗi phút
     const interval = setInterval(() => {
       regenerateEnergy();
-    }, 60000); // Check every minute
+    }, 5 * 60000); // 5 minutes instead of 1 minute
 
     return () => clearInterval(interval);
   }, []); // Empty dependency array - regenerateEnergy is stable
@@ -219,23 +205,16 @@ export function PetScreen() {
     const elapsed = Math.floor((Date.now() - pet.lastCoinTime) / 1000);
     const remaining = COIN_INTERVAL_SECONDS - elapsed;
     
-    // Debug logging
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`⏰ Timer useEffect: elapsed=${elapsed}s, remaining=${remaining}s, pendingCoins=${pet.pendingCoins}, level=${pet.level}`);
-    }
-    
     // CRITICAL: If there are already pending coins, just show timer as 0 and DON'T generate more
     if (pet.pendingCoins > 0) { 
       setCoinTimer(0); 
-      console.log(`🚫 Skipping coin generation - already have ${pet.pendingCoins} pending coins`);
       return; 
     }
     
     // If enough time has passed, generate coins immediately (only once)
     if (remaining <= 0) {
       const coins = getCoinsPerMinute(pet.level);
-      console.log(`💰 Generating ${coins} coins for level ${pet.level} (elapsed: ${elapsed}s)`);
-      // DON'T update lastCoinTime here - it should only be updated when user claims
+      console.log(`� Generating ${coins} coins for level ${pet.level} (elapsed: ${elapsed}s)`);
       setPet({ pendingCoins: coins });
       setCoinTimer(0);
       return;
@@ -243,13 +222,17 @@ export function PetScreen() {
     
     // Set initial timer
     setCoinTimer(remaining);
-    console.log(`⏰ Setting timer to ${remaining}s`);
     
-    // Start countdown timer - SIMPLIFIED: Only count down, don't generate coins here
+    // OPTIMIZED: Use single interval instead of multiple timers
     const interval = setInterval(() => {
       setCoinTimer(prev => {
         if (prev <= 1) {
-          // Timer reached 0 - trigger useEffect to check for coin generation
+          // Timer reached 0 - generate coins if needed
+          const newElapsed = Math.floor((Date.now() - pet.lastCoinTime) / 1000);
+          if (newElapsed >= COIN_INTERVAL_SECONDS && pet.pendingCoins <= 0) {
+            const coins = getCoinsPerMinute(pet.level);
+            setPet({ pendingCoins: coins });
+          }
           return 0;
         }
         return prev - 1;
@@ -257,42 +240,19 @@ export function PetScreen() {
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [pet.hatched, pet.lastCoinTime, pet.pendingCoins, pet.level]); // Include level to recalculate when pet levels up
-
-  // Separate effect to handle coin generation when timer reaches exactly 0
-  useEffect(() => {
-    // Don't generate coins if we just loaded from backend
-    if (hasLoadedFromBackend.current) return;
-    
-    // Only run when timer is exactly 0 and conditions are met
-    if (coinTimer !== 0 || !pet.hatched || pet.pendingCoins > 0) return;
-    
-    const elapsed = Math.floor((Date.now() - pet.lastCoinTime) / 1000);
-    
-    // Double-check: only generate if enough time has passed
-    if (elapsed >= COIN_INTERVAL_SECONDS) {
-      const coins = getCoinsPerMinute(pet.level);
-      console.log(`💰 Timer-triggered coin generation: ${coins} coins for level ${pet.level} (${elapsed}s elapsed)`);
-      setPet({ pendingCoins: coins });
-    }
-  }, [coinTimer]); // Only trigger when coinTimer changes to 0
+  }, [pet.hatched, pet.lastCoinTime, pet.pendingCoins, pet.level]); // Simplified dependencies
 
   const [isClaimingCoins, setIsClaimingCoins] = useState(false);
 
-  // Helper function to check if claiming is allowed
-  const canClaim = useCallback(() => {
+  // OPTIMIZED: Memoize canClaim function
+  const canClaim = useMemo(() => {
     if (pet.pendingCoins <= 0) return false;
     
     const elapsed = Math.floor((Date.now() - pet.lastCoinTime) / 1000);
     const timeRemaining = COIN_INTERVAL_SECONDS - elapsed;
     
-    // Debug logging
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🔍 canClaim check: pendingCoins=${pet.pendingCoins}, elapsed=${elapsed}s, remaining=${timeRemaining}s`);
-    }
-    
     // Can claim if there are pending coins AND enough time has passed
-    return pet.pendingCoins > 0 && timeRemaining <= 0;
+    return pet.pendingCoins > 0 && timeRemaining <= 5; // 5 second buffer
   }, [pet.pendingCoins, pet.lastCoinTime]);
 
   const collectCoins = useCallback(async () => {
@@ -958,23 +918,23 @@ export function PetScreen() {
       >
         <button 
           onClick={collectCoins} 
-          disabled={!canClaim() || isClaimingCoins} 
+          disabled={!canClaim || isClaimingCoins} 
           className="transition-all hover:scale-105 active:scale-95"
           style={{ 
             padding: '8px 20px', // Reduced from 10px 24px to 8px 20px
             borderRadius: '12px', // Slightly smaller border radius
-            background: canClaim() && !isClaimingCoins ? 'linear-gradient(135deg, #ffd700, #f5a623)' : 'rgba(100,100,100,0.3)', 
+            background: canClaim && !isClaimingCoins ? 'linear-gradient(135deg, #ffd700, #f5a623)' : 'rgba(100,100,100,0.3)', 
             border: 'none', 
-            color: canClaim() && !isClaimingCoins ? '#1a1a1f' : 'rgba(0,0,0,0.4)', 
+            color: canClaim && !isClaimingCoins ? '#1a1a1f' : 'rgba(0,0,0,0.4)', 
             fontSize: 'var(--fs-md)', // Back to medium font size
             fontWeight: '700', 
-            cursor: canClaim() && !isClaimingCoins ? 'pointer' : 'not-allowed',
-            boxShadow: canClaim() && !isClaimingCoins ? '0 3px 12px rgba(255,215,0,0.4)' : 'none', // Smaller shadow
+            cursor: canClaim && !isClaimingCoins ? 'pointer' : 'not-allowed',
+            boxShadow: canClaim && !isClaimingCoins ? '0 3px 12px rgba(255,215,0,0.4)' : 'none', // Smaller shadow
             transform: showCoinAnimation ? 'scale(0.95)' : 'scale(1)',
             opacity: showCoinAnimation ? 0.8 : 1,
           }}
         >
-          {isClaimingCoins ? 'Claiming...' : canClaim() ? (showCoinAnimation ? 'Claimed!' : 'Claim') : `Next in ${Math.floor(coinTimer / 60)}:${(coinTimer % 60).toString().padStart(2, '0')}`}
+          {isClaimingCoins ? 'Claiming...' : canClaim ? (showCoinAnimation ? 'Claimed!' : 'Claim') : `Next in ${Math.floor(coinTimer / 60)}:${(coinTimer % 60).toString().padStart(2, '0')}`}
         </button>
       </div>
 
@@ -1027,27 +987,24 @@ export function PetScreen() {
       <style jsx>{`
         @keyframes floatUp { 
           0% { opacity: 0; transform: translateY(20px) scale(0.8); } 
-          20% { opacity: 1; transform: translateY(0) scale(1.2); }
-          40% { transform: translateY(-20px) scale(1.1); }
-          100% { opacity: 0; transform: translateY(-80px) scale(1); } 
+          20% { opacity: 1; transform: translateY(0) scale(1.1); }
+          100% { opacity: 0; transform: translateY(-60px) scale(1); } 
         }
         @keyframes floatUpXP { 
-          0% { opacity: 0; transform: translateY(15px) translateX(-10px) scale(0.7); } 
-          25% { opacity: 1; transform: translateY(0) translateX(0) scale(1.1); }
-          50% { transform: translateY(-15px) translateX(5px) scale(1); }
-          100% { opacity: 0; transform: translateY(-60px) translateX(10px) scale(0.8); } 
+          0% { opacity: 0; transform: translateY(15px) translateX(-10px) scale(0.8); } 
+          25% { opacity: 1; transform: translateY(0) translateX(0) scale(1); }
+          100% { opacity: 0; transform: translateY(-50px) translateX(10px) scale(0.9); } 
         }
         @keyframes levelUpBounce { 
-          0% { opacity: 0; transform: translateY(30px) scale(0.5); } 
-          15% { opacity: 1; transform: translateY(-10px) scale(1.3); }
-          30% { transform: translateY(5px) scale(1.1); }
-          45% { transform: translateY(-5px) scale(1.2); }
-          60% { transform: translateY(0) scale(1); }
-          80% { transform: translateY(0) scale(1); opacity: 1; }
-          100% { opacity: 0; transform: translateY(-20px) scale(0.9); } 
+          0% { opacity: 0; transform: translateY(20px) scale(0.7); } 
+          15% { opacity: 1; transform: translateY(-5px) scale(1.1); }
+          30% { transform: translateY(0) scale(1); }
+          100% { opacity: 0; transform: translateY(-15px) scale(0.9); } 
         }
-        @keyframes floatPet { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes floatPet { 
+          0%, 100% { transform: translateY(0); } 
+          50% { transform: translateY(-8px); } 
+        }
         ::-webkit-scrollbar { display: none; }
       `}</style>
 

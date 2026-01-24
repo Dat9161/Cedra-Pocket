@@ -900,8 +900,8 @@ export const useAppStore = create<AppStore>()(
           console.log(`🏁 Completing game session with score ${score}`);
           const { backendAPI } = await import('../services/backend-api.service');
           
-          // Calculate points earned (same as frontend logic)
-          const pointsEarned = score; // 1 point per score
+          // Calculate points earned (exact 1:1 ratio - score = points)
+          const pointsEarned = score;
           
           const result = await backendAPI.completeGameSession('pocket-fly', score, pointsEarned);
           
