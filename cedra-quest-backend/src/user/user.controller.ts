@@ -29,12 +29,30 @@ export class UserController {
    */
   @Post('add-points')
   @HttpCode(HttpStatus.OK)
-  async addPoints(@Body() body: { points: number; telegramId?: string }) {
-    const { points, telegramId } = body;
+  async addPoints(@Body() body: { points: number; telegramId?: string; userId?: string }) {
+    const { points, telegramId, userId } = body;
     
     // For now, we'll get telegramId from request body or use a default
     // In production, this should come from JWT token
-    const userId = telegramId || '123456789'; // Default test user
+    const userIdToUse = telegramId || userId || '123456789'; // Default test user
+    
+    this.logger.log(`Adding ${points} points to user: ${userIdToUse}`);
+    
+    const result = await this.userService.addPoints(userIdToUse, points);
+    
+    this.logger.log(`Points added successfully. New total: ${result.total_points}`);
+    
+    return result;
+  }
+
+  /**
+   * Add points to specific user (alternative endpoint)
+   * POST /users/:userId/add-points
+   */
+  @Post(':userId/add-points')
+  @HttpCode(HttpStatus.OK)
+  async addPointsToUser(@Param('userId') userId: string, @Body() body: { points: number }) {
+    const { points } = body;
     
     this.logger.log(`Adding ${points} points to user: ${userId}`);
     

@@ -332,11 +332,16 @@ export const useAppStore = create<AppStore>()(
 
       updateBalance: async (amount, currency) => {
         const { user } = get();
-        if (!user) return;
+        if (!user) {
+          console.log('❌ No user found, cannot update balance');
+          return;
+        }
 
         if (currency === 'token') {
           // Update local state immediately for instant UI feedback
-          const newBalance = user.tokenBalance + amount;
+          const oldBalance = user.tokenBalance;
+          const newBalance = oldBalance + amount;
+          
           set({
             user: {
               ...user,
@@ -345,12 +350,28 @@ export const useAppStore = create<AppStore>()(
             },
           });
           
-          console.log(`💰 Balance updated locally: ${amount > 0 ? '+' : ''}${amount} (new total: ${newBalance})`);
+          console.log(`💰 Balance updated locally: ${oldBalance} → ${newBalance} (${amount > 0 ? '+' : ''}${amount})`);
           
-          // SIMPLIFIED: Just save to backend database, no complex sync logic
+          // Try to save to localStorage manually to ensure persistence
+          try {
+            const currentState = get();
+            const stateToSave = {
+              state: {
+                user: currentState.user,
+                pet: currentState.pet,
+                // Add other important state here
+              }
+            };
+            localStorage.setItem('tg-mini-app-storage', JSON.stringify(stateToSave));
+            console.log('📱 Manually saved to localStorage');
+          } catch (localError) {
+            console.error('❌ Failed to save to localStorage:', localError);
+          }
+          
+          // Save to backend database with better error handling
           try {
             const { backendAPI } = await import('../services/backend-api.service');
-            console.log(`💾 Saving to database: ${amount > 0 ? '+' : ''}${amount}`);
+            console.log(`💾 Attempting to save to database: ${amount > 0 ? '+' : ''}${amount}`);
             const result = await backendAPI.addPoints(amount);
             console.log(`✅ Database save success: ${result.total_points}`);
             
@@ -367,7 +388,9 @@ export const useAppStore = create<AppStore>()(
             }
           } catch (err) {
             console.error('❌ Database save failed:', err);
+            console.log('📱 Points saved locally, will sync when backend is available');
             // Keep local state - user still gets their coins
+            // The points are already saved in localStorage via Zustand persist
           }
         } else if (currency === 'wallet') {
           // Update wallet balance (USD)

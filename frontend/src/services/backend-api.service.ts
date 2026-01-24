@@ -244,22 +244,45 @@ export class BackendAPIService {
    */
   async addPoints(points: number): Promise<BackendUser> {
     try {
+      // Get current user ID from various sources
+      const userId = this.getCurrentUserId();
+      
       const response = await this.client.post<BackendUser>('/users/add-points', {
         points,
+        userId, // Include userId in request body for endpoints that don't use JWT
       });
       console.log(`✅ Backend add-points response: ${response.data.total_points}`);
       return response.data;
     } catch (error) {
       console.log('⚠️ Failed to add points to backend, using local fallback');
+      
+      // Try alternative endpoint without authentication
+      try {
+        const userId = this.getCurrentUserId();
+        console.log(`🔄 Trying alternative add-points for user: ${userId}`);
+        
+        // Use user service endpoint directly
+        const response = await this.client.post(`/users/${userId}/add-points`, {
+          points,
+        });
+        
+        if (response.data) {
+          console.log(`✅ Alternative add-points successful: ${response.data.total_points}`);
+          return response.data;
+        }
+      } catch (altError) {
+        console.log('⚠️ Alternative endpoint also failed:', altError);
+      }
+      
       // Return a mock user response with the new total for local gameplay
       return {
         id: 'local_user',
-        telegram_id: '123456789',
+        telegram_id: this.getCurrentUserId(),
         username: 'Local User',
         wallet_address: null,
         is_wallet_connected: false,
         total_points: points, // Just return the points added
-        current_rank: 'Shrimp',
+        current_rank: 'BRONZE',
         referral_code: null,
         referrer_id: null,
         created_at: new Date().toISOString(),

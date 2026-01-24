@@ -134,8 +134,8 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
       console.log(`💰 Backend balance: ${userData.tokenBalance}`);
       console.log(`💰 Raw backend total_points: ${response.user.total_points}`);
       
-      // Clear local storage to ensure backend is source of truth
-      localStorage.removeItem('tg-mini-app-storage');
+      // DON'T clear localStorage - let it persist for offline functionality
+      // localStorage.removeItem('tg-mini-app-storage');
       
       // Always use backend balance as source of truth
       setUser(userData);
@@ -209,11 +209,12 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
         const cachedData = localStorage.getItem('tg-mini-app-storage');
         if (cachedData) {
           const parsed = JSON.parse(cachedData);
-          // If cached username is "Guest Player" or different from Telegram user, clear it
-          if (parsed?.state?.user?.username === 'Guest Player' || 
-              (user && parsed?.state?.user?.username !== user.username && parsed?.state?.user?.username !== user.firstName)) {
-            console.log('🔄 Clearing stale cached user data');
+          // Only clear if cached username is "Guest Player" - keep other data for offline functionality
+          if (parsed?.state?.user?.username === 'Guest Player') {
+            console.log('🔄 Clearing guest user data');
             localStorage.removeItem('tg-mini-app-storage');
+          } else {
+            console.log('📱 Keeping existing user data for offline functionality');
           }
         }
 
