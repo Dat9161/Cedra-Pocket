@@ -261,7 +261,7 @@ const initialState: AppState = {
   pet: {
     level: 1,
     exp: 0,
-    maxExp: 100,
+    maxExp: 1200, // Fixed: Use correct XP threshold consistent with backend
     hunger: 50,
     happiness: 50,
     lastCoinTime: Date.now(),
@@ -774,13 +774,22 @@ export const useAppStore = create<AppStore>()(
           if (result.success) {
             console.log('✅ Pet fed successfully:', result);
             
-            // Update pet XP and level
-            get().setPet({
-              exp: result.newXp,
-              level: result.newLevel || get().pet.level,
-            });
+            // FIXED: Update pet with correct data from backend
+            const currentPet = get().pet;
+            const petUpdates: Partial<typeof currentPet> = {
+              exp: result.newXp, // Use backend's authoritative XP value
+              maxExp: 1200, // Keep consistent with backend constants
+            };
             
-            // Update user points (subtract cost)
+            // Only update level if backend explicitly returns a new level
+            if (result.newLevel !== undefined && result.newLevel !== currentPet.level) {
+              petUpdates.level = result.newLevel;
+              console.log(`🎉 Pet leveled up! Level ${currentPet.level} → ${result.newLevel}`);
+            }
+            
+            get().setPet(petUpdates);
+            
+            // Update user points (subtract cost) - use backend's authoritative value
             if (result.pointsSpent > 0) {
               const currentUser = get().user;
               if (currentUser) {
@@ -793,7 +802,7 @@ export const useAppStore = create<AppStore>()(
               }
             }
             
-            console.log(`🎉 Pet gained ${result.xpGained} XP, spent ${result.pointsSpent} points`);
+            console.log(`🎉 Pet gained ${result.xpGained} XP (${result.newXp}/1200), spent ${result.pointsSpent} points`);
           } else {
             console.error('❌ Failed to feed pet:', result.error);
             throw new Error(result.error || 'Failed to feed pet');
@@ -920,20 +929,35 @@ export const useAppStore = create<AppStore>()(
           if (dashboard && dashboard.success) {
             console.log('✅ Dashboard loaded successfully, processing data...');
             
-            // Update pet state
+            // Update pet state - FIXED: Don't overwrite local pet progress
             if (dashboard.pet) {
               console.log('🐾 Updating pet state:', dashboard.pet);
-              get().setPet({
-                level: dashboard.pet.level || 1,
-                exp: dashboard.pet.currentXp || 0,
-                maxExp: dashboard.pet.xpForNextLevel || 100,
+              const currentPet = get().pet;
+              
+              // Only update if backend has higher/newer values to prevent reset
+              const petUpdates: Partial<typeof currentPet> = {
+                // Keep existing hatched status and birth year from localStorage
+                hatched: currentPet.hatched,
+                birthYear: currentPet.birthYear,
+                hatchProgress: currentPet.hatchProgress,
+                // Update coins and timing from backend
                 pendingCoins: dashboard.pet.pendingRewards || 0,
                 lastCoinTime: dashboard.pet.lastClaimTime ? new Date(dashboard.pet.lastClaimTime).getTime() : Date.now(),
-                // Keep existing hatched status and birth year from localStorage
-                hatched: get().pet.hatched,
-                birthYear: get().pet.birthYear,
-                hatchProgress: get().pet.hatchProgress,
-              });
+                // Use consistent maxExp
+                maxExp: 1200,
+              };
+              
+              // Only update level and XP if backend has valid data AND it's higher than current
+              if (dashboard.pet.level && dashboard.pet.level >= currentPet.level) {
+                petUpdates.level = dashboard.pet.level;
+                petUpdates.exp = dashboard.pet.currentXp || 0;
+                console.log(`🔄 Pet sync: Level ${currentPet.level} → ${dashboard.pet.level}, XP: ${dashboard.pet.currentXp || 0}/1200`);
+              } else {
+                // Keep current level and XP if backend data is lower (prevent reset)
+                console.log(`🚫 Keeping local pet data: Level ${currentPet.level}, XP: ${currentPet.exp}/1200 (backend had lower values)`);
+              }
+              
+              get().setPet(petUpdates);
             }
 
             // Update energy state
@@ -1020,16 +1044,27 @@ export const useAppStore = create<AppStore>()(
               // Try to process the data even without success flag
               if (dashboard.pet) {
                 console.log('🐾 Processing pet data from response');
-                get().setPet({
-                  level: dashboard.pet.level || 1,
-                  exp: dashboard.pet.currentXp || 0,
-                  maxExp: dashboard.pet.xpForNextLevel || 100,
+                const currentPet = get().pet;
+                
+                // Same logic as above - don't overwrite local progress
+                const petUpdates: Partial<typeof currentPet> = {
+                  hatched: currentPet.hatched,
+                  birthYear: currentPet.birthYear,
+                  hatchProgress: currentPet.hatchProgress,
                   pendingCoins: dashboard.pet.pendingRewards || 0,
                   lastCoinTime: dashboard.pet.lastClaimTime ? new Date(dashboard.pet.lastClaimTime).getTime() : Date.now(),
-                  hatched: get().pet.hatched,
-                  birthYear: get().pet.birthYear,
-                  hatchProgress: get().pet.hatchProgress,
-                });
+                  maxExp: 1200,
+                };
+                
+                // Only update level and XP if backend has valid data AND it's higher
+                if (dashboard.pet.level && dashboard.pet.level >= currentPet.level) {
+                  petUpdates.level = dashboard.pet.level;
+                  petUpdates.exp = dashboard.pet.currentXp || 0;
+                } else {
+                  console.log(`🚫 Keeping local pet data in fallback processing`);
+                }
+                
+                get().setPet(petUpdates);
               }
               
               if (dashboard.energy) {

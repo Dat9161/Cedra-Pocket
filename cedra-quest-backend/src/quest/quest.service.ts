@@ -1,6 +1,7 @@
 import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { user_rank, pet_tier } from '@prisma/client';
+import { DailyQuestService } from './daily-quest.service';
 
 export interface QuestWithUserStatus {
   id: number;
@@ -22,7 +23,7 @@ export interface QuestWithUserStatus {
 export class QuestService {
   private readonly logger = new Logger(QuestService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private dailyQuestService: DailyQuestService) {}
 
   /**
    * Get all active quests for a user
@@ -77,25 +78,36 @@ export class QuestService {
       });
 
       // Transform to include user status
-      return quests.map((quest) => {
-        const userQuest = quest.user_quests[0];
-        
-        return {
-          id: quest.id,
-          title: quest.title,
-          description: quest.description,
-          type: quest.type,
-          category: quest.category,
-          config: quest.config,
-          reward_amount: quest.reward_amount,
-          reward_type: quest.reward_type || 'POINT',
-          frequency: quest.frequency || 'ONCE',
-          is_active: quest.is_active,
-          user_status: userQuest ? this.mapPrismaStatusToAPI(userQuest.status) : 'NOT_STARTED',
-          user_completed_at: userQuest?.completed_at?.toISOString(),
-          user_claimed_at: userQuest?.claimed_at?.toISOString(),
-        };
-      });
+      const transformedQuests = await Promise.all(
+        quests.map(async (quest) => {
+          const userQuest = quest.user_quests[0];
+          let userStatus = userQuest ? this.mapPrismaStatusToAPI(userQuest.status) : 'NOT_STARTED';
+          
+          // Special handling for daily quests
+          if (quest.frequency === 'DAILY') {
+            const dailyStatus = await this.dailyQuestService.getDailyQuestStatus(userId, quest.id);
+            userStatus = dailyStatus === 'claimable' ? 'NOT_STARTED' : 'CLAIMED';
+          }
+          
+          return {
+            id: quest.id,
+            title: quest.title,
+            description: quest.description,
+            type: quest.type,
+            category: quest.category,
+            config: quest.config,
+            reward_amount: quest.reward_amount,
+            reward_type: quest.reward_type || 'POINT',
+            frequency: quest.frequency || 'ONCE',
+            is_active: quest.is_active,
+            user_status: userStatus,
+            user_completed_at: userQuest?.completed_at?.toISOString(),
+            user_claimed_at: userQuest?.claimed_at?.toISOString(),
+          };
+        })
+      );
+      
+      return transformedQuests;
     } catch (error) {
       this.logger.error('Failed to get quests for user:', error);
       throw new BadRequestException('Failed to get quests');
@@ -374,37 +386,100 @@ export class QuestService {
         },
       });
 
-      if (!userQuest) {
-        throw new NotFoundException('User quest not found');
+      // For daily quests, check if user can claim today
+      const quest = await this.prisma.quests.findUnique({
+        where: { id: questId },
+      });
+
+      if (quest?.frequency === 'DAILY') {
+        const canClaim = await this.dailyQuestService.canClaimDailyQuest(userId, questId);
+        if (!canClaim) {
+          return {
+            success: false,
+            message: 'Daily quest already claimed today',
+            pointsEarned: 0,
+          };
+        }
+
+        // For daily quests, create or update user_quest record
+        const existingUserQuest = await this.prisma.user_quests.findUnique({
+          where: {
+            user_id_quest_id: {
+              user_id: userIdBigInt,
+              quest_id: questId,
+            },
+          },
+        });
+
+        if (!existingUserQuest) {
+          // Create new user_quest record for daily quest
+          await this.prisma.user_quests.create({
+            data: {
+              user_id: userIdBigInt,
+              quest_id: questId,
+              status: 'COMPLETED',
+              completed_at: new Date(),
+              progress: 100,
+            },
+          });
+        }
+      } else {
+        // For non-daily quests, check existing logic
+        if (!userQuest) {
+          throw new NotFoundException('User quest not found');
+        }
+
+        if (userQuest.status === 'CLAIMED') {
+          return {
+            success: true,
+            message: 'Reward already claimed',
+            pointsEarned: 0,
+          };
+        }
+
+        if (userQuest.status !== 'COMPLETED') {
+          throw new BadRequestException('Quest not completed yet');
+        }
       }
 
-      if (userQuest.status === 'CLAIMED') {
-        return {
-          success: true,
-          message: 'Reward already claimed',
-          pointsEarned: 0,
-        };
-      }
-
-      if (userQuest.status !== 'COMPLETED') {
-        throw new BadRequestException('Quest not completed yet');
-      }
-
-      const quest = userQuest.quests;
-      const rewardAmount = quest.reward_amount || 0;
+      const rewardAmount = quest?.reward_amount || 0;
 
       // Start transaction
       await this.prisma.$transaction(async (tx) => {
-        // Mark quest as claimed
-        await tx.user_quests.update({
+        // Get or create user_quest record
+        let userQuestRecord = await tx.user_quests.findUnique({
           where: {
-            id: userQuest.id,
-          },
-          data: {
-            status: 'CLAIMED',
-            claimed_at: new Date(),
+            user_id_quest_id: {
+              user_id: userIdBigInt,
+              quest_id: questId,
+            },
           },
         });
+
+        if (!userQuestRecord) {
+          // Create user_quest record (for daily quests)
+          userQuestRecord = await tx.user_quests.create({
+            data: {
+              user_id: userIdBigInt,
+              quest_id: questId,
+              status: 'CLAIMED',
+              completed_at: new Date(),
+              claimed_at: new Date(),
+              progress: 100,
+            },
+          });
+        } else {
+          // Update existing user_quest record
+          await tx.user_quests.update({
+            where: {
+              id: userQuestRecord.id,
+            },
+            data: {
+              status: 'CLAIMED',
+              claimed_at: new Date(),
+            },
+          });
+        }
 
         // Add points to user
         if (rewardAmount > 0) {
@@ -428,7 +503,7 @@ export class QuestService {
               user_id: userIdBigInt,
               amount: rewardAmount,
               type: 'QUEST_REWARD',
-              description: `Quest reward: ${quest.title}`,
+              description: `Quest reward: ${quest?.title}`,
               reference_id: `quest_${questId}`,
             },
           });

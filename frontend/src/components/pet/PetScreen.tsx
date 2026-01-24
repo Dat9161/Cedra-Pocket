@@ -314,7 +314,7 @@ export function PetScreen() {
   }, [pet.pendingCoins, pet.lastCoinTime, setPet, updateBalance, isClaimingCoins]);
 
   const handleFeed = async () => {
-    if ((user?.tokenBalance || 0) >= 20 && pet.hunger < 100) { // New system uses 20 points per feed
+    if ((user?.tokenBalance || 0) >= 20 && pet.level < 10) { // Use correct cost: 20 points per feed
       setIsFeeding(true);
       
       try {
@@ -323,20 +323,42 @@ export function PetScreen() {
         console.log('✅ Pet fed via new game system');
       } catch (error) {
         console.error('❌ Failed to feed via new game system, using fallback:', error);
-        // Fallback to old system
-        updateBalance(-10, 'token');
-        const newExp = pet.exp + 5;
+        // Fallback to local system with CORRECT logic
+        updateBalance(-20, 'token'); // Correct cost: 20 points
+        
+        // FIXED: Use correct XP calculation
+        const newExp = pet.exp + 20; // 20 XP per feed (same as backend)
         const newHunger = Math.min(100, pet.hunger + 20);
+        
         let newPetData: Partial<typeof pet>;
-        if (newExp >= pet.maxExp && pet.level < 10) {
-          // Level up, max level = 10
-          newPetData = { hunger: newHunger, level: pet.level + 1, exp: newExp - pet.maxExp, maxExp: Math.floor(pet.maxExp * 1.5) };
-        } else if (newExp >= pet.maxExp && pet.level >= 10) {
-          // Max level reached, keep exp at max
-          newPetData = { hunger: newHunger, exp: pet.maxExp };
+        
+        // FIXED: Use correct XP threshold for level up
+        if (newExp >= 1200 && pet.level < 10) { // 1200 XP needed for level up
+          // Level up - reset XP to remainder
+          const remainingXP = newExp - 1200;
+          newPetData = { 
+            hunger: newHunger, 
+            level: pet.level + 1, 
+            exp: remainingXP, 
+            maxExp: 1200 // Keep consistent maxExp
+          };
+          console.log(`🎉 Pet leveled up! Level ${pet.level} → ${pet.level + 1}, XP: ${remainingXP}/1200`);
+        } else if (pet.level >= 10) {
+          // Max level reached, cap XP at max
+          newPetData = { 
+            hunger: newHunger, 
+            exp: Math.min(newExp, 1200) // Cap at max XP
+          };
+          console.log(`⭐ Pet at max level (10), XP capped at ${Math.min(newExp, 1200)}/1200`);
         } else {
-          newPetData = { hunger: newHunger, exp: newExp };
+          // Normal XP gain
+          newPetData = { 
+            hunger: newHunger, 
+            exp: newExp 
+          };
+          console.log(`🍖 Pet fed! XP: ${newExp}/1200 (Level ${pet.level})`);
         }
+        
         setPet(newPetData);
       }
       
@@ -347,11 +369,22 @@ export function PetScreen() {
   const handleBoost = () => setShowBoostModal(true);
 
   const handleBuyBoost = (boost: typeof petBoosts[0]) => {
-    if ((user?.tokenBalance || 0) >= boost.cost && pet.level < 10) {
+    if ((user?.tokenBalance || 0) >= boost.cost) {
       updateBalance(-boost.cost, 'token');
-      const newPetData = { level: pet.level + 1, exp: 0, maxExp: Math.floor(pet.maxExp * 1.5) };
-      setPet(newPetData);
-      // Note: syncToBackend removed - data will sync automatically through updateBalance
+      
+      // FIXED: Boosts should NOT directly level up pet
+      // Instead, they should provide other benefits like increased coin generation, etc.
+      // For now, we'll just consume the points without leveling up
+      console.log(`💰 Bought boost: ${boost.name} for ${boost.cost} points`);
+      
+      // TODO: Implement actual boost effects (increased coin rate, etc.)
+      // For example:
+      // - Food Bowl: Increase hunger capacity
+      // - Cozy Bed: Increase passive mining speed  
+      // - Magic Collar: Boost mining speed multiplier
+      // - Golden Treat: Increase XP gain per feed
+      
+      // Note: Pet should only level up through feeding (care), not through buying boosts
     }
   };
 

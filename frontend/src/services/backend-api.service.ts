@@ -504,10 +504,10 @@ export class BackendAPIService {
       return response.data;
     } catch (error) {
       console.log('⚠️ Failed to claim quest reward via backend, using local fallback');
-      // Return mock success for local gameplay
+      // Return failure so frontend can handle with quest reward amount
       return {
-        success: true,
-        message: 'Quest reward claimed successfully (offline mode)',
+        success: false,
+        message: 'Backend unavailable - will use local quest reward',
         pointsEarned: 0,
       };
     }

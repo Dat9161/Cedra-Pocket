@@ -1,11 +1,15 @@
 import { Controller, Get, Post, Param, Body, Logger, HttpCode, HttpStatus } from '@nestjs/common';
 import { QuestService } from './quest.service';
+import { DailyQuestService } from './daily-quest.service';
 
 @Controller('quests')
 export class QuestController {
   private readonly logger = new Logger(QuestController.name);
 
-  constructor(private readonly questService: QuestService) {}
+  constructor(
+    private readonly questService: QuestService,
+    private readonly dailyQuestService: DailyQuestService,
+  ) {}
 
   /**
    * Get all quests for authenticated user
@@ -96,5 +100,17 @@ export class QuestController {
       success: true,
       message: 'Default quests initialized successfully',
     };
+  }
+
+  /**
+   * Manual reset daily quests (admin only)
+   * POST /quests/admin/reset-daily
+   */
+  @Post('admin/reset-daily')
+  @HttpCode(HttpStatus.OK)
+  async resetDailyQuests() {
+    this.logger.log('Manual daily quest reset requested');
+    
+    return await this.dailyQuestService.manualResetDailyQuests();
   }
 }
