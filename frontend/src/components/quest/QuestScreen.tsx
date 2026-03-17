@@ -554,7 +554,7 @@ export function QuestScreen() {
     >
       {/* Header */}
       <header style={{ marginBottom: 'clamp(8px, 2vw, 12px)', paddingLeft: 'clamp(8px, 2vw, 12px)', paddingRight: 'clamp(8px, 2vw, 12px)', textAlign: 'center' }} className="flex-shrink-0">
-        <h1 style={{ color: '#1a1a2e', fontSize: 'var(--fs-xl)' }} className="font-extrabold drop-shadow-[0_0_15px_rgba(0,0,0,0.1)]">
+        <h1 style={{ color: 'var(--card-text)', fontSize: 'var(--fs-xl)' }} className="font-extrabold drop-shadow-[0_0_15px_rgba(0,0,0,0.1)]">
           Quests
         </h1>
 
@@ -568,7 +568,7 @@ export function QuestScreen() {
                 background: 'linear-gradient(90deg, #FFD700, #FFA500)'
               }}
             />
-            <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-sm)' }} className="absolute inset-0 flex items-center justify-center font-bold drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">
+            <span style={{ color: 'var(--card-text)', fontSize: 'var(--fs-sm)' }} className="absolute inset-0 flex items-center justify-center font-bold drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">
               {completedCount}/{quests.length} completed
             </span>
           </div>
@@ -590,7 +590,7 @@ export function QuestScreen() {
 
       {/* Tasks Section */}
       <section style={{ paddingLeft: 'clamp(8px, 2vw, 12px)', paddingRight: 'clamp(8px, 2vw, 12px)' }} className="flex-shrink-0">
-        <h2 style={{ color: '#1a1a2e', marginBottom: 'clamp(6px, 1.5vw, 10px)', fontSize: 'var(--fs-base)' }} className="font-extrabold flex items-center gap-2">
+        <h2 style={{ color: 'var(--card-text)', marginBottom: 'clamp(6px, 1.5vw, 10px)', fontSize: 'var(--fs-md)' }} className="font-extrabold flex items-center gap-2">
           ⚡ Tasks
         </h2>
         <div className="flex flex-col" style={{ gap: 'clamp(8px, 2vw, 12px)' }}>

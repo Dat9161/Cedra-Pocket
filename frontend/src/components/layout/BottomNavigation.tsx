@@ -75,10 +75,10 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
         <div 
           className="flex items-center justify-center"
           style={{
-            background: 'rgba(255, 255, 255, 0.35)',
+            background: 'var(--topbar-bg)',
             backdropFilter: 'blur(24px)',
             borderRadius: 'clamp(16px, 4.5vw, 22px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
+            border: '1px solid var(--widget-border)',
             boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.3)',
             height: 'clamp(52px, 14vw, 64px)',
             padding: '0 clamp(4px, 1.5vw, 8px)',
@@ -94,11 +94,12 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
                 flex flex-col items-center justify-center
                 transition-all duration-300 rounded-xl flex-1 relative overflow-hidden
                 hover:scale-105 hover:bg-white/30
-                ${activeTab === 'quest' ? 'text-cyan-500' : 'text-gray-700 hover:text-cyan-500'}
+                ${activeTab === 'quest' ? 'text-cyan-500' : 'hover:text-cyan-500'}
               `}
               style={{ 
                 gap: 'clamp(2px, 0.5vw, 3px)', 
                 padding: 'clamp(4px, 1vw, 6px) clamp(6px, 1.5vw, 10px)',
+                color: activeTab === 'quest' ? undefined : 'var(--text-secondary)',
                 ...(activeTab === 'quest' ? { textShadow: '0 0 10px rgba(0,212,255,0.8)' } : {}) 
               }}
               aria-label="Quest"
@@ -117,11 +118,12 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
                 flex flex-col items-center justify-center
                 transition-all duration-300 rounded-xl flex-1 relative overflow-hidden
                 hover:scale-105 hover:bg-white/30
-                ${activeTab === 'pet' ? 'text-cyan-500' : 'text-gray-700 hover:text-cyan-500'}
+                ${activeTab === 'pet' ? 'text-cyan-500' : 'hover:text-cyan-500'}
               `}
               style={{ 
                 gap: 'clamp(2px, 0.5vw, 3px)', 
                 padding: 'clamp(4px, 1vw, 6px) clamp(6px, 1.5vw, 10px)',
+                color: activeTab === 'pet' ? undefined : 'var(--text-secondary)',
                 ...(activeTab === 'pet' ? { textShadow: '0 0 10px rgba(0,212,255,0.8)' } : {}) 
               }}
               aria-label="Pet"
@@ -139,10 +141,10 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
         <div 
           className="flex items-center justify-center"
           style={{
-            background: 'rgba(255, 255, 255, 0.35)',
+            background: 'var(--topbar-bg)',
             backdropFilter: 'blur(24px)',
             borderRadius: 'clamp(16px, 4.5vw, 22px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
+            border: '1px solid var(--widget-border)',
             boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.3)',
             height: 'clamp(52px, 14vw, 64px)',
             padding: '0 clamp(4px, 1.5vw, 8px)',
@@ -158,11 +160,12 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
                 flex flex-col items-center justify-center
                 transition-all duration-300 rounded-xl flex-1 relative overflow-hidden
                 hover:scale-105 hover:bg-white/30
-                ${activeTab === 'wallet' ? 'text-cyan-500' : 'text-gray-700 hover:text-cyan-500'}
+                ${activeTab === 'wallet' ? 'text-cyan-500' : 'hover:text-cyan-500'}
               `}
               style={{ 
                 gap: 'clamp(2px, 0.5vw, 3px)', 
                 padding: 'clamp(4px, 1vw, 6px) clamp(6px, 1.5vw, 10px)',
+                color: activeTab === 'wallet' ? undefined : 'var(--text-secondary)',
                 ...(activeTab === 'wallet' ? { textShadow: '0 0 10px rgba(0,212,255,0.8)' } : {}) 
               }}
               aria-label="Apps"
@@ -181,11 +184,12 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
                 flex flex-col items-center justify-center
                 transition-all duration-300 rounded-xl flex-1 relative overflow-hidden
                 hover:scale-105 hover:bg-white/30
-                ${activeTab === 'game' ? 'text-cyan-500' : 'text-gray-700 hover:text-cyan-500'}
+                ${activeTab === 'game' ? 'text-cyan-500' : 'hover:text-cyan-500'}
               `}
               style={{ 
                 gap: 'clamp(2px, 0.5vw, 3px)', 
                 padding: 'clamp(4px, 1vw, 6px) clamp(6px, 1.5vw, 10px)',
+                color: activeTab === 'game' ? undefined : 'var(--text-secondary)',
                 ...(activeTab === 'game' ? { textShadow: '0 0 10px rgba(0,212,255,0.8)' } : {}) 
               }}
               aria-label="Game"

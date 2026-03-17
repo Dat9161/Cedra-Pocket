@@ -198,7 +198,7 @@ export function SpinModal({ isOpen, onClose }: SpinModalProps) {
 
         {/* Spins Left */}
         <div 
-          className="rounded-xl"
+          className="rounded-full"
           style={{
             background: 'linear-gradient(135deg, #FF6B6B, #FF8E53)',
             border: '2px solid rgba(255,255,255,0.3)',
@@ -213,10 +213,11 @@ export function SpinModal({ isOpen, onClose }: SpinModalProps) {
         {/* Result */}
         {showResult && result !== null && (
           <div 
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl z-30"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30"
             style={{
               background: 'linear-gradient(135deg, #FFD700, #FFA500)',
               border: 'clamp(2px, 0.5vw, 3px) solid rgba(255,255,255,0.5)',
+              borderRadius: 'var(--card-radius)',
               boxShadow: '0 8px 30px rgba(255,215,0,0.5)',
               animation: 'pulse 0.5s ease-in-out infinite',
               padding: 'clamp(12px, 3vw, 18px) clamp(20px, 5vw, 30px)',

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fredoka } from "next/font/google";
 import "./globals.css";
 import { TelegramProvider, OfflineProvider, ErrorBoundaryProvider } from "../components/providers";
+import { ThemeProvider } from "../components/providers/ThemeProvider";
 
 const fredoka = Fredoka({
   variable: "--font-fredoka",
@@ -16,7 +17,7 @@ export const viewport: Viewport = {
   maximumScale: 3,
   userScalable: true,
   viewportFit: "cover",
-  themeColor: "#0a0a1a",
+  themeColor: "#A8DADC",
 };
 
 export const metadata: Metadata = {
@@ -43,25 +44,35 @@ export default function RootLayout({
       <head>
         {/* Telegram Web App Script - MUST be loaded before app */}
         <script src="https://telegram.org/js/telegram-web-app.js" />
+        {/* Apply theme before render to avoid flash */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              try {
+                var theme = localStorage.getItem('app-theme') || 'light';
+                if (theme === 'dark') document.documentElement.classList.add('dark');
+              } catch(e) {}
+            })();
+          `
+        }} />
       </head>
       <body
         className={`${fredoka.variable} font-sans antialiased min-h-screen-safe flex justify-center`}
-        style={{ backgroundColor: '#0a0a1a' }}
         suppressHydrationWarning
       >
         <div 
-          className="w-full overflow-hidden relative"
+          className="w-full overflow-hidden relative app-background"
           style={{ 
             maxWidth: '100%',
             minHeight: '100dvh',
-            background: "url('/background.png') no-repeat center center",
-            backgroundSize: 'cover'
           }}
         >
           <ErrorBoundaryProvider>
             <TelegramProvider>
               <OfflineProvider>
-                {children}
+                <ThemeProvider>
+                  {children}
+                </ThemeProvider>
               </OfflineProvider>
             </TelegramProvider>
           </ErrorBoundaryProvider>

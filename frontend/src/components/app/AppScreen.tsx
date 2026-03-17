@@ -9,7 +9,7 @@ const CedraAppCard = ({ onClick, isHorizontal = false }: { onClick: () => void; 
         style={{
           background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(147, 197, 253, 0.6))',
           backdropFilter: 'blur(20px)',
-          borderRadius: 'clamp(16px, 4vw, 20px)',
+          borderRadius: 'var(--card-radius)',
           border: '1px solid rgba(255, 255, 255, 0.3)',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
           width: 'clamp(280px, 70vw, 350px)',
@@ -100,7 +100,7 @@ const CedraAppCard = ({ onClick, isHorizontal = false }: { onClick: () => void; 
             fontSize: 'clamp(14px, 3.5vw, 18px)',
             boxShadow: '0 4px 16px rgba(255, 200, 0, 0.4)',
             padding: 'clamp(10px, 2.5vw, 14px) clamp(20px, 5vw, 28px)',
-            borderRadius: 'clamp(12px, 3vw, 16px)',
+            borderRadius: 'var(--card-radius)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
             cursor: 'pointer',
             fontWeight: '700',
@@ -117,12 +117,12 @@ const CedraAppCard = ({ onClick, isHorizontal = false }: { onClick: () => void; 
       className="flex items-center gap-3 p-4 cursor-pointer transition-all hover:scale-[1.01]"
       onClick={onClick}
       style={{
-        background: 'rgba(255, 255, 255, 0.95)',
-        borderRadius: 'clamp(12px, 3vw, 20px)',
-        border: '1px solid rgba(255,255,255,0.3)',
+        background: 'var(--card-bg-solid)',
+        borderRadius: 'var(--card-radius)',
+        border: '1px solid var(--card-border)',
         backdropFilter: 'blur(20px)',
         minHeight: 'clamp(70px, 18vw, 90px)',
-        padding: 'clamp(12px, 3vw, 18px)'
+        padding: 'var(--card-padding)'
       }}
     >
       <div 
@@ -146,14 +146,14 @@ const CedraAppCard = ({ onClick, isHorizontal = false }: { onClick: () => void; 
         />
       </div>
       <div className="flex-1">
-        <div style={{ fontSize: 'var(--fs-md)', fontWeight: '600', color: 'rgba(26,26,46,0.7)', marginBottom: '2px' }}>
+        <div style={{ fontSize: 'var(--fs-md)', fontWeight: '600', color: 'var(--card-text)', marginBottom: '2px' }}>
           Cedra Network
         </div>
-        <div style={{ fontSize: 'var(--fs-sm)', color: 'rgba(26,26,46,0.5)' }}>
+        <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--card-text-muted)' }}>
           Official Website
         </div>
       </div>
-      <div style={{ fontSize: 'clamp(24px, 6vw, 32px)', color: 'rgba(26,26,46,0.4)' }}>›</div>
+      <div style={{ fontSize: 'clamp(24px, 6vw, 32px)', color: 'var(--card-text-muted)' }}>›</div>
     </div>
   );
 };
@@ -173,7 +173,7 @@ export function AppScreen() {
     >
       {/* Suggested for you */}
       <div style={{ marginBottom: 'clamp(32px, 8vw, 48px)' }}>
-        <h2 style={{ fontSize: 'var(--fs-lg)', fontWeight: '700', color: '#fff', marginBottom: 'clamp(12px, 3vw, 20px)' }}>
+        <h2 style={{ fontSize: 'var(--fs-lg)', fontWeight: '700', color: 'var(--card-text)', marginBottom: 'clamp(12px, 3vw, 20px)' }}>
           Suggested for you
         </h2>
         
@@ -227,7 +227,7 @@ export function AppScreen() {
 
       {/* Recent */}
       <div style={{ marginBottom: 'clamp(24px, 6vw, 40px)' }}>
-        <h2 style={{ fontSize: 'var(--fs-lg)', fontWeight: '700', color: '#fff', marginBottom: 'clamp(12px, 3vw, 20px)' }}>
+        <h2 style={{ fontSize: 'var(--fs-lg)', fontWeight: '700', color: 'var(--card-text)', marginBottom: 'clamp(12px, 3vw, 20px)' }}>
           Recent
         </h2>
         

@@ -13,6 +13,7 @@ import { PetScreen } from '../components/pet/PetScreen';
 import { useTelegram } from '../components/providers';
 import { useSpinsLeft } from '../store/useAppStore';
 import { RankUpModal } from '../components/shared/RankUpModal';
+import { ThemeToggleButton } from '../components/providers/ThemeProvider';
 
 // Rank tiers based on points - Updated system
 const RANK_TIERS = [
@@ -248,8 +249,11 @@ export default function HomePage() {
                 </button>
               </div>
 
-              {/* Points display - top right */}
-              <div className="absolute z-20" style={{ top: 'clamp(14px, 4vw, 20px)', right: 'clamp(8px, 2.5vw, 12px)' }}>
+              {/* Points display + Theme Toggle - top right */}
+              <div className="absolute z-20 flex items-center" style={{ top: 'clamp(14px, 4vw, 20px)', right: 'clamp(8px, 2.5vw, 12px)', gap: 'clamp(4px, 1vw, 6px)' }}>
+                {/* Theme Toggle - left of Points */}
+                <ThemeToggleButton />
+
                 {/* Points Display */}
                 <div 
                   className="flex items-center transition-all"
@@ -267,7 +271,7 @@ export default function HomePage() {
                     style={{ 
                       fontSize: 'var(--fs-sm)', 
                       fontWeight: '700',
-                      color: '#1a1a2e'
+                      color: 'var(--card-text)'
                     }}
                   >
                     {user.tokenBalance.toLocaleString('fr-FR').replace(/\s/g, ' ')}
@@ -277,13 +281,13 @@ export default function HomePage() {
 
               {/* Username - center */}
               <div className="absolute left-1/2 -translate-x-1/2 z-20" style={{ top: 'clamp(12px, 3.5vw, 18px)' }}>
-                <span style={{ fontSize: 'var(--fs-sm)' }} className="font-bold text-gray-800">{user.username}</span>
+                <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--card-text)' }} className="font-bold">{user.username}</span>
               </div>
 
               {/* Glass background */}
               <div 
                 style={{
-                  background: 'rgba(255,255,255,0.5)',
+                  background: 'var(--topbar-bg)',
                   backdropFilter: 'blur(20px)',
                   borderRadius: 'clamp(10px, 3vw, 14px)',
                   clipPath: 'url(#notchClipTop)',
@@ -302,7 +306,7 @@ export default function HomePage() {
                 {/* Rank Progress Bar - Inside glass at bottom */}
                 <div className="px-2">
                   <div className="text-center mb-1">
-                    <span style={{ fontSize: 'var(--fs-sm)' }} className="text-gray-600 font-semibold">
+                    <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--card-text-secondary)' }} className="font-semibold">
                       RANK {(() => {
                         const currentRank = getUserRankTier(user.tokenBalance);
                         const currentIndex = RANK_TIERS.findIndex(tier => tier.name === currentRank.name);
@@ -350,10 +354,10 @@ export default function HomePage() {
               {/* Total Balance Card */}
               <div 
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.25) 100%)',
+                  background: 'var(--card-bg)',
                   backdropFilter: 'blur(24px)',
-                  border: '1px solid rgba(255, 255, 255, 0.4)',
-                  borderRadius: '16px',
+                  border: '1px solid var(--card-border)',
+                  borderRadius: 'var(--card-radius)',
                   boxShadow: '0 4px 16px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.5)',
                   width: '100%',
                   maxWidth: 'clamp(280px, 75vw, 360px)',
@@ -362,7 +366,7 @@ export default function HomePage() {
               >
                 {/* Header with eye icon */}
 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-600 font-medium" style={{ fontSize: 'var(--fs-sm)' }}>
+                  <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--card-text-secondary)' }} className="font-medium">
                     Total Balance
                   </span>
                   <button 
@@ -371,13 +375,13 @@ export default function HomePage() {
                   >
                     {showBalance ? (
                       // Open eye icon
-                      <svg width="clamp(16px, 4vw, 24px)" height="clamp(16px, 4vw, 24px)" viewBox="0 0 24 24" fill="none" className="text-gray-400">
+                      <svg width="clamp(16px, 4vw, 24px)" height="clamp(16px, 4vw, 24px)" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--card-text-muted)' }}>
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" fill="none"/>
                         <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" fill="none"/>
                       </svg>
                     ) : (
                       // Closed eye icon (eye with slash)
-                      <svg width="clamp(16px, 4vw, 24px)" height="clamp(16px, 4vw, 24px)" viewBox="0 0 24 24" fill="none" className="text-gray-400">
+                      <svg width="clamp(16px, 4vw, 24px)" height="clamp(16px, 4vw, 24px)" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--card-text-muted)' }}>
                         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" strokeWidth="2" fill="none"/>
                         <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" strokeWidth="2"/>
                       </svg>
@@ -387,7 +391,7 @@ export default function HomePage() {
 
                 {/* Balance Amount */}
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-gray-800 font-bold" style={{ fontSize: 'var(--fs-xl)' }}>
+                  <span style={{ fontSize: 'var(--fs-xl)', fontWeight: 'bold', color: 'var(--card-text)' }}>
                     {showBalance 
                       ? `$${(user?.walletBalance || 0).toLocaleString()}` 
                       : '****'
@@ -403,7 +407,7 @@ export default function HomePage() {
                       height="clamp(16px, 4vw, 24px)" 
                       viewBox="0 0 24 24" 
                       fill="none" 
-                      className={`text-gray-400 transition-transform duration-500 ${isRefreshing ? 'animate-reverse-spin' : ''}`}
+                      className={`transition-transform duration-500 ${isRefreshing ? 'animate-reverse-spin' : ''}`} style={{ color: 'var(--card-text-muted)' }}
                     >
                       <path 
                         d="M1 4v6h6M23 20v-6h-6" 
@@ -436,7 +440,7 @@ export default function HomePage() {
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                       </svg>
                     </div>
-                    <span className="text-gray-700 font-medium" style={{ fontSize: 'var(--fs-xs)' }}>Deposit</span>
+                    <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--card-text-secondary)', fontWeight: '500' }}>Deposit</span>
                   </button>
 
                   <button className="flex flex-col items-center p-2 rounded-xl transition-all hover:scale-105">
@@ -449,7 +453,7 @@ export default function HomePage() {
                         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                       </svg>
                     </div>
-                    <span className="text-gray-700 font-medium" style={{ fontSize: 'var(--fs-xs)' }}>Bridge</span>
+                    <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--card-text-secondary)', fontWeight: '500' }}>Bridge</span>
                   </button>
 
                   <button className="flex flex-col items-center p-2 rounded-xl transition-all hover:scale-105">
@@ -463,7 +467,7 @@ export default function HomePage() {
                         <path d="m9 12 2 2 4-4"></path>
                       </svg>
                     </div>
-                    <span className="text-gray-700 font-medium" style={{ fontSize: 'var(--fs-xs)' }}>Earn</span>
+                    <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--card-text-secondary)', fontWeight: '500' }}>Earn</span>
                   </button>
 
                   <button className="flex flex-col items-center p-2 rounded-xl transition-all hover:scale-105">
@@ -477,7 +481,7 @@ export default function HomePage() {
                         <polyline points="7,7 17,7 17,17"></polyline>
                       </svg>
                     </div>
-                    <span className="text-gray-700 font-medium" style={{ fontSize: 'var(--fs-xs)' }}>Transfer</span>
+                    <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--card-text-secondary)', fontWeight: '500' }}>Transfer</span>
                   </button>
                 </div>
               </div>
@@ -500,10 +504,10 @@ export default function HomePage() {
                 style={{ 
                   width: 'clamp(90px, 25vw, 135px)',
                   height: 'clamp(90px, 25vw, 135px)',
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.25) 100%)',
+                  background: 'var(--widget-bg)',
                   backdropFilter: 'blur(24px)',
-                  border: '1px solid rgba(255, 255, 255, 0.4)',
-                  borderRadius: 'clamp(12px, 3vw, 20px)',
+                  border: '1px solid var(--widget-border)',
+                  borderRadius: 'var(--card-radius)',
                   boxShadow: '0 4px 16px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.5)',
                   cursor: 'pointer',
                   animation: 'bubble-float-slow 4s ease-in-out infinite',
@@ -551,14 +555,14 @@ export default function HomePage() {
                   
                   {/* Center Content */}
                   <div className="flex flex-col items-center relative z-10">
-                    <div className="text-gray-800 font-bold" style={{ fontSize: 'var(--fs-sm)' }}>
+                    <div style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', color: 'var(--card-text)' }}>
                       {Math.min(energy.currentEnergy, 10)}/{Math.min(energy.maxEnergy, 10)}
                     </div>
                   </div>
                 </div>
                 
                 {/* Status Text */}
-                <div className="text-gray-600 font-medium mt-1" style={{ fontSize: 'var(--fs-xs)' }}>
+                <div style={{ fontSize: 'var(--fs-xs)', fontWeight: '500', color: 'var(--card-text-secondary)', marginTop: '4px' }}>
                   {Math.min(energy.currentEnergy, 10) >= 5 ? 'Ready' : 
                    Math.min(energy.currentEnergy, 10) >= 3 ? 'Low' : 
                    Math.min(energy.currentEnergy, 10) >= 1 ? 'Very Low' : 'Empty'}
@@ -572,10 +576,10 @@ export default function HomePage() {
                 style={{ 
                   width: 'clamp(90px, 25vw, 135px)',
                   height: 'clamp(90px, 25vw, 135px)',
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.25) 100%)',
+                  background: 'var(--widget-bg)',
                   backdropFilter: 'blur(24px)',
-                  border: '1px solid rgba(255, 255, 255, 0.4)',
-                  borderRadius: 'clamp(12px, 3vw, 20px)',
+                  border: '1px solid var(--widget-border)',
+                  borderRadius: 'var(--card-radius)',
                   boxShadow: '0 4px 16px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.5)',
                   cursor: 'pointer',
                   animation: 'bubble-float 3.5s ease-in-out infinite',
@@ -617,12 +621,12 @@ export default function HomePage() {
                 </div>
                 
                 {/* Spin Title */}
-                <div className="text-gray-800 font-bold mb-1" style={{ fontSize: 'var(--fs-sm)' }}>
+                <div style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', color: 'var(--card-text)', marginBottom: '4px' }}>
                   Lucky Spin
                 </div>
                 
                 {/* Status Text */}
-                <div className="text-gray-600 font-medium" style={{ fontSize: 'var(--fs-xs)' }}>
+                <div style={{ fontSize: 'var(--fs-xs)', fontWeight: '500', color: 'var(--card-text-secondary)' }}>
                   {spinsLeft > 0 ? `${spinsLeft} spins left` : 'No spins'}
                 </div>
               </button>
@@ -634,10 +638,10 @@ export default function HomePage() {
                 style={{ 
                   width: 'clamp(90px, 25vw, 135px)',
                   height: 'clamp(90px, 25vw, 135px)',
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.25) 100%)',
+                  background: 'var(--widget-bg)',
                   backdropFilter: 'blur(24px)',
-                  border: '1px solid rgba(255, 255, 255, 0.4)',
-                  borderRadius: 'clamp(12px, 3vw, 20px)',
+                  border: '1px solid var(--widget-border)',
+                  borderRadius: 'var(--card-radius)',
                   boxShadow: '0 4px 16px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.5)',
                   cursor: 'pointer',
                   animation: 'bubble-float 3.2s ease-in-out infinite',
@@ -655,14 +659,16 @@ export default function HomePage() {
                 </div>
                 
                 {/* Pet Storage Title */}
-                <div className="text-gray-800 font-bold mb-1" style={{ fontSize: 'var(--fs-xs)' }}>
+                <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 'bold', color: 'var(--card-text)', marginBottom: '4px' }}>
                   Pet Coins
                 </div>
                 
                 {/* Pending Coins Amount */}
                 <div className="text-center w-full px-1">
-                  <div className="text-gray-800 font-bold" style={{ 
+                  <div style={{ 
                     fontSize: 'var(--fs-sm)',
+                    fontWeight: 'bold',
+                    color: 'var(--card-text)',
                     lineHeight: '1.1',
                     wordBreak: 'break-all',
                     maxWidth: '100%',
@@ -672,7 +678,7 @@ export default function HomePage() {
                   }}>
                     {pet.pendingCoins.toLocaleString()}
                   </div>
-                  <div className="text-gray-500" style={{ fontSize: 'var(--fs-xs)' }}>
+                  <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--card-text-muted)' }}>
                     {pet.pendingCoins > 0 ? 'Ready' : 'Empty'}
                   </div>
                 </div>
@@ -732,9 +738,9 @@ export default function HomePage() {
             className="w-full overflow-hidden"
             style={{
               maxWidth: '320px',
-              background: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '20px',
-              border: '1px solid rgba(255,255,255,0.3)',
+              background: 'var(--card-bg-solid)',
+            borderRadius: 'var(--card-radius)',
+            border: '1px solid var(--card-border)',
               boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
               backdropFilter: 'blur(20px)',
             }}
@@ -748,10 +754,10 @@ export default function HomePage() {
                 className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full transition-all hover:scale-110 z-10"
                 style={{ background: 'rgba(0,0,0,0.1)' }}
               >
-                <span className="text-gray-600 text-lg font-bold">✕</span>
+                <span style={{ color: 'var(--card-text-secondary)', fontSize: '18px', fontWeight: 'bold' }}>✕</span>
               </button>
 
-              <div className="text-gray-600 font-semibold tracking-widest mb-4" style={{ fontSize: 'var(--fs-xs)' }}>YOUR RANK</div>
+              <div style={{ color: 'var(--card-text-secondary)', fontWeight: '600', letterSpacing: '0.1em', marginBottom: '16px', fontSize: 'var(--fs-xs)' }}>YOUR RANK</div>
               
               {/* Current Rank Display with Navigation */}
               <div className="relative flex items-center justify-center mb-4">
@@ -765,7 +771,7 @@ export default function HomePage() {
                     border: '1px solid rgba(255,255,255,0.2)'
                   }}
                 >
-                  <span className="text-gray-700 text-lg">‹</span>
+                  <span style={{ color: 'var(--card-text)', fontSize: '18px' }}>‹</span>
                 </button>
 
                 {/* Rank Display */}
@@ -785,10 +791,10 @@ export default function HomePage() {
                     alt="Rank" 
                     style={{ width: '80px', height: '80px', objectFit: 'contain' }} 
                   />
-                  <div className="text-gray-800 font-bold" style={{ fontSize: 'var(--fs-lg)', marginTop: '8px' }}>
+                  <div style={{ color: 'var(--card-text)', fontWeight: 'bold', fontSize: 'var(--fs-lg)', marginTop: '8px' }}>
                     {RANK_TIERS[displayRankIndex].name}
                   </div>
-                  <div className="text-gray-600" style={{ fontSize: 'var(--fs-sm)', marginTop: '4px' }}>
+                  <div style={{ color: 'var(--card-text-secondary)', fontSize: 'var(--fs-sm)', marginTop: '4px' }}>
                     {RANK_TIERS[displayRankIndex].minPoints >= 1000 
                       ? `${RANK_TIERS[displayRankIndex].minPoints/1000}K` 
                       : RANK_TIERS[displayRankIndex].minPoints}
@@ -816,7 +822,7 @@ export default function HomePage() {
                     border: '1px solid rgba(255,255,255,0.2)'
                   }}
                 >
-                  <span className="text-gray-700 text-lg">›</span>
+                  <span style={{ color: 'var(--card-text)', fontSize: '18px' }}>›</span>
                 </button>
               </div>
             </div>

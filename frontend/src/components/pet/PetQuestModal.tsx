@@ -233,8 +233,8 @@ export function PetQuestModal({ isOpen, onClose, onHatch, currentProgress }: Pet
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
       <div style={{ 
-        background: 'rgba(255, 255, 255, 0.95)', 
-        borderRadius: 'clamp(16px, 4vw, 24px)', 
+        background: 'var(--card-bg-solid)', 
+        borderRadius: 'var(--card-radius)', 
         padding: 'clamp(20px, 5vw, 24px)', 
         maxWidth: 'clamp(320px, 90vw, 400px)', 
         width: '100%', 
@@ -250,12 +250,12 @@ export function PetQuestModal({ isOpen, onClose, onHatch, currentProgress }: Pet
             position: 'absolute',
             top: 'clamp(12px, 3vw, 16px)',
             right: 'clamp(12px, 3vw, 16px)',
-            background: 'rgba(0,0,0,0.1)', 
+            background: 'var(--widget-bg)', 
             border: 'none', 
             borderRadius: '50%', 
             width: 'clamp(28px, 7vw, 32px)', 
             height: 'clamp(28px, 7vw, 32px)', 
-            color: '#333', 
+            color: 'var(--card-text)', 
             cursor: 'pointer', 
             fontSize: 'clamp(14px, 3.5vw, 16px)',
             display: 'flex',
@@ -271,10 +271,10 @@ export function PetQuestModal({ isOpen, onClose, onHatch, currentProgress }: Pet
             {/* Birth Year Input */}
             <div className="text-center mb-6">
               <div style={{ fontSize: 'clamp(40px, 10vw, 48px)', marginBottom: 'clamp(12px, 3vw, 16px)' }}>🎂</div>
-              <h3 style={{ color: '#1a1a2e', fontSize: 'clamp(18px, 4.5vw, 22px)', fontWeight: '700', marginBottom: 'clamp(8px, 2vw, 12px)' }}>
+              <h3 style={{ color: 'var(--card-text)', fontSize: 'clamp(18px, 4.5vw, 22px)', fontWeight: '700', marginBottom: 'clamp(8px, 2vw, 12px)' }}>
                 Enter Your Birth Year
               </h3>
-              <p style={{ color: 'rgba(26, 26, 46, 0.7)', fontSize: 'clamp(14px, 3.5vw, 16px)', lineHeight: '1.4' }}>
+              <p style={{ color: 'var(--card-text-secondary)', fontSize: 'clamp(14px, 3.5vw, 16px)', lineHeight: '1.4' }}>
                 Your birth year determines your pet's zodiac traits
               </p>
             </div>
@@ -291,9 +291,9 @@ export function PetQuestModal({ isOpen, onClose, onHatch, currentProgress }: Pet
                 width: '100%',
                 padding: 'clamp(12px, 3vw, 16px)',
                 borderRadius: 'clamp(10px, 2.5vw, 12px)',
-                border: '2px solid rgba(0,0,0,0.1)',
-                background: 'rgba(0,0,0,0.05)',
-                color: '#1a1a2e',
+                border: '1px solid var(--card-border)',
+                background: 'var(--widget-bg)',
+                color: 'var(--card-text)',
                 fontSize: 'clamp(16px, 4vw, 18px)',
                 textAlign: 'center',
                 outline: 'none',
@@ -309,9 +309,9 @@ export function PetQuestModal({ isOpen, onClose, onHatch, currentProgress }: Pet
                   flex: 1, 
                   padding: 'clamp(12px, 3vw, 14px)', 
                   borderRadius: 'clamp(10px, 2.5vw, 12px)', 
-                  background: 'rgba(0,0,0,0.08)', 
+                  background: 'var(--widget-bg)', 
                   border: 'none', 
-                  color: '#333', 
+                  color: 'var(--card-text)', 
                   fontSize: 'clamp(14px, 3.5vw, 16px)', 
                   fontWeight: '600', 
                   cursor: 'pointer' 
@@ -328,9 +328,9 @@ export function PetQuestModal({ isOpen, onClose, onHatch, currentProgress }: Pet
                   borderRadius: 'clamp(10px, 2.5vw, 12px)',
                   background: birthYear && !isSubmitting && parseInt(birthYear) >= 1900 && parseInt(birthYear) <= new Date().getFullYear() - 5
                     ? 'linear-gradient(135deg, #ffd700, #f5a623)' 
-                    : 'rgba(0,0,0,0.1)',
+                    : 'var(--widget-bg)',
                   border: 'none',
-                  color: '#1a1a2e',
+                  color: birthYear && !isSubmitting && parseInt(birthYear) >= 1900 && parseInt(birthYear) <= new Date().getFullYear() - 5 ? '#1a1a2e' : 'var(--card-text-muted)',
                   fontSize: 'clamp(14px, 3.5vw, 16px)',
                   fontWeight: '700',
                   cursor: birthYear && !isSubmitting ? 'pointer' : 'not-allowed',
@@ -358,10 +358,10 @@ export function PetQuestModal({ isOpen, onClose, onHatch, currentProgress }: Pet
                   margin: '0 auto clamp(12px, 3vw, 16px)',
                 }}
               />
-              <h3 style={{ color: '#1a1a2e', fontSize: 'clamp(18px, 4.5vw, 22px)', fontWeight: '700', marginBottom: 'clamp(4px, 1vw, 8px)' }}>
+              <h3 style={{ color: 'var(--card-text)', fontSize: 'clamp(18px, 4.5vw, 22px)', fontWeight: '700', marginBottom: 'clamp(4px, 1vw, 8px)' }}>
                 Complete all tasks to hatch your egg
               </h3>
-              <p style={{ color: 'rgba(0,0,0,0.5)', fontSize: 'clamp(12px, 3vw, 14px)' }}>
+              <p style={{ color: 'var(--card-text-muted)', fontSize: 'clamp(12px, 3vw, 14px)' }}>
                 {completedCount}/{quests.length} tasks completed
               </p>
             </div>
@@ -369,10 +369,10 @@ export function PetQuestModal({ isOpen, onClose, onHatch, currentProgress }: Pet
             {/* Progress Bar */}
             <div style={{ marginBottom: 'clamp(20px, 5vw, 24px)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'clamp(6px, 1.5vw, 8px)' }}>
-                <span style={{ color: 'rgba(0,0,0,0.5)', fontSize: 'clamp(12px, 3vw, 14px)' }}>Progress</span>
+                <span style={{ color: 'var(--card-text-muted)', fontSize: 'clamp(12px, 3vw, 14px)' }}>Progress</span>
                 <span style={{ color: '#f5a623', fontSize: 'clamp(12px, 3vw, 14px)', fontWeight: '600' }}>{Math.round(totalProgress)}%</span>
               </div>
-              <div style={{ height: 'clamp(8px, 2vw, 10px)', background: 'rgba(0,0,0,0.1)', borderRadius: 'clamp(4px, 1vw, 5px)', overflow: 'hidden' }}>
+              <div style={{ height: 'clamp(8px, 2vw, 10px)', background: 'var(--widget-bg)', borderRadius: 'clamp(4px, 1vw, 5px)', overflow: 'hidden' }}>
                 <div style={{ 
                   width: `${totalProgress}%`, 
                   height: '100%', 
@@ -396,8 +396,8 @@ export function PetQuestModal({ isOpen, onClose, onHatch, currentProgress }: Pet
                     gap: 'clamp(12px, 3vw, 16px)',
                     padding: 'clamp(12px, 3vw, 16px)',
                     borderRadius: 'clamp(12px, 3vw, 16px)',
-                    background: quest.completed ? 'rgba(34, 197, 94, 0.15)' : 'rgba(0,0,0,0.05)',
-                    border: quest.completed ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(0,0,0,0.08)',
+                    background: quest.completed ? 'rgba(34, 197, 94, 0.15)' : 'var(--card-bg)',
+                    border: quest.completed ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid var(--card-border)',
                     cursor: quest.completed ? 'default' : 'pointer',
                     transition: 'all 0.2s',
                     textAlign: 'left'
@@ -407,7 +407,7 @@ export function PetQuestModal({ isOpen, onClose, onHatch, currentProgress }: Pet
                     width: 'clamp(36px, 9vw, 44px)', 
                     height: 'clamp(36px, 9vw, 44px)', 
                     borderRadius: 'clamp(8px, 2vw, 12px)', 
-                    background: quest.completed ? 'rgba(34, 197, 94, 0.2)' : 'rgba(0,0,0,0.05)', 
+                    background: quest.completed ? 'rgba(34, 197, 94, 0.2)' : 'var(--widget-bg)', 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center', 
@@ -417,7 +417,7 @@ export function PetQuestModal({ isOpen, onClose, onHatch, currentProgress }: Pet
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ 
-                      color: quest.completed ? 'rgba(34, 197, 94, 1)' : '#1a1a2e', 
+                      color: quest.completed ? 'rgba(34, 197, 94, 1)' : 'var(--card-text)', 
                       fontSize: 'clamp(14px, 3.5vw, 16px)', 
                       fontWeight: '600',
                       marginBottom: 'clamp(2px, 0.5vw, 4px)'
@@ -425,14 +425,14 @@ export function PetQuestModal({ isOpen, onClose, onHatch, currentProgress }: Pet
                       {quest.name}
                     </div>
                     <div style={{ 
-                      color: quest.completed ? 'rgba(34, 197, 94, 0.7)' : 'rgba(0,0,0,0.4)', 
+                      color: quest.completed ? 'rgba(34, 197, 94, 0.7)' : 'var(--card-text-muted)', 
                       fontSize: 'clamp(11px, 2.8vw, 13px)' 
                     }}>
                       +{quest.progress}% progress
                     </div>
                   </div>
                   {!quest.completed && (
-                    <span style={{ color: 'rgba(0,0,0,0.3)', fontSize: 'clamp(14px, 3.5vw, 16px)' }}>›</span>
+                    <span style={{ color: 'var(--card-text-muted)', fontSize: 'clamp(14px, 3.5vw, 16px)' }}>›</span>
                   )}
                 </button>
               ))}
@@ -448,9 +448,9 @@ export function PetQuestModal({ isOpen, onClose, onHatch, currentProgress }: Pet
                 borderRadius: 'clamp(12px, 3vw, 16px)',
                 background: totalProgress >= 100 
                   ? 'linear-gradient(135deg, #ffd700, #f5a623)' 
-                  : 'rgba(0,0,0,0.1)',
+                  : 'var(--widget-bg)',
                 border: 'none',
-                color: totalProgress >= 100 ? '#1a1a2e' : 'rgba(0,0,0,0.4)',
+                color: totalProgress >= 100 ? '#1a1a2e' : 'var(--card-text-muted)',
                 fontSize: 'clamp(16px, 4vw, 18px)',
                 fontWeight: '700',
                 cursor: totalProgress >= 100 ? 'pointer' : 'not-allowed',

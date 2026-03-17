@@ -57,7 +57,7 @@ const RewardBadge = ({ type, amount }: { type: Quest['reward']['type']; amount: 
     <span style={{ fontSize: 'var(--fs-sm)' }}>
       <RewardIcon type={type} />
     </span>
-    <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-sm)' }} className="font-extrabold">
+    <span style={{ color: 'var(--card-text)', fontSize: 'var(--fs-sm)' }} className="font-extrabold">
       +{formatRewardAmount(amount)}
     </span>
   </div>
@@ -125,10 +125,10 @@ const QuestDetailModal = ({
     >
       <div 
         style={{
-          background: 'linear-gradient(135deg, #ffffff, #e8dcc8)',
-          border: '1px solid rgba(0, 0, 0, 0.1)',
-          borderRadius: 'clamp(10px, 2.5vw, 14px)',
-          padding: 'clamp(10px, 2.5vw, 14px)',
+          background: 'var(--card-bg-solid)',
+          border: '1px solid var(--card-border)',
+          borderRadius: 'var(--card-radius)',
+          padding: 'var(--card-padding)',
           boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
           width: '100%',
           maxWidth: 'clamp(240px, 68vw, 300px)'
@@ -152,12 +152,12 @@ const QuestDetailModal = ({
           {/* Quest Content */}
           <div className="flex-1 min-w-0">
             {/* Title */}
-            <h3 style={{ color: '#1a1a2e', fontSize: 'var(--fs-base)', marginBottom: 'clamp(2px, 0.5vw, 4px)' }} className="font-bold">
+            <h3 style={{ color: 'var(--card-text)', fontSize: 'var(--fs-base)', marginBottom: 'clamp(2px, 0.5vw, 4px)' }} className="font-bold">
               {quest.title}
             </h3>
 
             {/* Description - full text */}
-            <p style={{ color: 'rgba(0, 0, 0, 0.6)', fontSize: 'var(--fs-sm)', lineHeight: '1.4', marginBottom: 'clamp(6px, 1.5vw, 10px)' }}>
+            <p style={{ color: 'var(--card-text-secondary)', fontSize: 'var(--fs-sm)', lineHeight: '1.4', marginBottom: 'clamp(6px, 1.5vw, 10px)' }}>
               {quest.description}
             </p>
 
@@ -213,10 +213,10 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
       <div
         onClick={isLocked || isCompleted || hasClaimButton ? undefined : () => setShowDetail(true)}
         style={{
-          background: 'linear-gradient(135deg, #ffffff, #e8dcc8)',
-          border: '1px solid rgba(0, 0, 0, 0.1)',
-          borderRadius: 'clamp(10px, 2.5vw, 14px)',
-          padding: 'clamp(8px, 2vw, 12px)',
+          background: 'var(--card-bg-solid)',
+          border: '1px solid var(--card-border)',
+          borderRadius: 'var(--card-radius)',
+          padding: 'var(--card-padding)',
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
           width: '100%',
         }}
@@ -241,8 +241,8 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
             {/* Title - max 2 lines */}
             <h3 
               style={{ 
-                color: '#1a1a2e', 
-                fontSize: 'var(--fs-lg)', 
+                color: 'var(--card-text)', 
+                fontSize: 'var(--fs-sm)', 
                 marginBottom: 'clamp(1px, 0.2vw, 2px)',
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
@@ -258,8 +258,8 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
             {/* Description - max 1 line */}
             <p 
               style={{ 
-                color: 'rgba(0, 0, 0, 0.6)', 
-                fontSize: 'var(--fs-base)',
+                color: 'var(--card-text-secondary)', 
+                fontSize: 'var(--fs-xs)',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis'

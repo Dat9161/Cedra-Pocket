@@ -711,7 +711,7 @@ export function PetScreen() {
             style={{
               marginTop: 'clamp(16px, 4vw, 32px)',
               padding: 'clamp(12px, 3vw, 18px) clamp(32px, 8vw, 48px)',
-              borderRadius: 'clamp(12px, 3vw, 20px)',
+              borderRadius: 'var(--card-radius)',
               background: 'linear-gradient(135deg, #ffd700, #f5a623)',
               border: 'none',
               color: '#1a1a2e',
@@ -724,7 +724,7 @@ export function PetScreen() {
           </button>
 
           {/* Info */}
-          <div style={{ marginTop: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>
+          <div style={{ marginTop: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: 'var(--fs-xs)' }}>
             Tap to see hatch tasks
           </div>
         </div>
@@ -922,7 +922,7 @@ export function PetScreen() {
           className="transition-all hover:scale-105 active:scale-95"
           style={{ 
             padding: '8px 20px', // Reduced from 10px 24px to 8px 20px
-            borderRadius: '12px', // Slightly smaller border radius
+            borderRadius: 'var(--card-radius)', // Slightly smaller border radius
             background: canClaim && !isClaimingCoins ? 'linear-gradient(135deg, #ffd700, #f5a623)' : 'rgba(100,100,100,0.3)', 
             border: 'none', 
             color: canClaim && !isClaimingCoins ? '#1a1a1f' : 'rgba(0,0,0,0.4)', 
@@ -942,12 +942,12 @@ export function PetScreen() {
       <div 
         className="absolute left-1/2 transform -translate-x-1/2"
         style={{ 
-          bottom: '-85px', // Moved down to make room for XP display
-          background: 'rgba(255, 255, 255, 0.95)', 
-          borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.4)', 
+          bottom: '-85px',
+          background: 'var(--card-bg-solid)', 
+          borderRadius: 'var(--card-radius)',
+          border: '1px solid var(--card-border)', 
           backdropFilter: 'blur(20px)',
-          width: '260px', // Increased width for better spacing
+          width: '260px',
           zIndex: 5,
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
           padding: '8px 12px'
@@ -967,19 +967,19 @@ export function PetScreen() {
             }}
           >
             <img src="/icons/mission.png" alt="Mission" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
-            <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>
+            <span style={{ color: 'var(--card-text)', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>
               {isFeeding ? 'Caring...' : pet.level >= 10 ? 'Max Lv' : 'Mission'}
             </span>
           </button>
-          <div style={{ width: '1px', height: '24px', background: 'rgba(0,0,0,0.1)' }} />
+          <div style={{ width: '1px', height: '24px', background: 'var(--divider)' }} />
           <button onClick={handleCareItems} className="flex flex-col items-center gap-0 transition-all hover:scale-105 active:scale-95" style={{ background: 'transparent', border: 'none', padding: '3px 6px', cursor: 'pointer' }}>
             <img src="/icons/care.png" alt="Care Items" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
-            <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>Care</span>
+            <span style={{ color: 'var(--card-text)', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>Care</span>
           </button>
-          <div style={{ width: '1px', height: '24px', background: 'rgba(0,0,0,0.1)' }} />
+          <div style={{ width: '1px', height: '24px', background: 'var(--divider)' }} />
           <button onClick={() => setShowFriendsModal(true)} className="flex flex-col items-center gap-0 transition-all hover:scale-105 active:scale-95" style={{ padding: '3px 6px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
             <img src="/icons/friend.png" alt="Friends" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
-            <span style={{ color: '#1a1a2e', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>Friends</span>
+            <span style={{ color: 'var(--card-text)', fontSize: 'var(--fs-xs)', fontWeight: '600' }}>Friends</span>
           </button>
         </div>
       </div>
@@ -1011,22 +1011,22 @@ export function PetScreen() {
       {/* Care Items Modal */}
       {showBoostModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '20px', padding: '16px', maxWidth: '320px', width: '100%', maxHeight: '70vh', overflowY: 'auto', backdropFilter: 'blur(20px)' }}>
+          <div style={{ background: 'var(--card-bg-solid)', borderRadius: 'var(--card-radius)', padding: '16px', maxWidth: '320px', width: '100%', maxHeight: '70vh', overflowY: 'auto', backdropFilter: 'blur(20px)' }}>
             <button onClick={() => setShowBoostModal(false)} className="absolute top-3 right-3" style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(0,0,0,0.1)', border: 'none', color: '#333', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             <div className="text-center mb-3">
               <div className="flex items-center justify-center gap-1 mb-1">
                 <span style={{ fontSize: '14px' }}>🪙</span>
                 <span style={{ fontSize: 'var(--fs-md)', fontWeight: '700', color: '#f5a623' }}>{(user?.tokenBalance || 0).toLocaleString()}</span>
               </div>
-              <h2 style={{ fontSize: 'var(--fs-md)', fontWeight: '700', color: '#1a1a2e' }}>Care Items for your pet!</h2>
+              <h2 style={{ fontSize: 'var(--fs-md)', fontWeight: '700', color: 'var(--card-text)' }}>Care Items for your pet!</h2>
             </div>
             <div className="overflow-y-auto" style={{ maxHeight: 'calc(70vh - 100px)', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {petBoosts.map((boost) => (
-                <button key={boost.id} onClick={() => handleBuyCareItem(boost)} disabled={(user?.tokenBalance || 0) < boost.cost} className="w-full mb-2 transition-all hover:scale-[1.02] active:scale-[0.98]" style={{ background: 'rgba(0,0,0,0.05)', borderRadius: '12px', padding: '10px', border: '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: '8px', opacity: (user?.tokenBalance || 0) < boost.cost ? 0.5 : 1, cursor: (user?.tokenBalance || 0) < boost.cost ? 'not-allowed' : 'pointer' }}>
+                <button key={boost.id} onClick={() => handleBuyCareItem(boost)} disabled={(user?.tokenBalance || 0) < boost.cost} className="w-full mb-2 transition-all hover:scale-[1.02] active:scale-[0.98]" style={{ background: 'rgba(0,0,0,0.05)', borderRadius: 'var(--card-radius)', padding: '10px', border: '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: '8px', opacity: (user?.tokenBalance || 0) < boost.cost ? 0.5 : 1, cursor: (user?.tokenBalance || 0) < boost.cost ? 'not-allowed' : 'pointer' }}>
                   <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #fff8e1, #ffe082)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>{boost.icon}</div>
                   <div className="flex-1 text-left">
-                    <div style={{ color: '#1a1a2e', fontSize: 'var(--fs-sm)', fontWeight: '600' }}>{boost.name}</div>
-                    <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 'var(--fs-xs)', marginBottom: '2px' }}>{boost.effect}</div>
+                    <div style={{ color: 'var(--card-text)', fontSize: 'var(--fs-sm)', fontWeight: '600' }}>{boost.name}</div>
+                    <div style={{ color: 'var(--card-text-muted)', fontSize: 'var(--fs-xs)', marginBottom: '2px' }}>{boost.effect}</div>
                     <div className="flex items-center gap-2" style={{ marginTop: '2px' }}>
                       <div className="flex items-center gap-1">
                         <span style={{ fontSize: '10px' }}>🪙</span>
@@ -1036,10 +1036,10 @@ export function PetScreen() {
                         <span style={{ fontSize: '10px', color: '#4facfe' }}>⚡</span>
                         <span style={{ color: '#4facfe', fontWeight: '600', fontSize: 'var(--fs-xs)' }}>+{boost.expGain} XP</span>
                       </div>
-                      <span style={{ color: 'rgba(0,0,0,0.4)', fontSize: 'var(--fs-xs)' }}>L{boost.level}</span>
+                      <span style={{ color: 'var(--card-text-muted)', fontSize: 'var(--fs-xs)' }}>L{boost.level}</span>
                     </div>
                   </div>
-                  <span style={{ color: 'rgba(0,0,0,0.3)', fontSize: '14px' }}>›</span>
+                  <span style={{ color: 'var(--card-text-muted)', fontSize: '14px' }}>›</span>
                 </button>
               ))}
             </div>
@@ -1050,16 +1050,16 @@ export function PetScreen() {
       {/* Friends Modal */}
       {showFriendsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '20px', padding: '24px 20px', maxWidth: '320px', width: '100%', backdropFilter: 'blur(20px)', position: 'relative' }}>
+          <div style={{ background: 'var(--card-bg-solid)', borderRadius: 'var(--card-radius)', padding: '24px 20px', maxWidth: '320px', width: '100%', backdropFilter: 'blur(20px)', position: 'relative' }}>
             <button onClick={() => { setShowFriendsModal(false); setShowRecoverInviter(false); }} style={{ position: 'absolute', top: '12px', right: '12px', width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(0,0,0,0.1)', border: 'none', color: '#333', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             
             {showRecoverInviter ? (
               <>
                 {/* Recover Inviter View */}
                 <div>
-                  <h2 style={{ fontSize: 'var(--fs-lg)', fontWeight: '700', color: '#1a1a2e' }}>Recover inviter</h2>
+                  <h2 style={{ fontSize: 'var(--fs-lg)', fontWeight: '700', color: 'var(--card-text)' }}>Recover inviter</h2>
                   
-                  <p style={{ fontSize: 'var(--fs-md)', color: 'rgba(0,0,0,0.6)', marginTop: '12px', lineHeight: 1.5 }}>
+                  <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--card-text-secondary)', marginTop: '12px', lineHeight: 1.5 }}>
                     You can link the account that invited you if this did not happen automatically.
                   </p>
                   
@@ -1073,12 +1073,12 @@ export function PetScreen() {
                       width: '100%',
                       marginTop: '20px',
                       padding: '14px 16px',
-                      borderRadius: '12px',
+                      borderRadius: 'var(--card-radius)',
                       border: '1px solid rgba(0,0,0,0.15)',
                       background: 'rgba(0,0,0,0.03)',
-                      color: '#1a1a2e',
-                      fontSize: 'var(--fs-md)',
-                      outline: 'none',
+                      color: 'var(--card-text)',
+                    fontSize: 'var(--fs-md)',
+                    outline: 'none',
                     }}
                   />
                 </div>
@@ -1093,10 +1093,10 @@ export function PetScreen() {
                     width: '100%',
                     marginTop: '24px',
                     padding: '14px',
-                    borderRadius: '12px',
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    border: '1px solid rgba(0,0,0,0.1)',
-                    color: '#1a1a2e',
+                    borderRadius: 'var(--card-radius)',
+                    background: 'var(--card-bg-solid)',
+                    border: '1px solid var(--card-border)',
+                    color: 'var(--card-text)',
                     fontSize: '16px',
                     fontWeight: '600',
                     cursor: 'pointer',
@@ -1116,7 +1116,7 @@ export function PetScreen() {
                     width: '100%',
                     marginTop: '10px',
                     padding: '14px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--card-radius)',
                     background: inviterAddress ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.2)',
                     border: 'none',
                     color: 'rgba(255,255,255,0.9)',
@@ -1132,15 +1132,15 @@ export function PetScreen() {
               <>
                 {/* Main Friends View */}
                 <div className="text-center">
-                  <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1a1a2e' }}>Friends: <span style={{ color: '#f5a623' }}>0</span></h2>
+                  <h2 style={{ fontSize: 'var(--fs-lg)', fontWeight: '700', color: 'var(--card-text)' }}>Friends: <span style={{ color: '#f5a623' }}>0</span></h2>
                   
-                  <p style={{ fontSize: '14px', color: 'rgba(0,0,0,0.6)', marginTop: '16px', lineHeight: 1.5 }}>
-                    Every time your friend claims coins you get <span style={{ fontWeight: '600', color: '#1a1a2e' }}>20% cashback</span>. And <span style={{ fontWeight: '600', color: '#1a1a2e' }}>5%</span> every time their referrals claim it
+                  <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--card-text-secondary)', marginTop: '16px', lineHeight: 1.5 }}>
+                    Every time your friend claims coins you get <span style={{ fontWeight: '600', color: 'var(--card-text)' }}>20% cashback</span>. And <span style={{ fontWeight: '600', color: 'var(--card-text)' }}>5%</span> every time their referrals claim it
                   </p>
                   
                   <button 
                     onClick={() => setShowRecoverInviter(true)}
-                    style={{ marginTop: '16px', background: 'transparent', border: 'none', color: '#1a1a2e', fontSize: '14px', fontWeight: '600', textDecoration: 'underline', cursor: 'pointer' }}
+                    style={{ marginTop: '16px', background: 'transparent', border: 'none', color: 'var(--card-text)', fontSize: 'var(--fs-sm)', fontWeight: '600', textDecoration: 'underline', cursor: 'pointer' }}
                   >
                     Recovery my inviter
                   </button>
@@ -1153,10 +1153,10 @@ export function PetScreen() {
                     width: '100%',
                     marginTop: '24px',
                     padding: '14px',
-                    borderRadius: '12px',
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    border: '1px solid rgba(0,0,0,0.1)',
-                    color: '#1a1a2e',
+                    borderRadius: 'var(--card-radius)',
+                    background: 'var(--card-bg-solid)',
+                    border: '1px solid var(--card-border)',
+                    color: 'var(--card-text)',
                     fontSize: '16px',
                     fontWeight: '600',
                     cursor: 'pointer',
@@ -1212,8 +1212,8 @@ export function PetScreen() {
           {/* Content */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
             {/* Header */}
-            <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#fff', marginBottom: '8px' }}>Friends: <span style={{ color: '#f5a623' }}>0</span></h2>
-            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', textAlign: 'center', lineHeight: 1.5, marginBottom: '30px', maxWidth: '280px' }}>
+            <h2 style={{ fontSize: 'var(--fs-lg)', fontWeight: '700', color: '#fff', marginBottom: '8px' }}>Friends: <span style={{ color: '#f5a623' }}>0</span></h2>
+            <p style={{ fontSize: 'var(--fs-xs)', color: 'rgba(255,255,255,0.6)', textAlign: 'center', lineHeight: 1.5, marginBottom: '30px', maxWidth: '280px' }}>
               Every time your friend claims HOT you get <span style={{ color: '#fff', fontWeight: '600' }}>20% cashback</span>. And <span style={{ color: '#fff', fontWeight: '600' }}>5%</span> every time their referrals claim it
             </p>
 
@@ -1221,8 +1221,8 @@ export function PetScreen() {
             <div style={{ fontSize: '70px', marginBottom: '24px' }}>🙌</div>
 
             {/* Friendship bonus */}
-            <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#fff', marginBottom: '10px' }}>Friendship bonus</h3>
-            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 1.5, maxWidth: '260px' }}>
+            <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: '700', color: '#fff', marginBottom: '10px' }}>Friendship bonus</h3>
+            <p style={{ fontSize: 'var(--fs-xs)', color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 1.5, maxWidth: '260px' }}>
               Friends amplify your power! Earn <span style={{ color: '#fff', fontWeight: '600' }}>20% HOT</span> from all your friends' income - no limits, no boundaries.
             </p>
           </div>

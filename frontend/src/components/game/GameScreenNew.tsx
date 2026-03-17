@@ -173,16 +173,16 @@ function GameScreenNew({ onGameStateChange }: GameScreenProps) {
               onClick={() => setSelectedCategory(cat.id)}
               className="flex items-center whitespace-nowrap transition-all"
               style={{
-                background: selectedCategory === cat.id 
-                  ? 'rgba(255, 255, 255, 0.9)' 
-                  : 'rgba(255, 255, 255, 0.6)',
+                background: selectedCategory === cat.id
+                  ? 'var(--card-bg-solid)'
+                  : 'var(--card-bg)',
                 backdropFilter: 'blur(20px)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
-                color: '#1a1a2e',
+                color: 'var(--card-text)',
                 fontSize: 'var(--fs-sm)',
                 fontWeight: selectedCategory === cat.id ? '600' : '400',
                 padding: 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px)',
-                borderRadius: 'clamp(16px, 4vw, 24px)',
+                borderRadius: 'clamp(20px, 5vw, 28px)',
                 boxShadow: selectedCategory === cat.id 
                   ? '0 4px 20px rgba(0, 0, 0, 0.1)' 
                   : '0 2px 10px rgba(0, 0, 0, 0.05)',
@@ -196,7 +196,7 @@ function GameScreenNew({ onGameStateChange }: GameScreenProps) {
 
       {/* Featured Games Section */}
       <section style={{ marginBottom: 'clamp(12px, 3vw, 16px)' }} className="flex-shrink-0">
-        <h2 style={{ color: '#1a1a2e', marginBottom: 'clamp(8px, 2vw, 12px)', fontSize: 'var(--fs-lg)', margin: '0 0 clamp(8px, 2vw, 12px) 0' }} className="font-bold">
+        <h2 style={{ color: 'var(--card-text)', marginBottom: 'clamp(8px, 2vw, 12px)', fontSize: 'var(--fs-lg)', margin: '0 0 clamp(8px, 2vw, 12px) 0' }} className="font-bold">
           Featured Games
         </h2>
         
@@ -254,7 +254,7 @@ function GameScreenNew({ onGameStateChange }: GameScreenProps) {
                     index % 4 === 2 ? 'rgba(245, 101, 101, 0.8), rgba(252, 165, 165, 0.6)' :
                     'rgba(168, 85, 247, 0.8), rgba(196, 181, 253, 0.6)'})`,
                 backdropFilter: 'blur(20px)',
-                borderRadius: 'clamp(16px, 4vw, 20px)',
+                borderRadius: 'var(--card-radius)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
                 width: 'clamp(220px, 60vw, 280px)',
@@ -313,7 +313,7 @@ function GameScreenNew({ onGameStateChange }: GameScreenProps) {
                 <h3 
                   className="font-bold"
                   style={{ 
-                    fontSize: 'clamp(18px, 4.5vw, 24px)', 
+                    fontSize: 'var(--fs-md)', 
                     lineHeight: '1.2',
                   }}
                 >
@@ -341,7 +341,7 @@ function GameScreenNew({ onGameStateChange }: GameScreenProps) {
                     ? '0 4px 16px rgba(255, 200, 0, 0.4)'
                     : '0 2px 8px rgba(0, 0, 0, 0.1)',
                   padding: 'clamp(8px, 2vw, 10px) clamp(16px, 4vw, 20px)',
-                  borderRadius: 'clamp(10px, 2.5vw, 12px)',
+                  borderRadius: 'clamp(16px, 4vw, 20px)',
                   border: '1px solid rgba(255, 255, 255, 0.3)',
                   cursor: 'pointer',
                   fontWeight: '700',
@@ -356,7 +356,7 @@ function GameScreenNew({ onGameStateChange }: GameScreenProps) {
 
       {/* Games Section */}
       <section className="flex-shrink-0">
-        <h2 style={{ color: '#1a1a2e', marginBottom: 'clamp(12px, 3vw, 16px)', fontSize: 'var(--fs-lg)', margin: '0 0 clamp(12px, 3vw, 16px) 0' }} className="font-bold">
+        <h2 style={{ color: 'var(--card-text)', marginBottom: 'clamp(12px, 3vw, 16px)', fontSize: 'var(--fs-lg)', margin: '0 0 clamp(12px, 3vw, 16px) 0' }} className="font-bold">
           {selectedCategory === 'all' ? 'All Games' : `${CATEGORIES.find(c => c.id === selectedCategory)?.name} Games`}
         </h2>
 
@@ -368,12 +368,12 @@ function GameScreenNew({ onGameStateChange }: GameScreenProps) {
                 key={game.id}
                 className="flex items-center transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.8)',
+                  background: 'var(--card-bg)',
                   backdropFilter: 'blur(20px)',
-                  borderRadius: 'clamp(16px, 4vw, 20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: 'var(--card-radius)',
+                  border: '1px solid var(--card-border)',
                   boxShadow: '0 6px 24px rgba(0, 0, 0, 0.08)',
-                  padding: 'clamp(12px, 3vw, 16px)',
+                  padding: 'var(--card-padding)',
                   gap: 'clamp(10px, 2.5vw, 12px)',
                   minHeight: 'clamp(64px, 16vw, 80px)',
                 }}
@@ -397,12 +397,12 @@ function GameScreenNew({ onGameStateChange }: GameScreenProps) {
 
                 {/* Game Info */}
                 <div className="flex-1 min-w-0" style={{ paddingRight: 'clamp(6px, 1.5vw, 8px)' }}>
-                  <h3 className="font-bold" style={{ fontSize: 'clamp(14px, 3.5vw, 16px)', marginBottom: 'clamp(2px, 0.5vw, 4px)', color: '#1a1a2e', lineHeight: '1.2' }}>
+                  <h3 className="font-bold" style={{ fontSize: 'var(--fs-sm)', marginBottom: 'clamp(2px, 0.5vw, 4px)', color: 'var(--card-text)', lineHeight: '1.2' }}>
                     {game.name}
                   </h3>
                   <p 
                     className="truncate"
-                    style={{ fontSize: 'clamp(12px, 3vw, 14px)', color: 'rgba(26, 26, 46, 0.7)', lineHeight: '1.3' }}
+                    style={{ fontSize: 'var(--fs-xs)', color: 'var(--card-text-secondary)', lineHeight: '1.3' }}
                   >
                     {game.description}
                   </p>
@@ -426,7 +426,7 @@ function GameScreenNew({ onGameStateChange }: GameScreenProps) {
                       ? '0 4px 16px rgba(255, 200, 0, 0.25)'
                       : '0 3px 12px rgba(0, 0, 0, 0.08)',
                     padding: 'clamp(8px, 2vw, 10px) clamp(14px, 3.5vw, 18px)',
-                    borderRadius: 'clamp(12px, 3vw, 16px)',
+                    borderRadius: 'clamp(16px, 4vw, 20px)',
                     border: '1px solid rgba(255, 255, 255, 0.3)',
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
