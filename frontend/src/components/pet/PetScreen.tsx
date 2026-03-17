@@ -942,7 +942,7 @@ export function PetScreen() {
       <div 
         className="absolute left-1/2 transform -translate-x-1/2"
         style={{ 
-          bottom: '-85px',
+          bottom: '-65px',
           background: 'var(--card-bg-solid)', 
           borderRadius: 'var(--card-radius)',
           border: '1px solid var(--card-border)', 
@@ -1011,8 +1011,8 @@ export function PetScreen() {
       {/* Care Items Modal */}
       {showBoostModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div style={{ background: 'var(--card-bg-solid)', borderRadius: 'var(--card-radius)', padding: '16px', maxWidth: '320px', width: '100%', maxHeight: '70vh', overflowY: 'auto', backdropFilter: 'blur(20px)' }}>
-            <button onClick={() => setShowBoostModal(false)} className="absolute top-3 right-3" style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(0,0,0,0.1)', border: 'none', color: '#333', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          <div style={{ background: 'var(--card-bg-solid)', borderRadius: 'var(--card-radius)', padding: '16px', maxWidth: '320px', width: '100%', maxHeight: '70vh', overflowY: 'auto', backdropFilter: 'blur(20px)', position: 'relative' }}>
+            <button onClick={() => setShowBoostModal(false)} style={{ position: 'absolute', top: '12px', right: '12px', width: '32px', height: '32px', borderRadius: '50%', background: 'var(--widget-bg)', border: '1px solid var(--card-border)', color: 'var(--card-text)', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>✕</button>
             <div className="text-center mb-3">
               <div className="flex items-center justify-center gap-1 mb-1">
                 <span style={{ fontSize: '14px' }}>🪙</span>
@@ -1051,7 +1051,7 @@ export function PetScreen() {
       {showFriendsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div style={{ background: 'var(--card-bg-solid)', borderRadius: 'var(--card-radius)', padding: '24px 20px', maxWidth: '320px', width: '100%', backdropFilter: 'blur(20px)', position: 'relative' }}>
-            <button onClick={() => { setShowFriendsModal(false); setShowRecoverInviter(false); }} style={{ position: 'absolute', top: '12px', right: '12px', width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(0,0,0,0.1)', border: 'none', color: '#333', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            <button onClick={() => { setShowFriendsModal(false); setShowRecoverInviter(false); }} style={{ position: 'absolute', top: '12px', right: '12px', width: '32px', height: '32px', borderRadius: '50%', background: 'var(--widget-bg)', border: '1px solid var(--card-border)', color: 'var(--card-text)', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>✕</button>
             
             {showRecoverInviter ? (
               <>

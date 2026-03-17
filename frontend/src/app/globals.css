@@ -144,7 +144,7 @@
 /* App background - uses CSS variable for theme switching */
 .app-background {
   background: var(--app-bg);
-  background-attachment: fixed;
+  background-attachment: scroll;
   transition: background 0.4s ease;
 }
 

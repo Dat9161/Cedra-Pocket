@@ -93,12 +93,13 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
               className={`
                 flex flex-col items-center justify-center
                 transition-all duration-300 rounded-xl flex-1 relative overflow-hidden
-                hover:scale-105 hover:bg-white/30
+                hover:scale-105
                 ${activeTab === 'quest' ? 'text-cyan-500' : 'hover:text-cyan-500'}
               `}
               style={{ 
                 gap: 'clamp(2px, 0.5vw, 3px)', 
                 padding: 'clamp(4px, 1vw, 6px) clamp(6px, 1.5vw, 10px)',
+                height: '100%',
                 color: activeTab === 'quest' ? undefined : 'var(--text-secondary)',
                 ...(activeTab === 'quest' ? { textShadow: '0 0 10px rgba(0,212,255,0.8)' } : {}) 
               }}
@@ -117,12 +118,13 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
               className={`
                 flex flex-col items-center justify-center
                 transition-all duration-300 rounded-xl flex-1 relative overflow-hidden
-                hover:scale-105 hover:bg-white/30
+                hover:scale-105
                 ${activeTab === 'pet' ? 'text-cyan-500' : 'hover:text-cyan-500'}
               `}
               style={{ 
                 gap: 'clamp(2px, 0.5vw, 3px)', 
                 padding: 'clamp(4px, 1vw, 6px) clamp(6px, 1.5vw, 10px)',
+                height: '100%',
                 color: activeTab === 'pet' ? undefined : 'var(--text-secondary)',
                 ...(activeTab === 'pet' ? { textShadow: '0 0 10px rgba(0,212,255,0.8)' } : {}) 
               }}
@@ -159,12 +161,13 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
               className={`
                 flex flex-col items-center justify-center
                 transition-all duration-300 rounded-xl flex-1 relative overflow-hidden
-                hover:scale-105 hover:bg-white/30
+                hover:scale-105
                 ${activeTab === 'wallet' ? 'text-cyan-500' : 'hover:text-cyan-500'}
               `}
               style={{ 
                 gap: 'clamp(2px, 0.5vw, 3px)', 
                 padding: 'clamp(4px, 1vw, 6px) clamp(6px, 1.5vw, 10px)',
+                height: '100%',
                 color: activeTab === 'wallet' ? undefined : 'var(--text-secondary)',
                 ...(activeTab === 'wallet' ? { textShadow: '0 0 10px rgba(0,212,255,0.8)' } : {}) 
               }}
@@ -183,12 +186,13 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
               className={`
                 flex flex-col items-center justify-center
                 transition-all duration-300 rounded-xl flex-1 relative overflow-hidden
-                hover:scale-105 hover:bg-white/30
+                hover:scale-105
                 ${activeTab === 'game' ? 'text-cyan-500' : 'hover:text-cyan-500'}
               `}
               style={{ 
                 gap: 'clamp(2px, 0.5vw, 3px)', 
                 padding: 'clamp(4px, 1vw, 6px) clamp(6px, 1.5vw, 10px)',
+                height: '100%',
                 color: activeTab === 'game' ? undefined : 'var(--text-secondary)',
                 ...(activeTab === 'game' ? { textShadow: '0 0 10px rgba(0,212,255,0.8)' } : {}) 
               }}
